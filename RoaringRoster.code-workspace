@@ -1,0 +1,31 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"editor.tabSize": 2,
+		"editor.formatOnPaste": true,
+		"editor.bracketPairColorization.enabled": true,
+		"editor.guides.bracketPairs": true,
+		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": [
+			"source.fixAll.eslint"
+		],
+		"typescript.tsdk": "node_modules/typescript/lib",
+		"eslint.validate": [
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"vue"
+		],
+		"i18n-ally.localesPaths": [
+			"src/i18n"
+		],
+		"i18n-ally.pathMatcher": "{locale}/index.json",
+		"i18n-ally.sourceLanguage": "de-DE",
+		"i18n-ally.displayLanguage": "de-DE",
+		"i18n-ally.keystyle": "nested"
+	}
+}

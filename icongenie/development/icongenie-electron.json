@@ -1,0 +1,16 @@
+{
+  "params": {
+    "skipTrim": true,
+    "splashscreenIconRatio": "0",
+    "svgColor": "BD1550",
+    "icon": "src/icons/dev-icon.png",
+    "padding": [
+      0,
+      0
+    ],
+    "include": [
+      "electron"
+    ]
+  },
+  "assets": []
+}

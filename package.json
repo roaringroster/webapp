@@ -1,0 +1,81 @@
+{
+  "name": "roaringroster",
+  "version": "0.1.0",
+  "description": "A collaborative rostering app for self-organized teams",
+  "productName": "RoaringRoster",
+  "author": "Michael Kamphausen",
+  "homepage": "https://www.roaringroster.app",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/roaringroster/webapp.git"
+  },
+  "scripts": {
+    "install": "curl \"https://raw.githubusercontent.com/spdx/license-list-data/master/text/{MIT,Apache-2.0,ISC,Unlicense}.txt\" --output \"license-templates/#1.txt\" --create-dirs --silent",
+    "dev": "./bin/quasar.js",
+    "device": "./bin/quasar.js",
+    "build": "./bin/quasar.js",
+    "set:version": "npm --no-git-tag-version version ${VERSION:-patch}",
+    "version": "bin/version.js",
+    "icons": "bin/icons.js",
+    "lint": "eslint --ext .js,.ts,.vue ./",
+    "format": "prettier --write \"**/*.{js,ts,vue,,html,md,json}\" --ignore-path .gitignore",
+    "test": "echo \"No test specified\" && exit 0"
+  },
+  "dependencies": {
+    "@automerge/automerge": "^2.0.3",
+    "@quasar/extras": "^1.16.7",
+    "argon2-browser": "^1.18.0",
+    "core-js": "^3.6.5",
+    "dexie": "^3.2.4",
+    "dexie-encrypted": "^2.0.0",
+    "fs-extra": "^11.1.1",
+    "indexeddbshim": "^10.1.0",
+    "keytar": "^7.9.0",
+    "luxon": "^3.4.2",
+    "pinia": "^2.0.11",
+    "quasar": "^2.13.0",
+    "vue": "^3.0.0",
+    "vue-facing-decorator": "^3.0.3",
+    "vue-i18n": "^9.2.2",
+    "vue-router": "^4.0.0"
+  },
+  "devDependencies": {
+    "@electron/notarize": "^2.1.0",
+    "@quasar/app-webpack": "3.9.4",
+    "@quasar/quasar-app-extension-qmarkdown": "^2.0.0-beta.10",
+    "@types/argon2-browser": "^1.18.1",
+    "@types/luxon": "^3.3.2",
+    "@types/node": "^20.5.7",
+    "@types/uuid": "^9.0.3",
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/parser": "^6.5.0",
+    "apk-update": "^1.0.3",
+    "base64-loader": "^1.0.0",
+    "dotenv": "^16.3.1",
+    "electron": "^26.4.0",
+    "electron-builder": "^24.6.4",
+    "electron-updater": "^6.1.4",
+    "eslint": "^8.10.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "license-webpack-plugin": "^4.0.2",
+    "prettier": "^3.0.3"
+  },
+  "browserslist": [
+    "last 10 Chrome versions",
+    "last 10 Firefox versions",
+    "last 4 Edge versions",
+    "last 7 Safari versions",
+    "last 8 Android versions",
+    "last 8 ChromeAndroid versions",
+    "last 8 FirefoxAndroid versions",
+    "last 10 iOS versions",
+    "last 5 Opera versions"
+  ],
+  "engines": {
+    "node": ">= 12.22.1",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 1.21.1"
+  }
+}
