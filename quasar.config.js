@@ -17,6 +17,7 @@ const { readFileSync } = require("fs");
 const path = require("path");
 const { LicenseWebpackPlugin } = require("license-webpack-plugin");
 
+const packageJson = JSON.parse(readFileSync("./package.json"));
 const env = require("dotenv").config({
     path: require("path").resolve(
       process.cwd(),
@@ -114,8 +115,9 @@ module.exports = configure(function (ctx) {
         UPDATE_URL: "",
         APPLE_APP_ID: "",
         ...env,        
-        APP_VERSION: JSON.parse(readFileSync("./package.json")).version || 0,
+        APP_VERSION: packageJson.version || 0,
         APP_BUILD: (new Date()).toISOString().replace(/\D/g, ""),
+        APP_NAME: packageJson.productName || "",
       },
 
       extendWebpack(config) {

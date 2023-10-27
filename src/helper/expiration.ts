@@ -3,4 +3,4 @@ export const expirationDate = !!process.env.BETA_EXPIRATION && !Number.isNaN((ne
     ? new Date(process.env.BETA_EXPIRATION)
     : undefined;
 
-export const didExpire =() => !!expirationDate && expirationDate < new Date();
+export const didExpire = () => !!expirationDate && expirationDate < new Date();

@@ -6,25 +6,19 @@
         style="z-index: 1000"
       >
         <q-btn
-          v-if="hasBackButton"
-          size="lg"
-          dense
-          no-caps
+          v-if="hasMenuButton"
           flat
-          icon="chevron_left"
-          :ripple="false"
-          @click="$router.back()"
+          icon="menu"
+          aria-label="menu"
+          @click="$bus.emit('toggle-drawer')"
         />
         <div 
-          style="width: 86px"
+          v-else
+          style="width: 60px"
         ></div>
 
         <q-toolbar-title class="text-center">
-          <div
-            class="ellipsis title-text"
-          >
-            {{ title }}
-          </div>
+          <div class="ellipsis title-text">{{ title }}</div>
         </q-toolbar-title>
 
         <q-btn
@@ -44,6 +38,7 @@
       ></div>
     </q-header>
 
+    <navigation-drawer v-if="hasDrawer" />
     
     <q-page-container>
       <div class="print-only text-black text-center text-subtitle2 border-bottom-grey">
@@ -51,7 +46,7 @@
       </div>
       <router-view v-slot="{ Component, route }">
         <transition
-          :name="route.meta.transition"
+          :name="(route.meta.transition as string | undefined)"
           @enter="isTransitioning = !!route.meta.transition"
           @leave="isTransitioning = false"
         >
@@ -84,26 +79,31 @@
 import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { useQuasar } from "quasar";
 import LanguageMenu from "components/LanguageMenu.vue";
-import Banner from "components/BannerView.vue";
+import Banner from "src/components/BannerView.vue";
+import NavigationDrawer from "src/components/NavigationDrawer.vue";
+import { useAPI } from "src/api";
 
 const route = useRoute();
 const { t, te } = useI18n();
+const { screen } = useQuasar();
+const api = useAPI();
 
 const isTransitioning = ref(false);
 
 const title = computed(() => {
   const name = route.name?.toString() || "";
 
-  if (name == "start") {
-    return "RoaringRoster";
-  } else if (name.length > 0 && name != "login" && te(name)) {
+  if (name.length > 0 && name != "login" && te(name)) {
     return t(name);
   } else {
     return "";
   }
 });
-const hasBackButton = computed(() => !["login", "start", ""].includes(route?.name?.toString() || ""))
+
+const hasDrawer = computed(() => api.isLoggedIn || isTransitioning.value);
+const hasMenuButton = computed(() => hasDrawer.value && screen.lt.md);
 
 const modalSheetComponent = computed(() => {
   const sheet = route.params.sheet as string;

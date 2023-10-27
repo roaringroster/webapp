@@ -1,4 +1,4 @@
-# RoaringRoster (roaringroster)
+# RoaringRoster
 
 A collaborative rostering app for self-organized teams.
 

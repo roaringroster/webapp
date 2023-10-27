@@ -15,7 +15,7 @@ export const useRedirectStore = defineStore("redirect", {
 
       return path 
         || await useAPI().getLocalValue<string>("currentPath") 
-        || { name: "start" };
+        || { name: "overview" };
     },
   },
 });

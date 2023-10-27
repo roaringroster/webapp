@@ -26,6 +26,9 @@ const bus = new EventBus<{
   "did-login": (userData: {user: User, userSettings: UserSettings, contact: Contact}) => void;
   "did-logout": () => void;
   "did-debug": (value: any) => void;
+  "toggle-drawer": () => void;
+  "open-drawer": () => void;
+  "close-drawer": () => void;
 }>();
 
 export default boot(({ app }) => {

@@ -47,7 +47,7 @@ export default route(function (/* { store, ssrContext } */) {
 
     if (api.isLoggedIn) {
       if (to.name == "login") {
-        next({ name: "start" });
+        next({ name: "overview" });
       } else {
         api.setLocalValue?.("currentPath", to.path);
         next();
