@@ -3,10 +3,7 @@ import { createI18n } from "vue-i18n";
 import { Quasar } from "quasar";
 import { DateTime } from "luxon";
 import { WritableComputedRef } from "vue";
-import { bus } from "./eventBus";
-
 import messages from "../i18n";
-import { useAPI } from "src/api";
 
 export type MessageLanguages = keyof typeof messages;
 // Type-define 'en-US' as the master schema for the resource
@@ -26,7 +23,7 @@ declare module "vue-i18n" {
 }
 /* eslint-enable @typescript-eslint/no-empty-interface */
 
-async function loadLangPack(locale: string) {
+export async function loadLangPack(locale: string) {
     try {
         await import(
             /* webpackInclude: /(de|en-US)\.js$/ */
@@ -167,7 +164,8 @@ const numberFormats = availableLocales.reduce((result, locale) => {
   result[locale] = defaultNumberFormats;
   return result;
 }, {} as any);
-const getDefaultLocale = () => matchLocale(
+
+export const getDefaultLocale = () => matchLocale(
     Quasar.lang.getLocale() || "",
     availableLocales,
     fallbackLocale
@@ -202,47 +200,6 @@ const locale = i18n.global.locale as unknown as WritableComputedRef<string>;
 export default boot(({ app }) => {
   // Set i18n instance on app
   app.use(i18n);
-
-  const api = useAPI();
-
-  // propagate locale changes
-  bus.on("did-change-locale", async (value: string) => {
-    locale.value = value;
-    loadLangPack(value);
-    window.electronAPI?.didChangeLocale(value);
-
-    const user = await api.getCurrentUser().catch(() => undefined);
-
-    if (user && user.userSettings.locale != value) {
-      await api.updateDocumentWithChanges(user.userSettings, {locale: value});
-    }
-  })
-
-  // initialize locale propagation
-  bus.emit("did-change-locale", locale.value);
-
-  // receive locale change from electron menu
-  window.electronAPI?.addListener("did-change-locale", (value: string) => {
-    if (locale.value != value) {
-      bus.emit("did-change-locale", value)
-    }
-  })
-
-  // get locale from current user's settings
-  bus.on("did-login", ({ userSettings }) => {
-    const value = userSettings.locale || getDefaultLocale();
-
-    if (value != locale.value) {
-      bus.emit("did-change-locale", value);
-    }
-  });
-  bus.on("did-logout", () => {
-    const value = getDefaultLocale();
-
-    if (value != locale.value) {
-      bus.emit("did-change-locale", value);
-    }
-  });
 });
 
 

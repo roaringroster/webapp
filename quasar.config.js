@@ -56,6 +56,7 @@ module.exports = configure(function (ctx) {
       "fetch",
       "database",
       "i18n",
+      "localeChange",
       "updater",
       "setup",
     ],
