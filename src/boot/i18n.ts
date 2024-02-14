@@ -102,6 +102,10 @@ const defaultDateTimeFormats: Record<string, Intl.DateTimeFormatOptions> = {
   "WeekdayLong": { // Mittwoch
     weekday: "long"
   },
+  "DayMonthNumeric": { // 11.4.
+    day: "numeric",
+    month: "numeric",
+  },
   "DayMonthShort": { // 11. Apr
     day: "numeric",
     month: "short",
@@ -116,11 +120,26 @@ const defaultDateTimeFormats: Record<string, Intl.DateTimeFormatOptions> = {
     second: "2-digit",
   },
   "TimeSimple": DateTime.TIME_SIMPLE, // 21:15 (or 09:15 PM)
+  "MonthYear": {
+    month: "long",
+    year: "numeric",
+  }
 };
 
 const defaultNumberFormats: Record<string, Intl.NumberFormatOptions> = {
   "Percent": {
     style: "percent"
+  },
+  "Currency": {
+    style: "decimal", 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  },
+  "CurrencyNoGrouping": {
+    style: "decimal", 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false
   },
   "Byte": {
     style: "unit",
@@ -197,11 +216,13 @@ const i18n = createI18n<{ message: MessageSchema }, MessageLanguages>({
 
 const locale = i18n.global.locale as unknown as WritableComputedRef<string>;
 
+const i18nGlobal = i18n.global;
+
+const tv = (value: string) => i18nGlobal.te(value) ? i18nGlobal.t(value) : value;
+
 export default boot(({ app }) => {
   // Set i18n instance on app
   app.use(i18n);
 });
 
-
-const i18nGlobal = i18n.global;
-export { locale, i18nGlobal as i18n };
+export { locale, i18nGlobal as i18n, tv };

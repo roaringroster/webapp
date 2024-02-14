@@ -1,5 +1,15 @@
 import { Platform } from "quasar";
 
+export function promise<T>(method: (...args: any[]) => void, ...args: any[]): Promise<T> {
+    return new Promise((resolve, reject) => method.apply(window, args.concat([resolve, reject])));
+}
+
+export function sanitizeHTML(html: string) {
+    const element = document.createElement("div");
+    element.innerText = html;
+    return element.innerHTML;
+}
+
 export function reportError(error: Error, context = "Unknown Error") {
     const address = "feedback@roaringroster.app"
     const subject = encodeURI(context)
@@ -29,4 +39,44 @@ export function selectBehavior() {
       || (Platform.is.ios && window["ScreenOrientation"] != undefined) // iOS 16.4 or higher, where position:fixed bug is resolved
         ? "menu"
         : "default"
+}
+
+/**
+ * detect a long press gesture that did not occur by scrolling
+ * @return method for cleaning up event handlers on target
+ */
+export function onLongPress(
+  target: HTMLElement,
+  handler: (event: PointerEvent) => void,
+  delay = 500,
+) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  function clear() {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = undefined;
+    }
+  }
+
+  function onPointerDown(event: PointerEvent) {
+    clear();
+
+    timeout = setTimeout(
+      () => handler(event),
+      delay,
+    );
+  }
+
+  target.addEventListener("pointerdown", onPointerDown)
+  target.addEventListener("pointerup", clear)
+  target.addEventListener("pointermove", clear) // potential improvement: add tolerance of 5px compared to pointerdown coordinates
+  target.addEventListener("pointerleave", clear)
+
+  return () => {
+    target.removeEventListener("pointerdown", onPointerDown)
+    target.removeEventListener("pointerup", clear)
+    target.removeEventListener("pointermove", clear)
+    target.removeEventListener("pointerleave", clear)
+  }
 }
