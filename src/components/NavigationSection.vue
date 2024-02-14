@@ -36,7 +36,7 @@ export default class NavigationSection extends Vue {
   @Prop({type: String, default: ""}) readonly itemClass!: string;
 
   isActive(item: NavigationItem) {
-    return !!item.route && this.$route.name == item.route;
+    return !!item.route && !!this.$route.matched.find(route => route.name == item.route);
   }
 
   route(routeName?: string) {

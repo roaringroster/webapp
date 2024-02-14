@@ -212,10 +212,10 @@ const isTeamExpanded = ref(true);
 const isOrganizationExpanded = ref(hasActiveItem(organizationItems.value));
 const isAppExpanded = ref(hasActiveItem(appItems.value));
 
-const teams = computed(() => ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]);
+const teams = computed(() => ["Carnaby Street", "Portobello Road", "Covent Garden"]);
 const team = ref(0);
 
-const organizations = computed(() => ["Hogwarts", "Zaubereiministerium"]);
+const organizations = computed(() => ["Caffè Cooperativo"]);
 const organization = ref(0);
 
 function openDrawer() {
@@ -242,7 +242,7 @@ function headerClass(isExpanded: boolean, items: NavigationItem[]) {
 }
 
 function hasActiveItem(items: NavigationItem[]) {
-  return !!items.find(item => !!item.route && item.route == route.name)
+  return !!items.find(item => !!item.route && !!route.matched.find(route => route.name == item.route));
 }
 
 async function logout() {
