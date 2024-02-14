@@ -7,10 +7,11 @@ import { toRaw } from "vue";
 import { EncryptedDatabase } from "src/database/EncryptedDatabase";
 import Vault from "src/database/Vault";
 import { didExpire } from "src/helper/expiration";
-import { User, UserSettings } from "src/models/user";
-import { IdentifiableType, UUIDv4, createIdentifiable } from "src/models/identifiable";
-import { Contact, createContact } from "src/models/contact";
+import { User, UserSettings, createUser } from "src/models/user";
+import { IdentifiableType, UUIDv4 } from "src/models/identifiable";
+import { Contact } from "src/models/contact";
 import { bus } from "src/boot/eventBus";
+import { WorkAgreements } from "src/models/workAgreements";
 
 export default class LocalAccountApi {
     private dbPrefix = "account.";
@@ -19,6 +20,7 @@ export default class LocalAccountApi {
         user: Automerge.Doc<User>;
         userSettings: Automerge.Doc<UserSettings>;
         contact: Automerge.Doc<Contact>;
+        workAgreements: Automerge.Doc<WorkAgreements>;
     };
     private actorId = v4().replace(/-/g, "");
     /** Transactions with async/await and promises do not work using Dexie with IndexedDBShim 
@@ -222,28 +224,20 @@ export default class LocalAccountApi {
         const name = this.dbPrefix + username;
         const db = new EncryptedDatabase(name, key);
 
-        const userContact = createContact();
-        const userSettings: UserSettings = {
-            ...createIdentifiable(),
-            locale,
-        };
-        const user: User = {
-            ...createIdentifiable(),
-            contactId: userContact.id,
-            userSettingsId: userSettings.id,
-        };
+        const items = createUser();
+        items.userSettings.locale = locale;
 
         await db.open();
         this.db = db;
-        await this.createDocument(userContact);
-        await this.createDocument(userSettings);
-        await this.createDocument(user);
+        await Promise.all(
+            Object.values(items).map(item => this.createDocument(item, items.user.id))
+        );
         await db.local.bulkAdd([{
             id: "verification",
             value: true
         },{
             id: "userId",
-            value: user.id
+            value: items.user.id
         }]);
         db.close();
         this.db = undefined;
@@ -289,12 +283,13 @@ export default class LocalAccountApi {
 
         const userSettings = await this.getDocumentById<UserSettings>(user.userSettingsId);
         const contact = await this.getDocumentById<Contact>(user.contactId);
+        const workAgreements = await this.getDocumentById<WorkAgreements>(user.workAgreementsId);
 
-        if (!userSettings || !contact) {
+        if (!userSettings || !contact || !workAgreements) {
             return;
         }
 
-        return { user, userSettings, contact };
+        return { user, userSettings, contact, workAgreements };
     }
 
     async deleteLocalAccount(username: string) {
@@ -341,13 +336,13 @@ export default class LocalAccountApi {
         );
     }
 
-    async createDocument<T extends IdentifiableType>(value: T, overwrite = false) {
+    async createDocument<T extends IdentifiableType>(value: T, userId = this.userId, overwrite = false) {
         this.assertLoggedIn();
         this.assertCanWriteData();
 
         let document = Automerge.from({}, this.actorId);
         const time = Math.floor(Date.now() / 1000);
-        const message = JSON.stringify({ by: this.userId });
+        const message = JSON.stringify({ by: userId });
         document = Automerge.change(document, { time, message }, doc => Object.assign(doc, value));
         const item = {
             id: value.id,
@@ -363,9 +358,13 @@ export default class LocalAccountApi {
         return document;
     }
 
-    async updateDocument<T extends IdentifiableType>(doc: Automerge.Doc<T>, changeFn: Automerge.ChangeFn<T>) {
+    async updateDocument<T extends IdentifiableType>(doc: Automerge.Doc<T>, changeFn: Automerge.ChangeFn<T> | Partial<T>) {
         this.assertLoggedIn();
         this.assertCanWriteData();
+
+        if (typeof changeFn != "function") {
+            changeFn = doc => Object.assign(doc, changeFn);
+        }
 
         doc = toRaw(doc);
         const { id } = doc;
@@ -387,10 +386,6 @@ export default class LocalAccountApi {
                 throw new Error("ObjectDoesNotExist");
             }
         }) as Automerge.Doc<T>;
-    }
-
-    async updateDocumentWithChanges<T extends IdentifiableType>(doc: Automerge.Doc<T>, changes: Partial<T>) {
-        return await this.updateDocument<T>(doc, doc => Object.assign(doc, changes));
     }
 
     async transaction<T>(transaction: () => T | Promise<T>) {

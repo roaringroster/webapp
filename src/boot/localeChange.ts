@@ -17,7 +17,7 @@ export default boot(() => {
     const user = await api.getCurrentUser().catch(() => undefined);
 
     if (user && user.userSettings.locale != value) {
-      await api.updateDocumentWithChanges<UserSettings>(user.userSettings, {locale: value});
+      await api.updateDocument<UserSettings>(user.userSettings, {locale: value});
     }
   })
 
