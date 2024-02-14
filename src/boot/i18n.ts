@@ -120,6 +120,7 @@ const defaultDateTimeFormats: Record<string, Intl.DateTimeFormatOptions> = {
     second: "2-digit",
   },
   "TimeSimple": DateTime.TIME_SIMPLE, // 21:15 (or 09:15 PM)
+  "Time24Simple": DateTime.TIME_24_SIMPLE, // 21:15 (always 24h)
   "MonthYear": {
     month: "long",
     year: "numeric",

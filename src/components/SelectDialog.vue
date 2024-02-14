@@ -30,14 +30,14 @@
           @click="hide"
         />
         <q-btn
-          v-for="(label, index) in otherButtonLabels"
-          :key="index"
+          v-for="(label, buttonIndex) in otherButtonLabels"
+          :key="buttonIndex"
           :label="label"
           color="primary"
           no-caps
           flat
           rounded
-          @click="hide(); $emit('ok', {selection, index});"
+          @click="hide(); $emit('ok', {selection, buttonIndex});"
         />
         <q-btn
           :label="okButtonLabel || $t('OK')"
@@ -45,7 +45,7 @@
           no-caps
           flat
           rounded
-          @click="hide(); $emit('ok', otherButtonLabels.length ? {selection, index: otherButtonLabels.length} : selection);"
+          @click="hide(); $emit('ok', otherButtonLabels.length ? {selection, buttonIndex: otherButtonLabels.length} : selection);"
         />
       </q-card-actions>
     </q-card>

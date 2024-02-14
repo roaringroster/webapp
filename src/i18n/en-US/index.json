@@ -259,5 +259,9 @@
   "copyPreviousWeek": "Copy from previous week…",
   "notAssigned": "not assigned",
   "overwriteScheduleWarningMessage": "There is already a draft roster for calendar week {0}. \nAre you sure you want to delete this draft and replace it with a previous week's roster?",
-  "overwriteScheduleWarningTitle": "Overwrite roster?"
+  "overwriteScheduleWarningTitle": "Overwrite roster?",
+  "copyRosterDialogTitle": "Copy roster from a previous week",
+  "copyRosterDialogMessage": "Select another week's roster as a template:",
+  "copyRosterWithoutAssignmentsButton": "Copy shifts without assignments",
+  "copyRosterWithAssignmentsButton": "Copy including shift assignments"
 }

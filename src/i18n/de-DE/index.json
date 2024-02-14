@@ -259,5 +259,9 @@
   "copyPreviousWeek": "Von Vorwoche kopieren…",
   "notAssigned": "nicht besetzt",
   "overwriteScheduleWarningMessage": "Es existiert bereits ein Dienstplan-Entwurf für die Kalenderwoche {0}. Möchtest du diesen Entwurf wirklich löschen und durch den Dienstplan einer Vorwoche ersetzen?",
-  "overwriteScheduleWarningTitle": "Dienstplan überschreiben?"
+  "overwriteScheduleWarningTitle": "Dienstplan überschreiben?",
+  "copyRosterDialogTitle": "Dienstplan einer Vorwoche übernehmen",
+  "copyRosterDialogMessage": "Wähle den Dienstplan einer anderen Woche als Vorlage:",
+  "copyRosterWithoutAssignmentsButton": "Schichten ohne Belegung kopieren",
+  "copyRosterWithAssignmentsButton": "Einschließlich Schichtbelegung kopieren"
 }

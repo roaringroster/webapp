@@ -166,6 +166,14 @@ body.q-ios-padding .q-notifications__list--top
   background-image: linear-gradient(var(--q-secondary), var(--q-primary) 70%)
 .bg-primary-light
   background-color: var(--q-primary-bg) !important
+.bg-secondary-light
+  background-color: var(--q-secondary-bg) !important
+.bg-ternary-light
+  background-color: var(--q-ternary-bg) !important
+.bg-accent-light
+  background-color: var(--q-accent-bg) !important
+.bg-extra-light
+  background-color: var(--q-extra-bg) !important
 .bg-weekend
   background-color: #f6f6f6 !important
 .tabview-padding
@@ -201,9 +209,8 @@ body.q-ios-padding .q-notifications__list--top
   .q-calendar-scheduler__head--date .q-calendar__button
     font-size: 0.875rem
   .q-calendar-scheduler__resource .q-calendar__ellipsis
-    text-overflow: unset
-    overflow: unset
     font-size: unset
+    white-space: normal
 .can-hover:hover, .active-background.q-item--active
   position: relative
   &::before
@@ -215,3 +222,20 @@ body.q-ios-padding .q-notifications__list--top
     left: 0
     background-color: #000000
     opacity: .08
+.break-word
+  word-wrap: break-word
+.hyphen
+  word-wrap: break-word
+  -webkit-hyphens: auto
+  -ms-hyphens: auto
+  hyphens: auto
+.border-primary
+  border-color: var(--q-primary)
+.border-secondary
+  border-color: var(--q-secondary)
+.border-ternary
+  border-color: var(--q-ternary)
+.border-accent
+  border-color: var(--q-accent)
+.border-extra
+  border-color: var(--q-extra)

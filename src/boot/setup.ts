@@ -13,7 +13,7 @@ export default boot(async ({ store }) => {
 
     ["primary", "secondary", "accent", "ternary", "extra"]
         .forEach(name => {
-            setCssVar(name + "-bg", lighten(getCssVar(name) || "", 96))
+            setCssVar(name + "-bg", lighten(getCssVar(name) || "", name == "primary" ? 96 : 94))
         });
 
     /* Delete all CSS rules concerning custom scrollbars 
