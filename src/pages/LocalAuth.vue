@@ -1,5 +1,5 @@
 <template>
-  <div class="fullscreen bg-primary column">
+  <div class="fullscreen bg-primary-gradient column">
     <q-toolbar class="fixed text-white self-start window-draggable" style="z-index: 100">
       <q-space />
       <q-btn
@@ -34,11 +34,11 @@ export default defineComponent({
   },
 
   mounted() {
-    document.body.classList.add("bg-primary");
+    document.body.classList.add("bg-primary-gradient");
   },
 
   unmounted() {
-    document.body.classList.remove("bg-primary");
+    document.body.classList.remove("bg-primary-gradient");
   }
 });
 </script>

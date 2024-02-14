@@ -2,7 +2,7 @@
   <q-layout view="hHh Lpr lff">
     <q-header class="bg-white print-hide">
       <q-toolbar
-        :class="'shadow-3 bg-primary ' + ($q.screen.lt.sm ? 'q-px-none' : '')"
+        :class="'shadow-3 bg-primary-gradient ' + ($q.screen.lt.sm ? 'q-px-none' : '')"
         style="z-index: 1000"
       >
         <q-btn
@@ -21,15 +21,7 @@
           <div class="ellipsis title-text">{{ title }}</div>
         </q-toolbar-title>
 
-        <q-btn
-          :label="$i18n.locale.split('-')[0]"
-          icon="fas fa-globe"
-          stretch
-          flat
-          class="hide-arrow"
-        >
-          <language-menu />
-        </q-btn>
+        <document-menu />
       </q-toolbar>
       <banner />
       <div
@@ -80,7 +72,7 @@ import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useQuasar } from "quasar";
-import LanguageMenu from "components/LanguageMenu.vue";
+import DocumentMenu from "src/components/DocumentMenu.vue";
 import Banner from "src/components/BannerView.vue";
 import NavigationDrawer from "src/components/NavigationDrawer.vue";
 import { useAPI } from "src/api";

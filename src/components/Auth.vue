@@ -29,7 +29,7 @@
           type="submit"
           no-caps
           rounded
-          color="primary"
+          color="primary-gradient"
           class="full-width q-mt-md"
           @click.prevent="login"
           :loading="isLoadingLogin"
@@ -82,7 +82,7 @@
           type="submit"
           no-caps
           rounded
-          color="primary"
+          color="primary-gradient"
           class="full-width q-mt-md"
           @click.prevent="createAccount"
           :loading="isLoadingAddUser"

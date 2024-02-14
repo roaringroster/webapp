@@ -157,7 +157,61 @@ body.q-ios-padding .q-notifications__list--top
   .q-markdown--link-external
     &:after
       content: ''
-.bg-primary
-  background-image: linear-gradient(var(--q-secondary) -40%, var(--q-primary) 80%) !important
-.fullscreen.bg-primary
-  background-image: linear-gradient(var(--q-secondary), var(--q-primary) 70%) !important
+.bg-primary-gradient
+  background-image: linear-gradient(var(--q-secondary) -40%, var(--q-primary) 80%)
+  background-color: var(--q-primary)
+.text-primary-gradient
+  color: var(--q-primary)
+.fullscreen.bg-primary-gradient
+  background-image: linear-gradient(var(--q-secondary), var(--q-primary) 70%)
+.bg-primary-light
+  background-color: var(--q-primary-bg) !important
+.bg-weekend
+  background-color: #f6f6f6 !important
+.tabview-padding
+  padding: 24px 24px
+  @media (max-width: $breakpoint-sm-max)
+    padding: 8px
+  @media (max-width: $breakpoint-xs-max)
+    padding: 8px 0px
+    .tabview-panel
+      padding: 0px 8px
+  @media print
+    padding: .75cm 0 0
+.text-ternary
+  color: var(--q-ternary)
+.bg-ternary
+  background-color: var(--q-ternary)
+.text-extra
+  color: var(--q-extra)
+.bg-extra
+  background-color: var(--q-extra)
+// bugfix: horizontal scrollbar should not disappear below sticky first column
+.q-calendar .q-calendar__scroll
+  z-index: 1
+// bugfix: if a row has events, these become the last children of it's parent,
+// so the existing rule's :last-chld selector does not apply to the correct element
+.q-calendar-scheduler__day:not(:has(~ .q-calendar-scheduler__day))
+  border-right: none
+.q-calendar-scheduler
+  .q-calendar-scheduler__head--day.q-current-day
+    color: var(--q-primary)
+    .q-calendar__button
+      border: none
+  .q-calendar-scheduler__head--date .q-calendar__button
+    font-size: 0.875rem
+  .q-calendar-scheduler__resource .q-calendar__ellipsis
+    text-overflow: unset
+    overflow: unset
+    font-size: unset
+.can-hover:hover, .active-background.q-item--active
+  position: relative
+  &::before
+    content: ''
+    position: absolute
+    width: 100%
+    height: 100%
+    top: 0
+    left: 0
+    background-color: #000000
+    opacity: .08

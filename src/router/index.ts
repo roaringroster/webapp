@@ -8,6 +8,7 @@ import {
 import routes from "./routes";
 import { useAPI } from "src/api";
 import { useRedirectStore } from "src/stores/redirectStore";
+import { useChangeHistoryStore } from "src/stores/changeHistoryStore";
 
 const api = useAPI();
 
@@ -26,7 +27,15 @@ export default route(function (/* { store, ssrContext } */) {
     : (process.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory);
 
   const Router = createRouter({
-    scrollBehavior: () => ({ left: 0, top: 0 }),
+    scrollBehavior: (to, from, savedPosition) => {
+      if (savedPosition) {
+        return savedPosition;
+      } else if (to.meta.noScroll && (to.params.memberId == from.params.memberId)) {
+        return undefined;
+      } else {
+        return { left: 0, top: 0 };
+      }
+    },
     routes,
 
     // Leave this as is and make changes in quasar.conf.js instead!
@@ -40,6 +49,9 @@ export default route(function (/* { store, ssrContext } */) {
   Router.beforeEach((to, from, next) => {
     // console.log("before each. to:", to.name, "from:", from.name);
     const redirectStore = useRedirectStore();
+    const changeHistoryStore = useChangeHistoryStore();
+
+    changeHistoryStore.documents = [];
 
     if (!!to.params.sheet && !(to.meta.sheets as Record<string, any>)?.[to.params.sheet as string]) {
       console.error(`component not registered for sheet '${to.params.sheet}' at route '${to.name?.toString()}'`);
@@ -68,7 +80,7 @@ export default route(function (/* { store, ssrContext } */) {
     } else if (from.name == "login" && !to.meta.noAuth) {
       to.meta.transition = "fade"
     }
-  })
+  });
 
   return Router;
 });
