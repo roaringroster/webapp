@@ -237,7 +237,7 @@ exitOnError(() => {
     }
 
     if (isWeb) {
-      runCommand("rm dist/spa/*.jsonc");
+      runCommand("if [ -f dist/spa/*.jsonc ]; then rm dist/spa/*.jsonc; fi");
     }
 
     if (product == "app" && !!env.CLEAR_DOWNLOAD_DIRECTORY) {
