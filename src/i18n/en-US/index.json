@@ -263,5 +263,6 @@
   "copyRosterDialogTitle": "Copy roster from a previous week",
   "copyRosterDialogMessage": "Select another week's roster as a template:",
   "copyRosterWithoutAssignmentsButton": "Copy shifts without assignments",
-  "copyRosterWithAssignmentsButton": "Copy including shift assignments"
+  "copyRosterWithAssignmentsButton": "Copy including shift assignments",
+  "birthdays": "Birthdays"
 }

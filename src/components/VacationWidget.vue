@@ -1,5 +1,9 @@
 <template>
-  <widget-container :title="$t('vacation')">
+  <widget-container
+    :title="$t('vacation')"
+    class="cursor-pointer"
+    @click="$router.push({name: 'absences'})"
+  >
     <q-card-section class="q-pt-none">
       <div>{{ props.vacation.remaining }} {{ $t('daysRemainingLeave') }}</div>
       <div>{{ props.vacation.planned }} {{ $t('daysPlanned') }}</div>

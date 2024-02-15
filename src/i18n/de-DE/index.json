@@ -263,5 +263,6 @@
   "copyRosterDialogTitle": "Dienstplan einer Vorwoche übernehmen",
   "copyRosterDialogMessage": "Wähle den Dienstplan einer anderen Woche als Vorlage:",
   "copyRosterWithoutAssignmentsButton": "Schichten ohne Belegung kopieren",
-  "copyRosterWithAssignmentsButton": "Einschließlich Schichtbelegung kopieren"
+  "copyRosterWithAssignmentsButton": "Einschließlich Schichtbelegung kopieren",
+  "birthdays": "Geburtstage"
 }

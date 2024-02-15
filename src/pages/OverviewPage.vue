@@ -25,9 +25,11 @@
 import { computed } from "vue";
 import { date } from "quasar";
 import MasonryWall from "@yeger/vue-masonry-wall";
-import TodayWidget from "src/components/TodayWidget.vue";
+import BirthdayWidget from "src/components/BirthdayWidget.vue";
+import AbsenceWidget from "src/components/AbsenceWidget.vue";
 import RequestWidget from "src/components/RequestWidget.vue";
 import NotificationWidget from "src/components/NotificationWidget.vue";
+import ShiftWidget from "src/components/ShiftWidget.vue";
 import VacationWidget from "src/components/VacationWidget.vue";
 import { createContact } from "src/models/contact";
 import { Absence, createAbsence } from "src/models/absence";
@@ -58,13 +60,19 @@ const absences: {absence: Absence, name: string}[] = [
 
 const widgets = computed(() => [
   {
-    component: TodayWidget, 
-    props: { birthdays, absences },
+    component: BirthdayWidget, 
+    props: { birthdays },
+  }, {
+    component: AbsenceWidget, 
+    props: { absences },
   }, {
     component: RequestWidget,
     props: {},
   }, {
     component: NotificationWidget,
+    props: {},
+  }, {
+    component: ShiftWidget,
     props: {},
   }, {
     component: VacationWidget,
