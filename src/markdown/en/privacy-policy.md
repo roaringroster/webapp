@@ -76,6 +76,20 @@ robots_nofollow: true
 <p>The legal basis for this is Art. 6 Para. 1 lit. a) GDPR.</p>
 <p>You may revoke your prior consent to receive this newsletter under Art. 7 Para. 3 GDPR with future effect. All you have to do is inform us that you are revoking your consent or click on the unsubscribe link contained in each newsletter.</p>
 
+<h3>Brevo</h3>
+<p>We offer you the opportunity to register for our free newsletter on our website.</p>
+<p>We use Brevo to send newsletters. Brevo is a service provided by the company Sendinblue GmbH, Köpenicker Str. 126, 10179 Berlin, hereinafter referred to as "Brevo".</p>
+<p>If you sign up to receive our newsletter, the data requested during the registration process (your email address) will be processed by Brevo. For this your IP address and the date of your registration will be saved along with the time. As a further part of the registration process, your consent to the sending of the newsletter will be obtained, the content will be described in concrete terms and reference made to this data protection declaration.</p>
+<p>Brevo offers further data protection information at</p>
+<p><a href="https://www.brevo.com/legal/privacypolicy/" target="_blank" 
+  rel="noopener noreferrer nofollow">https://www.brevo.com/legal/privacypolicy/</a><br>
+<a href="https://www.brevo.com/information-for-email-recipients/" target="_blank" 
+  rel="noopener noreferrer nofollow">https://www.brevo.com/information-for-email-recipients/</a>
+.</p>
+<p>The newsletters sent by Brevo contain technologies by which we can analyse whether and when an email was opened and whether and which links contained in the newsletter were followed. We save this data in addition to the technical data (system data and IP address) so that the respective newsletter can be best tailored to your wishes and interests. The data thus collected is used to continuously improve the quality of our newsletters.</p>
+<p>The legal basis for sending the newsletter and the analysis is Art. 6 Para. 1 lit. a.) EU General Data Protection Regulation (GDPR).</p>
+<p>Consent to the newsletter being sent can be revoked at any time with future effect in accordance with Art. 7 Para. 3 GDPR. To do this, you only have to inform us of your revocation or click the unsubscribe link contained in each newsletter.</p>
+
 <h2>IV. General notes</h2>
 
 <h3>Objection to advertising mails</h3>

@@ -141,6 +141,31 @@ robots_nofollow: true
   widerrufen. Hierzu müssen Sie uns lediglich über Ihren Widerruf in Kenntnis setzen oder den in jedem Newsletter
   enthaltenen Abmeldelink betätigen.</p>
 
+<h3>Brevo</h3>
+<p>Wir bieten Ihnen die Möglichkeit an, sich bei uns über unseren Internetauftritt für unsere kostenlosen Newsletter
+  anmelden zu können.</p>
+<p>Zum Newsletterversand setzen wir Brevo ein. Bei Brevo handelt es sich um einen Dienst der Firma Sendinblue
+  GmbH, Köpenicker Str. 126, 10179 Berlin, nachfolgend nur „Brevo“ genannt.<br>Falls Sie sich zu unserem
+  Newsletter-Versand anmelden, werden die während des Anmeldevorgangs abgefragten Daten (Ihre E-Mail-Adresse) durch
+  Brevo verarbeitet. Zudem werden Ihre IP-Adresse sowie das Datum Ihrer Anmeldung nebst Uhrzeit gespeichert. Im
+  Rahmen des weiteren Anmeldevorgangs wird Ihre Einwilligung in die Übersendung des Newsletters eingeholt, der Inhalt
+  konkret beschreiben und auf diese Datenschutzerklärung verwiesen.</p>
+<p>Zudem bietet Brevo unter</p>
+<p><a href="https://www.brevo.com/de/legal/privacypolicy/" target="_blank"
+  rel="noopener noreferrer nofollow">https://www.brevo.com/de/legal/privacypolicy/</a><br>
+<a href="https://www.brevo.com/de/informationen-newsletter-empfaenger/" target="_blank"
+  rel="noopener noreferrer nofollow">https://www.brevo.com/de/informationen-newsletter-empfaenger/</a></p>
+<p>weitergehende Datenschutzinformationen an.</p>
+<p>Die von Brevo versandten Newsletter enthalten Technologien anhand derer wir in den Analysen erkennen können, ob
+  und wann eine E-Mail geöffnet sowie ob und welchen in dem Newsletter etwaig enthaltenen Links gefolgt worden ist.
+  Diese Daten speichern wir neben den technischen Daten (Systemdaten und IP-Adresse), damit der jeweilige Newsletter
+  optimal auf Ihre Wünsche und Interessen ausgerichtet werden kann. Die somit erhobenen Daten werden also genutzt, um
+  die Qualität unserer Newsletter ständig zu steigern.<br>Rechtsgrundlage für den Newsletterversand und die Analyse ist
+  Art. 6 Abs. 1 lit. a.) DSGVO.</p>
+<p>Die Einwilligung in den Newsletter-Versand können Sie gemäß Art. 7 Abs. 3 DSGVO jederzeit mit Wirkung für die Zukunft
+  widerrufen. Hierzu müssen Sie uns lediglich über Ihren Widerruf in Kenntnis setzen oder den in jedem Newsletter
+  enthaltenen Abmeldelink betätigen.</p>
+
 <h2>IV. Allgemeine Hinweise</h2>
 
 <h3>Widerspruch gegen Werbe-Mails</h3>
