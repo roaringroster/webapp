@@ -8,6 +8,29 @@
       <div>{{ $t("acknowledgementsIntro") }}</div>
     </div>
     <div class="text-body2">
+      <div class="text-h5 text-weight-medium q-mb-sm">{{ $t("appIconTitle")}}</div>
+      <div class="q-mb-md">
+        {{ $t("iconMadeBy") }} 
+        <a 
+          href="https://lorcblog.blogspot.com"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+        >Lorc</a>
+        {{ $t("underLicense") }} 
+        <a
+          href="https://creativecommons.org/licenses/by/3.0/"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+        >CC-BY-3.0</a>.
+        {{ $t("changesWereMade") }}
+        (<a 
+          href="https://game-icons.net/1x1/lorc/lion.html"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+        >{{ $t("original") }}</a>).
+      </div>
+    </div>
+    <div class="text-body2">
       <div class="text-h5 text-weight-medium q-mb-sm">{{ $t("ossComponents") }}</div>
       <div class="q-mb-md">{{ $t("acknowledgementsOpenSourceIntro", {count: ossLicenses.length}) }}</div>
     </div>
