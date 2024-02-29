@@ -19,13 +19,16 @@ export default boot(async ({ store }) => {
     /* Delete all CSS rules concerning custom scrollbars 
     (mainly originating from QCalender), because they cannot be overriden. 
     See https://stackoverflow.com/a/66069228 */
-    Array.from(document.getElementsByTagName("style")).forEach(style => 
-        Array.from(style.sheet?.cssRules || []).forEach((rule, index) => {
+    Array.from(document.querySelectorAll("style, link")).forEach(element => {
+        const sheet = (element as HTMLStyleElement | HTMLLinkElement).sheet;
+        let offset = 0;
+        Array.from(sheet?.cssRules || []).forEach((rule, index) => {
             if ((rule as any).selectorText?.includes("::-webkit-scrollbar")) {
-                style.sheet?.deleteRule(index);
+                sheet?.deleteRule(index + offset);
+                offset -= 1;
             }
         })
-    );
+    });
 
     if ((process.env.DEV as unknown) === true || process.env.DEV === "true") {
         const global = window as any;
