@@ -1,5 +1,6 @@
 <template>
   <q-btn
+    v-if="isVisible"
     icon="far fa-file-lines"
     flat
     stretch
@@ -63,10 +64,14 @@
       </q-list>
     </q-menu>
   </q-btn>
+  <div 
+    v-else
+    style="width: 44px"
+  ></div>
 </template>
 
 <script setup lang="ts">
-import {  } from "vue";
+import { computed } from "vue";
 import { useQuasar } from "quasar";
 import LanguageMenu from "src/components/LanguageMenu.vue";
 import ChangeHistorySheet from "src/components/ChangeHistorySheet.vue";
@@ -75,6 +80,9 @@ import { useChangeHistoryStore, NamedDocument } from "src/stores/changeHistorySt
 const $q = useQuasar();
 const store = useChangeHistoryStore();
 const isDev = process.env.DEV;
+
+const canPrint = computed(() => !$q.platform.is.electron);
+const isVisible = computed(() => isDev || canPrint.value || store.documents.length > 0);
 
 function print() {
   if ($q.platform.is.cordova && (cordova?.plugins as any)?.printer) {

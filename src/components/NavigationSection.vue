@@ -12,7 +12,7 @@
     <q-item-section side>
       <q-icon
         :name="item.icon"
-        :color="isActive(item) ? 'primary' : ''"
+        :color="isActive(item) ? 'primary' : undefined"
       />
     </q-item-section>
     <q-item-section>{{ item.label }}</q-item-section>
