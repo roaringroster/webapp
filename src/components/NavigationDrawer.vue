@@ -173,7 +173,7 @@ const userItems = computed(() => [{
 
 const appItems = computed(() => [{
   label: t("CheckForUpdates"),
-  icon: "far fa-magnifying-glass",
+  icon: "fas fa-magnifying-glass",
   action: () => checkForUpdates(true),
 },{
   label: t("Feedback") + "…",

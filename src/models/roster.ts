@@ -9,7 +9,8 @@ type RosterProps = {
 export type WeekSchedule = {
   weekStart: Date;
   shifts: Shift[];
-  status: "draft" | "collaboration" | "approved" | "discarded";
+  status: "draft" | "approved" | "discarded";
+  notify: false;
 };
 
 export type Shift = {
@@ -49,10 +50,12 @@ export const createRoster = ({
 export const createWorkSchedule = (weekStart: Date, {
   shifts = [],
   status = "draft",
+  notify = false,
 }: Partial<WeekSchedule> = {}): WeekSchedule => ({
   weekStart,
   shifts,
   status,
+  notify,
 });
 
 export const createShift = ({

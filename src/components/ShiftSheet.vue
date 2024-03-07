@@ -33,7 +33,7 @@
       </div>
     </div>
     <div class="q-mb-md">
-      <div class="text-caption text-grey-8 q-mb-xs">{{ $t('weekdayRecurrence') }}</div>
+      <div class="text-caption text-grey-8 q-mb-xs">{{ $t('weekdayRecurrence') }} {{ formattedWeekdays }}:</div>
       <q-btn-group
         rounded
         outline
@@ -105,6 +105,7 @@
     <q-btn
       v-if="!isNew"
       :label="$t('deleteItem', [$t('shift')])"
+      icon="fas fa-trash"
       flat
       rounded
       no-caps
@@ -157,6 +158,12 @@ const weekdayOptions = computed(() =>
     ),
     value
   }))
+);
+
+const formattedWeekdays = computed(() => 
+  weekdays.value
+    .map(value => date.formatDate(new Date(Date.UTC(2021, 5, value - 1)), "dddd"))
+    .join(", ")
 );
 
 function toggleWeekday(value: number) {

@@ -1,18 +1,21 @@
 import { IdentifiableType, createIdentifiable } from "./identifiable";
 
+export type Availability = {
+  start: Date;
+  end: Date;
+  // recurrence: string;
+};
+
 type AvailabilityProps = {
-  availabilities: {
-    start: Date;
-    end: Date;
-    // recurrence: string;
-  }[];
+  availabilities: Availability[];
 }
 
-export type Availability = IdentifiableType & AvailabilityProps;
 
-export const createAvailability = ({
+export type AvailabilityList = IdentifiableType & AvailabilityProps;
+
+export const createAvailabilityList = ({
   availabilities = [],
-}: Partial<AvailabilityProps> = {}): Availability => ({
+}: Partial<AvailabilityProps> = {}): AvailabilityList => ({
   ...createIdentifiable(),
   availabilities,
 });

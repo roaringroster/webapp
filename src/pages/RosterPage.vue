@@ -1,13 +1,13 @@
 <template>
   <q-page padding>
-    <div class="row justify-between items-center">
+    <div class="row justify-between items-center q-gutter-xs">
       <q-badge
         :label="$t(schedule.status)"
         rounded
         :color="statusColor[schedule.status]"
-        class="q-mb-sm q-px-sm text-subtitle2 text-bold"
+        class="q-px-sm text-subtitle2 text-bold"
       />
-      <div class="row q-mb-sm justify-center items-center no-wrap">
+      <div class="row justify-center items-center no-wrap">
         <div>
           <q-btn
             icon="fas fa-caret-left"
@@ -65,113 +65,77 @@
         :label="$t(schedule.status)"
         rounded
         :color="statusColor[schedule.status]"
-        class="q-px-sm text-subtitle2 text-bold invisible"
+        class="q-px-sm text-subtitle2 text-bold invisible q-py-none q-my-none"
         style="height: 0"
       />
     </div>
 
-    <!-- <q-markup-table
-      v-if="false"
-      flat
-      separator="cell"
-      class="shift-table full-width"
-      dense
-      wrap-cells
-    >
-      <thead>
-        <th>
-          <q-btn
-            v-if="isEditable"
-            icon="fa fa-add"
-            :label="$t('shift', 2)"
-            :title="$t('addItem', [$t('shift')])"
-            rounded
-            flat
-            no-caps
-            dense
-            size="md"
-            color="primary"
-            class="q-px-sm"
-            @click="addShift"
-          />
-        </th>
-        <th
-          v-for="(weekday, index) in weekdays"
-          :key="index"
-          :class="dayClasses(weekday).concat([!isToday(weekday) ? 'text-grey-8' : '']).concat('ellipsis')"
-        >
-          <div>{{ $d(weekday, "WeekdayLong") }}</div>
-          <div class="text-body2 text-weight-bold">{{ $d(weekday, "DayMonthNumeric") }}</div>
-        </th>
-      </thead>
-      <tbody>
-        <tr v-if="schedule.shifts.length == 0">
-          <td colspan="8">
-            <div class="row items-center justify-center q-gutter-xs">
-              <div class="text-italic">{{ $t("noShifts") }}</div>
-              <q-btn
-                v-if="isEditable"
-                :label="$t('addItem', [$t('shift')])"
-                flat
-                rounded
-                no-caps
-                dense
-                color="primary"
-                class="q-px-sm text-italic"
-                @click="addShift"
-              />
-            </div>
-          </td>
-        </tr>
-        <tr
-          v-for="(shift, index) in schedule.shifts"
-          :key="index"
-        >
-          <td>
-            <div class="row items-center q-gutter-xs">
-              <div>{{ $t('shift') }}</div>
-              <q-btn
-                v-if="isEditable"
-                icon="fa fa-pen"
-                :title="$t('editItem', [$t('shift')])"
-                round
-                flat
-                size="sm"
-                style="padding: 13px"
-                color="primary"
-                @click="editShift(shift)"
-              />
-            </div>
-          </td>
-          <td
-            v-for="(weekday, index) in weekdays"
-            :key="index"
-            :class="dayClasses(weekday)"
-          >
-            <div
-              v-if="shift.assignments[index] != undefined"
-              class="text-center"
-            >•</div>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="8"></td>
-        </tr>
-        <tr
-          v-for="(name, index) in workerNames"
-          :key="index"
-        >
-          <td>{{ name }}</td>
-          <td
-            v-for="(weekday, index) in weekdays"
-            :key="index"
-            :class="dayClasses(weekday)"
-          >
-          </td>
-        </tr>
-      </tbody>
-    </q-markup-table> -->
+    <div class="row justify-center items-center q-gutter-x-md q-mt-sm q-mb-md">
+      <q-btn
+        v-if="schedule.status == 'draft' && otherWeeks.length"
+        icon="fas fa-clone"
+        color="primary"
+        flat
+        round
+        no-caps
+        dense
+        @click="selectedRow = null; copyPreviousSchedule()"
+      >
+        <q-tooltip
+          :offset="$q.platform.is.mobile ? [0,10] : [0,4]"
+          :anchor="($q.platform.is.mobile ? 'top middle' : 'bottom middle')"
+          :self="($q.platform.is.mobile ? 'bottom middle' : 'top middle')"
+          class="text-center"
+          style="font-size: 0.8rem"
+        >{{ $t('copyPreviousWeek') }}</q-tooltip>
+      </q-btn>
 
+      <q-btn
+        v-if="schedule.shifts.length > 0"
+        :icon="schedule.notify ? 'fas fa-bell' : 'fas fa-bell-slash'"
+        color="primary"
+        flat
+        round
+        no-caps
+        dense
+        @click="selectedRow = null; schedule.notify = !schedule.notify"
+      >
+        <q-tooltip
+          :offset="$q.platform.is.mobile ? [0,10] : [0,4]"
+          :anchor="($q.platform.is.mobile ? 'top middle' : 'bottom middle')"
+          :self="($q.platform.is.mobile ? 'bottom middle' : 'top middle')"
+          class="text-center"
+          style="font-size: 0.8rem"
+        >{{ !schedule.notify 
+            ? $t("activateOpenShiftNotifications") 
+            : $t("deactivateOpenShiftNotifications") 
+          }}</q-tooltip>
+      </q-btn>
+
+      <q-btn
+        v-if="schedule.status == 'draft'"
+        :label="$t('approve')"
+        :disable="schedule.shifts.length == 0"
+        color="primary"
+        outline
+        rounded
+        no-caps
+        dense
+        class="q-px-sm"
+        @click="selectedRow = null; schedule.status = 'approved'"
+      />
+      <q-btn
+        v-else-if="schedule.status == 'approved'"
+        :label="$t('edit')"
+        color="primary"
+        outline
+        rounded
+        no-caps
+        dense
+        class="q-px-sm"
+        @click="selectedRow = null; schedule.status = 'draft'"
+      />
+    </div>
 
     <q-calendar-scheduler
       ref="calendar"
@@ -182,7 +146,7 @@
       :model-resources="resources"
       resource-key="value"
       resource-label="label"
-      :resource-min-height="44"
+      :resource-min-height="schedule.shifts.length > 0 ? 44 : 0"
       @click-resource="onClickResource"
       :cell-width="$q.screen.gt.xs ? 'max(14.28%, 110px)' : 'calc(50vw - 8px)'"
       :weekday-breakpoints="[200, 100]"
@@ -230,32 +194,8 @@
       </template>
 
       <template #resource-label="{ scope: { resource, resourceIndex } }">
-
-        <template v-if="resource.type == 'no-shifts'">
-          <div class="full-container-width row items-center justify-center q-gutter-x-md q-py-sm">
-            <div class="text-weight-medium">
-              <q-icon
-                name="warning"
-                size="1.25rem"
-                style="padding-bottom: 2px"
-              />
-              {{ $t("noShifts") }}:
-            </div>
-            <q-btn
-              v-if="isEditable"
-              :label="$t('addItem', [$t('shift')])"
-              unelevated
-              rounded
-              no-caps
-              dense
-              color="primary-gradient"
-              class="q-px-md"
-              @click="addShift"
-            />
-          </div>
-        </template>
-
-        <template v-else-if="resource.type == 'shift'">
+      
+        <template v-if="resource.type == 'shift'">
           <div class="column items-start q-gutter-xs text-black q-pt-xs q-pr-xs non-selectable">
             <q-item-label
               :class="['text-body2 text-weight-bold', selectedRowClass(resourceIndex)]"
@@ -275,16 +215,27 @@
             >
               {{ resource.shift.notes }}
             </q-item-label>
-            <q-btn
-              v-if="isEditable"
-              icon="fa fa-pen"
-              :title="$t('editItem', [$t('shift')])"
-              round
-              flat
-              size="sm"
-              style="padding: 11.5px"
-              color="primary"
-              @click.stop="editShift(resource.shift)"
+            <div>
+              <q-btn
+                v-if="isEditable"
+                icon="fa fa-pen"
+                :title="$t('editItem', [$t('shift')])"
+                round
+                flat
+                size="sm"
+                style="padding: 11.5px"
+                color="primary"
+                @click.stop="editShift(resource.shift)"
+              />
+            </div>
+          </div>
+        </template>
+
+        <template v-else-if="resource.type == 'spacer'">
+          <div class="availabilities-header full-container-width">
+            <q-toggle
+              v-model="showAvailableMembers"
+              :label="$t('availableMembers') + (showAvailableMembers ? ':' : '')"
             />
           </div>
         </template>
@@ -310,57 +261,67 @@
       <template #day="{ scope }">
 
         <template v-if="scope.resource.type == 'shift'">
-          <q-card
+          <q-select
             v-for="(item, index) in getAssignments(scope)"
             :key="index"
-            :flat="item.state != 'high'"
-            bordered
+            :model-value="item.memberId || item.label"
+            @update:model-value="setAssignment(scope, index, $event)"
+            :options="availableTeamMembers(scope, index)"
+            map-options
+            emit-value
+            :behavior="selectBehavior()"
+            dense
+            outlined
+            :hide-dropdown-icon="item.state == 'additional' || !isEditable"
+            :readonly="!isEditable"
+            :bg-color="!!item.memberId ? 'primary' : undefined"
             :class="[
-              'q-ma-xs',
-              editableClass, 
-              !!item.memberId ? 'bg-primary text-white' : 'text-caption text-italic',
-              item.state == 'low' ? '' : 'border-primary text-primary',
-              item.state == 'high' ? 'text-bold' : '',
+              'member-select non-selectable q-mx-xs q-mb-xs',
+              index == 0 ? 'q-mt-xs' : '',
+              'item-state-' + item.state,
+              !!item.memberId ? 'text-white' : '',
+              !!item.memberId || (item.state == 'additional') ? '' : 'text-caption text-italic',
             ]"
+            menu-anchor="bottom middle"
+            menu-self="top middle"
           >
-            <q-card-section
-              class="text-center q-pa-xs"
-            >
-              {{ item.label }}
-            </q-card-section>
-            <q-popup-edit
-              v-if="isEditable"
-              :model-value="item.memberId"
-              @update:model-value="setAssignment(scope, index, $event)"
-              auto-save
-              v-slot="scope"
-            >
-              <q-select
-                v-model="scope.value" 
-                :label="$t('teamMember')"
-                :options="teamMembers"
-                map-options
-                emit-value
-                :behavior="selectBehavior()"
-                options-dense
-                hide-bottom-space
-                autofocus
-                clearable
-                style="min-width: 220px"
-              />
-            </q-popup-edit>
-          </q-card>
-          <q-card
-            v-if="isEditable && isFullyAssigned(scope)"
-            flat
-            bordered
-            class="q-ma-xs bg-transparent row justify-center q-pa-sm cursor-pointer"
-          >
-            <q-icon
-              name="fas fa-add"
-              color="primary"
-            />
-          </q-card>
+            <template v-slot:option="optionScope">
+              <q-item
+                v-if="optionScope.opt.headerLabel"
+                dense
+                class="sticky-option-header"
+              >{{ optionScope.opt.headerLabel }}:</q-item>
+              <q-item
+                v-else
+                v-bind="optionScope.itemProps" 
+                class="q-pa-xs member-select-item"
+                @click="optionScope.opt.value == item.memberId && setAssignment(scope, index, null)"
+              >
+                <div class="row full-width items-center justify-between">
+                  <div class="col q-px-xs">
+                    <q-item-label>{{ optionScope.opt.label }}</q-item-label>
+                    <q-item-label 
+                      v-if="optionScope.opt.caption" 
+                      caption
+                    >{{ optionScope.opt.caption }}</q-item-label>
+                  </div>
+                  <q-checkbox
+                    v-if="!optionScope.opt.disable"
+                    :model-value="optionScope.opt.value == item.memberId"
+                    @update:model-value="setAssignment(scope, index, $event ? optionScope.opt.value : null)"
+                    size="sm"
+                    color="primary"
+                    v-close-popup
+                  />
+                </div>
+              </q-item>
+            </template>
+            <template v-slot:no-option>
+              <div
+                class="q-px-sm q-py-xs text-caption text-italic"
+              >{{ $t("noMemberAvailable") }}</div>
+            </template>
+          </q-select>
         </template>
 
         <template v-else-if="scope.resource.type == 'member'">
@@ -368,14 +329,14 @@
             v-for="(item, index) in getAvailability(scope)"
             :key="index"
             :flat="item.state != 'high'"
-            bordered
+            :bordered="item.state == 'high'"
             dense
-            color="primary"
             :class="[
               'q-ma-xs q-px-xs radius-md bg-transparent text-center', 
               isEditable ? 'cursor-pointer' : '',
-              item.state == 'low' ? '' : 'border-primary text-primary',
-              item.state == 'high' ? 'text-bold' : '',
+              item.assigned ? 'text-strike' : '',
+              item.state == 'low' ? '' : 'border-primary',
+              item.state == 'high' && !item.assigned ? 'text-bold text-primary' : '',
             ]"
             @click="matchAssignment(scope, item.state)"
           >
@@ -385,50 +346,35 @@
 
       </template>
     </q-calendar-scheduler>
-    <!-- <pre>{{ JSON.stringify(schedule.shifts, null, 2) }}</pre> -->
 
-    <div class="row justify-between items-center q-gutter-md q-mt-md">
+    <div 
+      v-if="schedule.shifts.length == 0"
+      class="row items-center justify-center q-gutter-x-md q-py-sm"
+    >
+      <div
+        class="text-weight-medium"
+        style="color: var(--calendar-color)"
+      >
+        <q-icon
+          name="warning"
+          size="1.25rem"
+          style="padding-bottom: 2px"
+        />
+        {{ $t("noShifts") }}:
+      </div>
       <q-btn
-        v-if="schedule.status == 'draft' && otherWeeks.length"
-        :label="$t('copyPreviousWeek')"
-        color="primary"
-        outline
+        v-if="isEditable"
+        :label="$t('addItem', [$t('shift')])"
+        unelevated
         rounded
         no-caps
-        @click="selectedRow = null; copyPreviousSchedule()"
-      />
-      <q-space v-else />
-
-      <q-btn
-        v-if="schedule.status == 'draft' && hasOpenShifts"
-        :label="$t('offerOpenShifts')"
-        :disable="schedule.shifts.length == 0"
-        color="primary"
-        outline
-        rounded
-        no-caps
-        @click="selectedRow = null; schedule.status = 'collaboration'"
-      />
-      <q-btn
-        v-else-if="['draft', 'collaboration'].includes(schedule.status)"
-        :label="$t('approve')"
-        :disable="schedule.shifts.length == 0"
-        color="primary"
-        outline
-        rounded
-        no-caps
-        @click="selectedRow = null; schedule.status = 'approved'"
-      />
-      <q-btn
-        v-else-if="schedule.status == 'approved'"
-        :label="$t('discard')"
-        color="primary"
-        outline
-        rounded
-        no-caps
-        @click="selectedRow = null; schedule.status = 'draft'"
+        dense
+        color="primary-gradient"
+        class="q-px-md"
+        @click="addShift"
       />
     </div>
+
   </q-page>
 </template>
 
@@ -437,33 +383,6 @@
   min-width: 218px
   @media (min-width: $breakpoint-xs-max)
     min-width: 280px
-// .shift-table .q-table
-//   // table-layout: fixed
-//   tbody tr, tbody tr td
-//     height: 44px
-//   th
-//     font-weight: 700
-//     font-size: 1rem
-//   th, td
-//     min-width: 100px
-//     min-height: 44px
-//     overflow: hidden
-//     @media (max-width: $breakpoint-xs-max)
-//       min-width: calc(50vw - 8px)
-//   th:first-child
-//     padding: 4px !important
-//   th:first-child,
-//   td:first-child
-//     padding-left: 8px
-//     position: sticky
-//     left: 0
-//     z-index: 1
-//     background-color: #ffffff
-//     min-width: 120px
-//     @media (max-width: $breakpoint-xs-max)
-//       min-width: calc(50vw - 8px)
-//   tbody td
-//     font-size: 14px
 .roster-scheduler
   container-type: inline-size
   .q-calendar-scheduler__head
@@ -473,8 +392,6 @@
     border-bottom: 1px solid rgb(224, 224, 224)
   .q-calendar-scheduler__head--weekday
     padding-top: 6px
-  // .q-calendar-scheduler__head--date
-  //   height: 24px
   .q-calendar-scheduler__head--resources, .q-calendar-scheduler__resource
     min-width: max(12.5%, 110px)
     @media (max-width: $breakpoint-xs-max)
@@ -493,9 +410,6 @@
     @media (max-width: $breakpoint-xs-max)
       min-width: calc(50vw - 8px)
     border-top: 1px solid rgb(224, 224, 224)
-  // .q-calendar-scheduler__day:not(.no-shifts, .spacer):hover .q-calendar__focus-helper
-  //   background-color: currentcolor
-  //   opacity: 0.15
   .no-shifts, .spacer
     background-color: #ffffff !important
     border-right: 0px none
@@ -516,7 +430,81 @@
     transition-property: box-shadow, color, border-color
     transition-duration: .25s
     transition-timing-function: ease-in-out
-
+  .member-select
+    transition-property: box-shadow
+    transition-duration: .25s
+    transition-timing-function: ease-in-out
+    .q-field__append
+      padding-left: 0
+    .q-field__control
+      padding-left: 4px
+      padding-right: 0
+    .q-field__native
+      justify-content: center
+    .q-field__control::before
+      transition-property: border-color
+      transition-duration: .25s
+      transition-timing-function: ease-in-out
+    .q-field__native, .q-field__append
+      transition-property: color
+      transition-duration: .25s
+      transition-timing-function: ease-in-out
+    &.text-white
+      .q-field__native, .q-field__append
+        color: #ffffff
+    &.item-state-normal, &.item-state-high, &.text-white
+      .q-field__control::before
+        border-color: var(--q-primary)
+    &.item-state-normal:not(.text-white), &.item-state-high:not(.text-white)
+      .q-field__native, .q-field__append
+        color: var(--q-primary)
+    &.item-state-high
+      box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 5px, rgba(0, 0, 0, 0.14) 0px 2px 2px, rgba(0, 0, 0, 0.12) 0px 3px 1px -2px
+      .q-field__native
+        font-weight: bold
+    &.item-state-additional
+      .q-field__control
+        padding-left: 0
+        min-height: 32px
+        &:hover::before
+          border-color: var(--q-primary)
+      .q-field__native
+        min-height: 0
+        font-size: 1.4rem
+        color: var(--q-primary)
+  .availabilities-header
+    padding-top: .5rem
+    font-size: 1rem
+    font-weight: bold
+.member-select-item
+  .q-item__label + .q-item__label
+    margin-top: 2px
+.sticky-option-header
+  position: -webkit-sticky
+  position: sticky
+  background-color: #ffffff
+  top: 0px
+  z-index: 1
+  text-align: center
+  overflow: hidden
+  min-height: initial
+  min-width: 140px
+  padding: 8px 0 4px
+  display: flex
+  flex-direction: row
+  font-weight: bold
+  &:before, &:after
+    content: ""
+    flex: 1 1
+    margin: auto
+  &:before
+    margin-right: .5em
+  &:after
+    margin-left: .5em
+  &:not(:first-child)
+    font-weight: normal
+    &:before, &:after
+      border-bottom: 2px solid #cccccc
 </style>
 
 <script setup lang="ts">
@@ -530,7 +518,7 @@ import { selectBehavior } from "src/helper/utils";
 import { getWeek, toUTC } from "src/helper/date";
 import { showWarning } from "src/helper/warning";
 import { Shift, WeekSchedule, createRoster, createWorkSchedule } from "src/models/roster";
-import { Availability, createAvailability } from "src/models/availability";
+import { Availability, AvailabilityList, createAvailabilityList } from "src/models/availability";
 import ShiftSheet from "src/components/ShiftSheet.vue";
 import SelectDialog from "src/components/SelectDialog.vue";
 
@@ -541,20 +529,6 @@ const { t, d } = useI18n();
 
 const dateProxy: Ref<QPopupProxy | null> = ref(null);
 const currentWeekStart = ref(getWeekStart());
-
-// function gotoPreviousWeek() {
-//   currentWeekStart.value = date.subtractFromDate(
-//     currentWeekStart.value, 
-//     { days: 7 }
-//   );
-// }
-
-// function gotoNextWeek() {
-//   currentWeekStart.value = date.addToDate(
-//     currentWeekStart.value, 
-//     { days: 7 }
-//   );
-// }
 
 function gotoDate(value: string | null) {
   if (value) {
@@ -570,10 +544,6 @@ function getWeekStart(value = new Date()) {
     "day"
   )
 }
-
-// function isToday(value: Date) {
-//   return date.isSameDate(value, new Date(), "date")
-// }
 
 const statusColor = {
   "draft": "secondary",
@@ -595,13 +565,6 @@ const schedule = computed((): WeekSchedule =>
   existingSchedule.value || createWorkSchedule(currentWeekStart.value)
 );
 const isEditable = computed(() => ["draft", "collaboration"].includes(schedule.value.status));
-const hasOpenShifts = computed(() => 
-  schedule.value.shifts.find(shift => 
-    Object.values(shift.assignments).find(list => 
-      list.length < shift.minimumWorkers
-    ) != undefined
-  ) != undefined
-);
 const otherWeeks = computed(() => 
   roster.value.weeks.filter(week => week.weekStart.getTime() != currentWeekStart.value.getTime()
     && week.shifts.length > 0
@@ -609,39 +572,39 @@ const otherWeeks = computed(() =>
 
 const positions = ["Tische", "Bar", "Küche"];
 
-type TeamMember = Availability & {
+type TeamMember = AvailabilityList & {
   label: string; 
-  positions: string[]; 
   value: string;
+  positions: string[];
 };
 
 const teamMembers: Ref<TeamMember[]> = ref([
   {
-    label: "Alice", 
+    label: "Alice Adams", 
     positions: [positions[0]], 
     value: v4(),
     ...available(["08,18", "08,16", "08,18", "", "08,18", "08,16", ""])
   },
   { 
-    label: "Bob", 
+    label: "Bob Brown", 
     positions: [positions[0], positions[1]], 
     value: v4(),
-    ...available(["12,24", "", "12,24", "12,24", "", "12,24", "12,24"])
+    ...available(["12,23", "", "12,23", "12,23", "", "12,23", "12,23"])
   },
   { 
-    label: "Charlie", 
+    label: "Charlie Clark", 
     positions: [positions[2]], 
     value: v4(),
     ...available(["", "06,12", "10,22", "10,22", "", "10,22", "10,22", "", "16,22"])
   },
   { 
-    label: "Dave", 
+    label: "Dave Diaz", 
     positions: [positions[1], positions[2]], 
     value: v4(),
     ...available(["06,16", "06,16", "06,16", "", "12,24", "12,24", ""])
   },
   { 
-    label: "Eve", 
+    label: "Eve Evans", 
     positions: [positions[0], positions[2]], 
     value: v4(),
     ...available(["", "11,24", "11,24", "13,02", "", "11,24", "11,24"])
@@ -649,7 +612,7 @@ const teamMembers: Ref<TeamMember[]> = ref([
 ]);
 
 function available(days: string[]) {
-  return createAvailability({availabilities: days.flatMap((hours, index) => {
+  return createAvailabilityList({availabilities: days.flatMap((hours, index) => {
     if (hours) {
       const [start, end] = hours.split(",");
       return [{
@@ -661,12 +624,6 @@ function available(days: string[]) {
     }
   })})
 }
-
-// const weekdays = computed(() => 
-//   [...Array(7).keys()].map(days => 
-//     date.addToDate(currentWeekStart.value, {days})
-//   )
-// );
 
 function addShift() {
   selectedRow.value = null;
@@ -707,6 +664,7 @@ function editShift(shift: Shift) {
 // - Scheduler
 
 const calendar: Ref<QCalendarScheduler | null> = ref(null);
+const showAvailableMembers = ref(false);
 
 type Resource = {
   type: "shift" | "no-shifts" | "spacer" | "member";
@@ -716,11 +674,19 @@ type Resource = {
   member?: TeamMember;
 }
 
+type QCalendarTimestamp = {
+  weekday: number;
+  current: boolean;
+  day: number;
+  month: number;
+  year: number;
+};
+
 type QCalendarScope = {
   resource?: Resource;
   days?: {date: string}[];
   cellWidth?: string;
-  timestamp?: {weekday: number, current: boolean};
+  timestamp?: QCalendarTimestamp;
   resourceIndex?: number;
 };
 
@@ -733,7 +699,7 @@ const resources = computed(() =>
     type: "no-shifts",
   }]).concat(schedule.value.shifts.length == 0 || !isEditable.value ? [] : [{
     type: "spacer",
-  }]).concat(schedule.value.shifts.length == 0 || !isEditable.value 
+  }]).concat(schedule.value.shifts.length == 0 || !isEditable.value || !showAvailableMembers.value
     ? [] 
     : teamMembers.value.map((member) => ({
         type: "member",
@@ -742,17 +708,14 @@ const resources = computed(() =>
   )
 )
 
-function isFullyAssigned(scope: QCalendarScope) {
-  const shift = scope.resource?.shift 
-  return !!shift && shift.assignments[scope.timestamp!.weekday]?.filter(Boolean).length >= shift.minimumWorkers;
-}
-
 function getAssignments(scope: QCalendarScope) {
   const shift = scope.resource?.shift;
   const assignments = shift?.assignments[scope.timestamp!.weekday];
   const lengthOfEmpty = assignments
     ? Math.max((shift?.minimumWorkers || 0) - assignments.length, 0)
     : 0;
+  const isFullyAssigned = !!shift && !!assignments 
+    && assignments.filter(Boolean).length >= shift.minimumWorkers;
 
   return (assignments || []).concat(Array(lengthOfEmpty).fill(""))
     .map(memberId => {
@@ -767,7 +730,11 @@ function getAssignments(scope: QCalendarScope) {
       }
 
       return { memberId, label, state };
-    })
+    }).concat(isFullyAssigned && isEditable.value ? [{
+      memberId: "",
+      label: "+",
+      state: "additional",
+    }] : [])
 }
 
 function setAssignment(scope: QCalendarScope, index: number, value: string | null) {
@@ -802,13 +769,19 @@ function getMember(id?: string) {
 }
 
 function getAvailability(scope: QCalendarScope) {
-  const weekday = scope.timestamp?.weekday;
+  const timestamp = scope.timestamp!;
+  const weekday = timestamp.weekday;
+  const member = scope.resource!.member!;
 
-  return scope.resource?.member?.availabilities
+  return member.availabilities
     .filter(({ start }) => start.getDay() == weekday)
-    .map(({ start, end }) => {
-      const label = timeRange(start, end);
+    .map(item => {
+      const label = timeRange(item.start, item.end);
       let state = "normal";
+      const assigned = schedule.value.shifts.find(shift => 
+        shift.assignments[weekday]?.includes(member.value) 
+          && matchShiftAvailability(shift, item, timestamp)
+      ) != undefined;
       const selectedShift = selectedRow.value !== null
         ? schedule.value.shifts[selectedRow.value]
         : undefined;
@@ -817,7 +790,7 @@ function getAvailability(scope: QCalendarScope) {
         state = Math.random() < 0.5 ? "high" : "low"
       }
 
-      return {label, state}
+      return {label, state, assigned}
     })
 }
 
@@ -848,14 +821,10 @@ function selectedRowClass(resourceIndex: number) {
     : "";
 }
 
-const editableClass = computed(() => 
-  isEditable.value ? "cursor-pointer can-hover" : ""
-);
-
 const selectedRow: Ref<number | null> = ref(null);
 
-function onClickResource({ scope }: {scope: QCalendarScope}) {
-  if (isEditable.value) {
+function onClickResource({ scope, event }: {scope: QCalendarScope, event: Event}) {
+  if (isEditable.value && !(event instanceof KeyboardEvent)) {
     if (["shift", "member"].includes(scope.resource?.type || "") 
       && scope.resourceIndex != selectedRow.value) {
         selectedRow.value = scope.resourceIndex ?? null;
@@ -865,13 +834,82 @@ function onClickResource({ scope }: {scope: QCalendarScope}) {
   }
 }
 
-// function dayClasses(date: Date) {
-//   const today = isToday(date);
-//   return [
-//     today ? "text-primary bg-primary-light" : "",
-//     !today && [0, 6].includes(date.getDay()) ? "bg-weekend" : ""
-//   ];
-// }
+function availableTeamMembers(scope: QCalendarScope, index: number) {
+  const timestamp = scope.timestamp!;
+  const weekday = timestamp.weekday;
+  const shift = scope.resource!.shift!;
+
+  // idea: this potentially intense calculation happens in advance for every visible QSelect
+  // and might be optimized by calculating the options lazily on-demand (@filter)
+  const options = teamMembers.value
+    .map(member => {
+      const availabilities = member.availabilities
+        .filter(item => matchShiftAvailability(shift, item, timestamp));
+      const isAssigned = schedule.value.shifts.find(shift2 => 
+          // ToDo: assignment could end on the following day:
+          // ToDo: check start and end time of shift:
+          shift2.assignments[weekday]?.includes(member.value)
+            && (shift != shift2 || shift2.assignments[weekday]?.[index] != member.value)
+        ) != undefined
+      const available =
+        // 1. member has matching availability
+        availabilities.length > 0
+        // 2. member is not absent
+        // ToDo: filter absence (full day / half day)
+        // 3. member is not assigned or is assigned to this shift and slot (index)
+        && !isAssigned
+        // 4. member matches position if shift requires position
+        // ToDo: filter position
+      const disable = !available;
+      const caption = isAssigned
+        ? t("alreadyAssigned")
+        : member.availabilities
+          .filter(({ start }) => start.getDay() == weekday)
+          .map(({start, end}) => timeRange(start, end))
+          .join(", ") || t("noAvailability");
+      const sortIndex = isAssigned 
+        ? 1
+        : availabilities.length == 0
+          ? 2
+          : 0
+
+      return {
+        ...member,
+        caption,
+        available,
+        disable,
+        sortIndex
+      }
+    });
+
+    const available = options.filter(item => item.available);
+    const unavailable = options.filter(item => !item.available)
+      .sort((a, b) => a.sortIndex - b.sortIndex);
+
+    return available
+      .concat(unavailable.length > 0 ? [{headerLabel: t("notAvailable")}] : [])
+      .concat(unavailable)
+
+}
+
+function matchShiftAvailability(shift: Shift, availability: Availability, timestamp: QCalendarTimestamp) {
+  return availability.start.getDay() == timestamp.weekday
+    && compareTime(availability.start, shift.startTime, timestamp) <= 0
+    // ToDo: shift and availability could end on the following day:
+    && compareTime(availability.end, shift.endTime, timestamp) >= 0
+}
+
+/** negative if a < b, zero if a == b, positive if  > b */
+function compareTime(a: Date, b: Date, timestamp: QCalendarTimestamp) {
+  return mergeDate(timestamp, a).getTime() - mergeDate(timestamp, b).getTime();
+}
+
+function mergeDate(timestamp: QCalendarTimestamp, time: Date) {
+  return new Date(
+    timestamp.year, timestamp.month - 1, timestamp.day, 
+    time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds()
+  );
+}
 
 // - Actions
 
@@ -908,6 +946,7 @@ function copyRosterDialog() {
     const weekStart = currentWeekStart.value.getTime();
     newWeek.weekStart = new Date(weekStart);
     newWeek.status = "draft";
+    newWeek.notify = false;
 
     if (buttonIndex == 0) {
       newWeek.shifts.forEach(shift => 

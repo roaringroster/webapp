@@ -1,4 +1,4 @@
-import { Availability, createAvailability } from "./availability";
+import { AvailabilityList, createAvailabilityList } from "./availability";
 import { Contact, createContact } from "./contact";
 import { IdentifiableType, UUIDv4, createIdentifiable } from "./identifiable";
 import { WorkAgreements, createWorkAgreements } from "./workAgreements";
@@ -6,7 +6,7 @@ import { WorkAgreements, createWorkAgreements } from "./workAgreements";
 type UserDocuments = {
   contact: Contact,
   workAgreements: WorkAgreements,
-  availability: Availability,
+  availability: AvailabilityList,
   userSettings: UserSettings
 };
 
@@ -27,7 +27,7 @@ export type UserSettings = IdentifiableType & UserSettingsProps;
 export const createUser = ({
   contact = createContact(),
   workAgreements = createWorkAgreements(),
-  availability = createAvailability(),
+  availability = createAvailabilityList(),
   userSettings = createUserSettings()
 }: Partial<UserDocuments> = {}) => ({
   user: {

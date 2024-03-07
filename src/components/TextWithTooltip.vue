@@ -12,8 +12,8 @@
       :offset="$q.platform.is.mobile ? [0,10] : [0,4]"
       v-if="tooltip"
       :max-width="maxWidth"
-      :anchor="(top || $q.platform.is.mobile ? 'top' : 'bottom') + ' middle'"
-      :self="(top || $q.platform.is.mobile ? 'bottom' : 'top') + ' middle'"
+      :anchor="(top || $q.platform.is.mobile ? 'top middle' : 'bottom middle')"
+      :self="(top || $q.platform.is.mobile ? 'bottom middle' : 'top middle')"
       class="text-center"
       style="font-size: 0.8rem"
     >

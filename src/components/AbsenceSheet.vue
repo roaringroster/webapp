@@ -89,6 +89,7 @@
     <q-btn
       v-if="!isNew"
       :label="$t('deleteItem', [$t('absence')])"
+      icon="fas fa-trash"
       flat
       rounded
       no-caps
