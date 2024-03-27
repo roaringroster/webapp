@@ -33,6 +33,7 @@
         </q-list>
       </q-expansion-item>
       <q-expansion-item
+        v-if="isDev"
         v-model="isOrganizationExpanded"
         :label="organizations.at(organization)"
         :caption="$t('organization')"
@@ -108,6 +109,7 @@ const api = useAPI();
 
 const appname = process.env.APP_NAME || "";
 const appversion = process.env.APP_VERSION || "0";
+const isDev = process.env.DEV;
 
 const isVisible = ref(screen.gt.sm);
 const contact: Ref<Contact | null> = ref(null);
@@ -129,11 +131,13 @@ const expirationWarning = computed(() =>
       : ""
 );
 
-const organizationItems = computed(() => [{
-  label: t("organizationSettings"),
-  icon: "fas fa-gears",
-  route: "organizationSettings",
-}]);
+const organizationItems = computed(() => isDev 
+  ? [{
+    label: t("organizationSettings"),
+    icon: "fas fa-gears",
+    route: "organizationSettings",
+  }]
+  : []);
 
 const teamItems = computed(() => [{
   label: t("roster"),
@@ -143,15 +147,19 @@ const teamItems = computed(() => [{
   label: t("absences"),
   icon: "fas fa-suitcase",
   route: "absences",
-},{
-  label: t("teamMembers"),
-  icon: "fas fa-users",
-  route: "teamMembers",
-},{
-  label: t("teamSettings"),
-  icon: "fas fa-users-gear",
-  route: "teamSettings",
-}]);
+}].concat(
+  isDev
+  ? [{
+      label: t("teamMembers"),
+      icon: "fas fa-users",
+      route: "teamMembers",
+    },{
+      label: t("teamSettings"),
+      icon: "fas fa-users-gear",
+      route: "teamSettings",
+    }]
+  : [])
+);
 
 const userItems = computed(() => [{
   label: t("overview"),
@@ -212,7 +220,7 @@ const isTeamExpanded = ref(true);
 const isOrganizationExpanded = ref(hasActiveItem(organizationItems.value));
 const isAppExpanded = ref(hasActiveItem(appItems.value));
 
-const teams = computed(() => ["Carnaby Street", "Portobello Road", "Covent Garden"]);
+const teams = computed(() => ["Carnaby Street"/*, "Portobello Road", "Covent Garden"*/]);
 const team = ref(0);
 
 const organizations = computed(() => ["Caffè Cooperativo"]);

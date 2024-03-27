@@ -860,6 +860,7 @@ function availableTeamMembers(scope: QCalendarScope, index: number) {
         && !isAssigned
         // 4. member matches position if shift requires position
         // ToDo: filter position
+      // ToDo: enable current user, even if his availability is not matched, except when absent or assigned
       const disable = !available;
       const caption = isAssigned
         ? t("alreadyAssigned")

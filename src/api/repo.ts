@@ -1,8 +1,12 @@
 import { Ref, WatchSource, ref, watch } from "vue";
 import {next as A, ChangeFn, ChangeOptions} from "@automerge/automerge";
-import { Repo, isValidAutomergeUrl, DocHandle, DocHandleChangePayload } from "@automerge/automerge-repo";
+import { Repo, isValidAutomergeUrl, DocHandle, DocHandleChangePayload, PeerId } from "@automerge/automerge-repo";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
-// import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
+import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
+import { AuthProvider, ShareId } from "@localfirst/auth-provider-automerge-repo";
+import { createUser, createDevice, UserWithSecrets, DeviceWithSecrets } from "@localfirst/auth";
+import { eventPromise } from "@localfirst/shared";
+import { UAParser } from "ua-parser-js";
 import { useChangeHistoryStore } from "src/stores/changeHistoryStore";
 import { useAPI } from "src/api";
 import * as AppSettings from "src/database/AppSettings";
@@ -12,6 +16,80 @@ const repo = new Repo({
   // network: [new BrowserWebSocketClientAdapter("wss://localhost:3030")],
   storage: new IndexedDBStorageAdapter("rr_demo"),
 });
+
+function getDeviceName() {
+  const { browser, os, device } = UAParser(navigator.userAgent)
+  return `${device.model ?? os.name} (${browser.name})`
+}
+
+export function getServerAddress() {
+  const server = process.env.SYNC_SERVER;
+
+  if (!server) {
+    throw Error("FatalAppError");
+  }
+
+  return server;
+}
+
+export async function registerTeam(username: string, teamname: string) {
+  const user = createUser(username);
+  const device = createDevice(user.userId, getDeviceName());
+  const server = getServerAddress();
+
+  const { auth } = await initializeAuthRepo(user, device, server);
+  const team = await auth.createTeam(teamname);
+  
+  return { team }
+}
+
+export async function joinTeam(username: string, teamId: ShareId, inviteCode: string) {
+  const user = createUser(username);
+  const device = createDevice(user.userId, getDeviceName());
+  const server = getServerAddress();
+
+  const { auth } = await initializeAuthRepo(user, device, server);
+
+  await auth.addInvitation({
+    shareId: teamId,
+    invitationSeed: inviteCode,
+  });
+}
+
+export function login(
+  user: UserWithSecrets, 
+  device: DeviceWithSecrets,
+  server: string
+) {
+  return initializeAuthRepo(user, device, server);
+}
+
+async function initializeAuthRepo(
+  user: UserWithSecrets, 
+  device: DeviceWithSecrets,
+  server: string
+) {
+  const storage = new IndexedDBStorageAdapter(user.userName);
+  const auth = new AuthProvider({ user, device, storage, server });
+  const httpProtocol = window.location.protocol;
+  const wsProtocol = httpProtocol.replace("http", "ws");
+  const networkAdapter = new BrowserWebSocketClientAdapter(`${wsProtocol}//${server}`)
+  const authAdapter = auth.wrap(networkAdapter)
+
+  // Create new repo with websocket adapter
+  const repo = new Repo({
+    peerId: device.deviceId as PeerId,
+    network: [authAdapter],
+    storage,
+  })
+
+  await Promise.all([
+    eventPromise(auth, "ready"), // auth provider has loaded any persisted state
+    eventPromise(repo.networkSubsystem, "ready"), // repo has a working network connection
+  ])
+
+  return { auth, repo }
+}
 
 export function useDocument<T>(id: string | Promise<string>) {
   const getId = typeof id == "string"

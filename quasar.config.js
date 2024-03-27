@@ -127,6 +127,11 @@ module.exports = configure(function (ctx) {
           "vue-facing-decorator": "vue-facing-decorator/dist/index-return-cons"
         };
 
+        config.resolve.fallback = {
+          ...config.resolve.fallback,
+          "crypto": false,
+        }
+
         /* pre-compiles all locale messages to enable the runtime-only version,
         otherwise the CSP header needs to allow unsafe-eval for script which should be avoided for security reasons */
         // config.module.rules.push({

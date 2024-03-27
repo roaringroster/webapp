@@ -7,6 +7,7 @@ Key | Value
 ---|---
 CSP_URLS | *URLs that need to be exempt from Content-Security-Policy, e.g. to check availability of app updates: `https://*.roaringroster.app https://itunes.apple.com/lookup`* 
 VAULTKEY | *string with 32 bytes secret to encrypt local vault*
+SYNC_SERVER | *hostname of the default Websocket data sync server*
 BETA_EXPIRATION | *expiration date in the format `YYYY-MM-DD HH:mm:ss`*
 APP_ID | *app identifier in reverse domain name notation*
 UPDATE_URL | *URL that points to a directory that contains files with update information*
