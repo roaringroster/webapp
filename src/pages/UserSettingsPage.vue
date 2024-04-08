@@ -29,7 +29,6 @@ import { useI18n } from "vue-i18n";
 import { locale, i18n } from "src/boot/i18n";
 import { selectBehavior } from "src/helper/utils";
 import { alwaysString } from "src/helper/input";
-import { getServerAddress } from "src/api/repo";
 
 const { t } = useI18n();
 
@@ -38,6 +37,6 @@ const localeOptions = computed(() => i18n.availableLocales.map(value => ({
   value
 })));
 
-const serverAddress = ref(getServerAddress());
+const serverAddress = ref("");
 
 </script>

@@ -4,12 +4,15 @@ import { Repo, isValidAutomergeUrl, DocHandle, DocHandleChangePayload, PeerId } 
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
 import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket";
 import { AuthProvider, ShareId } from "@localfirst/auth-provider-automerge-repo";
-import { createUser, createDevice, UserWithSecrets, DeviceWithSecrets } from "@localfirst/auth";
+import { UserWithSecrets, DeviceWithSecrets } from "@localfirst/auth";
 import { eventPromise } from "@localfirst/shared";
-import { UAParser } from "ua-parser-js";
 import { useChangeHistoryStore } from "src/stores/changeHistoryStore";
+import { LocalAccount } from "src/api/local2";
+
 import { useAPI } from "src/api";
 import * as AppSettings from "src/database/AppSettings";
+
+const dbPrefix = "account.";
 
 const repo = new Repo({
   network: [],
@@ -17,38 +20,15 @@ const repo = new Repo({
   storage: new IndexedDBStorageAdapter("rr_demo"),
 });
 
-function getDeviceName() {
-  const { browser, os, device } = UAParser(navigator.userAgent)
-  return `${device.model ?? os.name} (${browser.name})`
-}
-
-export function getServerAddress() {
-  const server = process.env.SYNC_SERVER;
-
-  if (!server) {
-    throw Error("FatalAppError");
-  }
-
-  return server;
-}
-
-export async function registerTeam(username: string, teamname: string) {
-  const user = createUser(username);
-  const device = createDevice(user.userId, getDeviceName());
-  const server = getServerAddress();
-
-  const { auth } = await initializeAuthRepo(user, device, server);
+export async function registerTeam(account: LocalAccount, teamname: string) {
+  const { auth, repo } = await initializeAuthRepo(account);
   const team = await auth.createTeam(teamname);
   
-  return { team }
+  return { team, auth, repo }
 }
 
-export async function joinTeam(username: string, teamId: ShareId, inviteCode: string) {
-  const user = createUser(username);
-  const device = createDevice(user.userId, getDeviceName());
-  const server = getServerAddress();
-
-  const { auth } = await initializeAuthRepo(user, device, server);
+export async function joinTeam(account: LocalAccount, teamId: ShareId, inviteCode: string) {
+  const { auth } = await initializeAuthRepo(account);
 
   await auth.addInvitation({
     shareId: teamId,
@@ -59,17 +39,17 @@ export async function joinTeam(username: string, teamId: ShareId, inviteCode: st
 export function login(
   user: UserWithSecrets, 
   device: DeviceWithSecrets,
-  server: string
+  server: string,
+  account: LocalAccount
 ) {
-  return initializeAuthRepo(user, device, server);
+  return initializeAuthRepo(account);
 }
 
-async function initializeAuthRepo(
-  user: UserWithSecrets, 
-  device: DeviceWithSecrets,
-  server: string
-) {
-  const storage = new IndexedDBStorageAdapter(user.userName);
+async function initializeAuthRepo(account: LocalAccount) {
+  const {user, device, settings} = account;
+  const server = settings.websocketServer;
+
+  const storage = new IndexedDBStorageAdapter(dbPrefix + user.userName);
   const auth = new AuthProvider({ user, device, storage, server });
   const httpProtocol = window.location.protocol;
   const wsProtocol = httpProtocol.replace("http", "ws");

@@ -834,6 +834,21 @@ function onClickResource({ scope, event }: {scope: QCalendarScope, event: Event}
   }
 }
 
+type AvailableTeamMembers = ({
+    caption: string;
+    available: boolean;
+    disable: boolean;
+    sortIndex: number;
+    id: string;
+    schema: number;
+    availabilities: Availability[];
+    label: string;
+    value: string;
+    positions: string[];
+} | {
+  headerLabel: string
+})[]
+
 function availableTeamMembers(scope: QCalendarScope, index: number) {
   const timestamp = scope.timestamp!;
   const weekday = timestamp.weekday;
@@ -883,7 +898,7 @@ function availableTeamMembers(scope: QCalendarScope, index: number) {
       }
     });
 
-    const available = options.filter(item => item.available);
+    const available: AvailableTeamMembers = options.filter(item => item.available);
     const unavailable = options.filter(item => !item.available)
       .sort((a, b) => a.sortIndex - b.sortIndex);
 
