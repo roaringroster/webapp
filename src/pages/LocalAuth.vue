@@ -20,25 +20,11 @@
   </div>
 </template>
 
-<script lang="ts">
-import Auth from "src/components/Auth.vue";
+<script setup lang="ts">
+import { onMounted, onUnmounted } from "vue";
+import Auth from "src/components/AuthView.vue";
 import LanguageMenu from "src/components/LanguageMenu.vue";
-import { defineComponent } from "vue";
 
-export default defineComponent({
-  name: "LoginPage",
-
-  components: {
-    Auth,
-    LanguageMenu
-  },
-
-  mounted() {
-    document.body.classList.add("bg-primary-gradient");
-  },
-
-  unmounted() {
-    document.body.classList.remove("bg-primary-gradient");
-  }
-});
+onMounted(() =>  document.body.classList.add("bg-primary-gradient"));
+onUnmounted(() =>  document.body.classList.remove("bg-primary-gradient"));
 </script>
