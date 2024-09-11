@@ -150,7 +150,6 @@ import { Vue, Component, Prop, Ref, Model } from "vue-facing-decorator";
 import { date, QInput, QMenu, QPopupProxy } from "quasar";
 
 // const emptyDate = new Date(0, 0, 1, 0, 0, 0, 0).getTime();
-const { formatDate, extractDate, isBetweenDates } = date;
 
 interface DateSelectionOption {
   label: string;
@@ -182,15 +181,15 @@ export default class DateTimeInput extends Vue {
   showOptions = false;
 
   get dateString(): string {
-    return formatDate(this.value || undefined, this.format);
+    return date.formatDate(this.value || undefined, this.format);
   }
   set dateString(value: string) {
-    const result = extractDate(value, this.format);
+    const result = date.extractDate(value, this.format);
 
     if (!!value && !value.includes("_") && !isNaN(result.getTime()) /* && result.getTime() != emptyDate */) { // comparing with empty date means that 1900-01-01 or 00:00 or both combined cannot be entered – but why was the check added?
       if (
         !this.min ||
-        isBetweenDates(result, this.min, result, {
+        date.isBetweenDates(result, this.min, result, {
           inclusiveTo: true,
           inclusiveFrom: true,
           onlyDate: true
@@ -239,13 +238,13 @@ export default class DateTimeInput extends Vue {
       .map((option: any) => {
         return {
           label: option.label,
-          value: () => formatDate(option.value(), this.format)
+          value: () => date.formatDate(option.value(), this.format)
         };
       });
   }
 
   dateOptions(value: string) {
-    return !this.min || value >= formatDate(this.min, "YYYY/MM/DD");
+    return !this.min || value >= date.formatDate(this.min, "YYYY/MM/DD");
   }
 
   onInputDate(value: string) {
