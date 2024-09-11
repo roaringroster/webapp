@@ -4,5 +4,5 @@ const { readEnv, generateIcons, exitOnError } = require("./utils/utils");
 
 exitOnError(() => {
   const env = readEnv();
-  generateIcons(env.QENV);
+  generateIcons(env.QENV, false);
 });

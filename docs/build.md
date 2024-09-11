@@ -41,3 +41,11 @@ Increment the app version, build the app for all platforms and distribute it to 
 ```bash
 npm run build app publish=beta version=patch
 ```
+
+## Testing
+
+To build an electron production build with enabled DevTools and process.env.DEBUGGING evaluating to true, but not in dev mode:
+
+```bash
+QENV=production quasar build --debug -m electron
+```

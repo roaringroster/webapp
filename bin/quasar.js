@@ -8,6 +8,7 @@ const {
   readEnv, 
   generateIcons, 
   changeCordovaAppId, 
+  changeCordovaCustomUrlScheme, 
   writeTestflightUpdateInfoFile, 
   revertLater, 
   revertFinally,
@@ -133,10 +134,10 @@ exitOnError(() => {
     generateIcons("development");
   }
 
-  // == cordova only: adjust app id if needed ==
+  // == cordova only: adjust app id and custom url scheme if needed ==
 
   if (["ios", "android", "cordova", "app"].includes(product)) {
-    console.log(`Using app id ${env.APP_ID} for cordova`);
+    console.log(`Using app id ${env.APP_ID} and custom url scheme ${env.URL_SCHEME} for cordova`);
     changeCordovaAppId(env.APP_ID);
 
     if (!!productionAppId) {
@@ -145,6 +146,18 @@ exitOnError(() => {
         () => changeCordovaAppId(productionAppId), 
         revertActionList
       );
+    }
+
+    if (!!env.URL_SCHEME) {
+      const previousScheme = changeCordovaCustomUrlScheme(env.URL_SCHEME);
+
+      if (!!previousScheme) {
+        revertLater(
+          "cordova custom url scheme", 
+          () => changeCordovaCustomUrlScheme(previousScheme), 
+          revertActionList
+        );
+      }
     }
   }
 

@@ -23,7 +23,7 @@ function replaceFileContent(path, pattern, replaceValue) {
 }
 
 /**
- * Changes the attribute `id` of the `widget` root element in `src-cordova/config.xml`.
+ * Changes the app id for the cordova app build.
  * Throws error if parameter appId is empty or undefined.
  * @param {string} appId the new app id
  * @returns the previous app id value
@@ -59,6 +59,31 @@ function changeCordovaVersion(version) {
   }
 
   return replaceFileContent("src-cordova/config.xml", /(<widget .*version=\")([0-9,.]*)(\")/, version);
+}
+
+/**
+ * Changes the custom url scheme for the cordova app build.
+ * Throws error if parameter scheme is empty or undefined.
+ * @param {string} scheme the new custom url scheme
+ * @returns the previous custom url scheme in use
+ */
+function changeCordovaCustomUrlScheme(scheme) {
+  if (!scheme) {
+    throw new Error("missing custom url scheme");
+  }
+
+  const previousScheme = replaceFileContent("src-cordova/package.json", /(\"URL_SCHEME\": \")(.*)(\")/, scheme);
+
+  if (scheme != previousScheme) {
+    const previousSchemeRegExp = previousScheme.replace(/\./g, "\\\.");
+    const { readFileSync } = require("fs");
+    const cordovaConfig = readFileSync("src-cordova/config.xml", "utf8");
+    const appName = /(<name>)(.*)(<\/name>)/.exec(cordovaConfig)[2];
+    replaceFileContent("src-cordova/platforms/android/app/src/main/AndroidManifest.xml", new RegExp("(<data android:scheme=\")(" + previousSchemeRegExp + ")(\")", "g"), scheme);
+    replaceFileContent(`src-cordova/platforms/ios/${appName}/${appName}-Info.plist`, new RegExp("(<string>)(" + previousSchemeRegExp + ")(</string>)", "g"), scheme);
+  }
+
+  return previousScheme;
 }
 
 /**
@@ -152,9 +177,23 @@ function exitOnError(method, onError) {
 /**
  * Generates different app icons depending on environment argument
  * @param {string} environment value is either "development" or "production"
+ * @param {boolean} useCache defaults to true, which means that icons are only
+ * generated if the environment is different from the last call to this function;
+ * you need to pass false to force a re-generation of icons
  */
-function generateIcons(environment) {
-  runCommand(`icongenie generate -p icongenie/${environment}`);
+function generateIcons(environment, useCache = true) {
+  const { readFileSync, writeFileSync } = require("fs");
+  const filePath = "icongenie/lastrun.txt";
+  let lastEnvironment = "";
+
+  try {
+    lastEnvironment = readFileSync(filePath);
+  } catch { }
+
+  if (!useCache || environment != lastEnvironment) {
+    runCommand(`icongenie generate -p icongenie/${environment}`);
+    writeFileSync(filePath, environment);
+  }
 }
 
 /**
@@ -265,8 +304,12 @@ function revertLater(description, action, revertActionList) {
  */
 function revertFinally(revertActionList) {
     revertActionList.forEach(({action, description}) => {
-      action();
-      console.log("Reverted:", description);
+      try {
+        action();
+        console.log("Reverted:", description);
+      } catch (error) {
+        console.error(error);
+      }
     });
 }
 
@@ -274,6 +317,7 @@ module.exports = {
   replaceFileContent, 
   changeCordovaAppId, 
   changeCordovaVersion, 
+  changeCordovaCustomUrlScheme,
   changeProductName,
   getProductName,
   readEnv,
