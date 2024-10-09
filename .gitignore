@@ -11,9 +11,9 @@ node_modules
 /src-cordova/platforms
 /src-cordova/plugins
 /src-cordova/www
-/src-cordova/res/android
+/src-cordova/res/android/*.png
 /src-cordova/res/ios
-/src-cordova/res/screen
+/src-cordova/res/screen/*/*.png
 /src-cordova/build.json
 *.keystore
 

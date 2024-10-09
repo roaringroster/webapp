@@ -14,7 +14,8 @@ const {
   revertFinally,
   quasarCommands,
   changeProductName,
-  getProductName
+  getProductName,
+  changeCordovaAppIcons
 } = require("./utils/utils");
 
 const revertActionList = [];
@@ -134,7 +135,7 @@ exitOnError(() => {
     generateIcons("development");
   }
 
-  // == cordova only: adjust app id and custom url scheme if needed ==
+  // == cordova only: adjust app id and custom url scheme and android app icons if needed ==
 
   if (["ios", "android", "cordova", "app"].includes(product)) {
     console.log(`Using app id ${env.APP_ID} and custom url scheme ${env.URL_SCHEME} for cordova`);
@@ -159,6 +160,13 @@ exitOnError(() => {
         );
       }
     }
+
+    changeCordovaAppIcons(mode != "build" || env.QENV == "development");
+    revertLater(
+      "cordova android adaptive app icon paths", 
+      () => changeCordovaAppIcons(), 
+      revertActionList
+    );
   }
 
   // == electron and development.env only: adjust product name to ==
@@ -207,7 +215,7 @@ exitOnError(() => {
 
   // == set version and run build commands before finally reverting temporary changes ==
 
-  if (version) {
+  if (version && version != "same") {
     runCommand(`VERSION=${version} npm run set:version`);
   }
 

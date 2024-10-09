@@ -87,6 +87,20 @@ function changeCordovaCustomUrlScheme(scheme) {
 }
 
 /**
+ * Changes the paths to adaptive app icon files of the `icon` elements in `src-cordova/config.xml`.
+ * @param {boolean} isDevelopment true, if dev icons shall be used, otherwise false
+ */
+function changeCordovaAppIcons(isDevelopment) {
+  const oldValue = isDevelopment
+    ? "app"
+    : "dev";
+  const newValue = isDevelopment
+    ? "dev"
+    : "app";
+  replaceFileContent("src-cordova/config.xml", new RegExp(`(res\/android\/)(${oldValue})(_icon)`, "g"), newValue);
+}
+
+/**
  * Changes the property `productName` in `package.json`. 
  * Electron uses this property as path component for the app data directory.
  * As we want to use seperate app data folders for different type of electron builds,
@@ -318,6 +332,7 @@ module.exports = {
   changeCordovaAppId, 
   changeCordovaVersion, 
   changeCordovaCustomUrlScheme,
+  changeCordovaAppIcons,
   changeProductName,
   getProductName,
   readEnv,
