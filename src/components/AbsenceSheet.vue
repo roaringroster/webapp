@@ -11,7 +11,7 @@
     :maxWidth="600"
   >
     <q-select
-      v-model="absence.absenteeId"
+      v-model="absenteeId"
       :label="$t('teamMember')"
       :options="teamMembers"
       map-options
@@ -108,7 +108,7 @@ import { tv } from "src/boot/i18n";
 import { useDialogPluginComponent } from "quasar";
 import { selectBehavior } from "src/helper/utils";
 import { fromUTC, toUTC } from "src/helper/date";
-import { equals } from "src/models/identifiable";
+import { equals } from "src/models/base";
 import { Absence, createAbsence } from "src/models/absence";
 import { createOrganization } from "src/models/organization";
 import EditingSheet from "src/components/EditingSheet.vue";
@@ -121,10 +121,15 @@ const props = defineProps({
   modelValue: {
     type: Object as PropType<Absence>
   },
+  userId: {
+    type: String,
+    required: true,
+  },
   teamMembers: {
     type: Array as PropType<{label: string, value: string}[]>,
     default: () => []
-  }
+  },
+  isNew: Boolean,
 });
 
 const organization = ref(createOrganization());
@@ -136,10 +141,10 @@ const reasonOptions = computed(() =>
 const absence: Ref<Absence> = ref(
   structuredClone(props.modelValue)
     || createAbsence({
-      absenteeId: props.teamMembers.at(-1)?.value,
       reason: reasonOptions.value.at(0)?.value,
     })
 );
+const absenteeId = ref(props.userId || props.teamMembers.at(0)?.value || "");
 
 const duration = computed(() =>
   Math.round(
@@ -194,17 +199,18 @@ const isNew = computed(() => props.modelValue == undefined);
 const title = computed(() => t(isNew.value ? "addItem" : "editItem", [t("absence")]));
 
 function hasPendingChanges() {
-  return !!props.modelValue && !equals(props.modelValue, absence.value);
+  return (!!props.modelValue && !equals(props.modelValue, absence.value))
+    || (!props.isNew && props.userId != absenteeId.value);
 }
 
 function onDone() {
   (dialogRef.value as EditingSheet | undefined)?.confirm();
-  emit("ok", absence.value);
+  emit("ok", {absence: absence.value, userId: absenteeId.value});
 }
 
 function onDelete() {
   (dialogRef.value as EditingSheet | undefined)?.confirm();
-  emit("ok", undefined);
+  emit("ok", {absence: undefined, userId: absenteeId.value});
 }
 
 const emit = defineEmits([

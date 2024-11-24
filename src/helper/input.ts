@@ -37,3 +37,5 @@ export const alwaysInt = (value: string | number | null, fallback: number) =>
 
 export const alwaysString = (value: string | number | null) =>
   value?.toString() || "";
+
+export const debounce = 1000;

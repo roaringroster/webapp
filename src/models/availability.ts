@@ -1,4 +1,4 @@
-import { IdentifiableType, createIdentifiable } from "./identifiable";
+import { BaseType, createBase } from "./base";
 
 export type Availability = {
   start: Date;
@@ -10,12 +10,11 @@ type AvailabilityProps = {
   availabilities: Availability[];
 }
 
-
-export type AvailabilityList = IdentifiableType & AvailabilityProps;
+export type AvailabilityList = BaseType & AvailabilityProps;
 
 export const createAvailabilityList = ({
   availabilities = [],
 }: Partial<AvailabilityProps> = {}): AvailabilityList => ({
-  ...createIdentifiable(),
+  ...createBase(),
   availabilities,
 });

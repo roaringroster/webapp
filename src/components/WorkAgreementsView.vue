@@ -124,7 +124,7 @@
 import { Ref, computed, ref, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDocument } from "src/api/repo";
-import { alwaysString, floatOrNull, positive } from "src/helper/input";
+import { debounce, alwaysString, floatOrNull, positive } from "src/helper/input";
 import { didExpire } from "src/helper/expiration";
 import { WorkAgreements } from "src/models/workAgreements";
 import EditToggleButton from "src/components/EditToggleButton.vue";
@@ -157,7 +157,6 @@ const isEditing = ref(false);
 const isDisabled = computed(() => didExpire());
 const compactLayout = ref(false);
 const el: Ref<HTMLElement | null> = ref(null);
-const debounce = 2000;
 
 function onResize() {
   const width = el.value?.offsetWidth || 0;

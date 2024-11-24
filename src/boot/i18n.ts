@@ -10,7 +10,7 @@ export type MessageLanguages = keyof typeof messages;
 export type MessageSchema = typeof messages["en-US"];
 
 // See https://vue-i18n.intlify.dev/guide/advanced/typescript.html#global-resource-schema-type-definition
-/* eslint-disable @typescript-eslint/no-empty-interface */
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 declare module "vue-i18n" {
   // define the locale messages schema
   export interface DefineLocaleMessage extends MessageSchema {}
@@ -21,7 +21,7 @@ declare module "vue-i18n" {
   // define the number format schema
   export interface DefineNumberFormat {}
 }
-/* eslint-enable @typescript-eslint/no-empty-interface */
+/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export async function loadLangPack(locale: string) {
     try {
@@ -103,6 +103,11 @@ const defaultDateTimeFormats: Record<string, Intl.DateTimeFormatOptions> = {
     weekday: "long"
   },
   "DayMonthNumeric": { // 11.4.
+    day: "numeric",
+    month: "numeric",
+  },
+  "DayMonthNumericWeekday": { // Fr. 11.4.
+    weekday: "short",
     day: "numeric",
     month: "numeric",
   },
@@ -194,7 +199,6 @@ export const getDefaultLocale = () => matchLocale(
 const i18n = createI18n<{ message: MessageSchema }, MessageLanguages>({
   legacy: false,
   globalInjection: true,
-  allowComposition: true,
   warnHtmlInMessage: "error",
   locale: getDefaultLocale(),
   fallbackLocale,

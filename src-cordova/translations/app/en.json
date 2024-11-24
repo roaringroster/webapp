@@ -1,0 +1,8 @@
+{
+  "config_ios": {
+    "NSCameraUsageDescription": "This app needs access to the camera for scanning QR codes and documents.",
+    "NSPhotoLibraryAddUsageDescription": "This app requires permission to add images to the photo library for sharing at your request.",
+    "NSPhotoLibraryUsageDescription": "This app requires permission to select or add images from the photo library at your request."
+  },
+  "config_android": {}
+}

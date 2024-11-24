@@ -1,5 +1,5 @@
 <template>
-  <div :class="tooltip ? 'cursor-help' : ''">
+  <div :class="!!tooltip ? 'cursor-help' : ''">
     <simplified-markdown :text="text" />
     <q-icon
       v-if="tooltip"
@@ -11,6 +11,7 @@
     <q-tooltip
       :offset="$q.platform.is.mobile ? [0,10] : [0,4]"
       v-if="tooltip"
+      :target="target"
       :max-width="maxWidth"
       :anchor="(top || $q.platform.is.mobile ? 'top middle' : 'bottom middle')"
       :self="(top || $q.platform.is.mobile ? 'bottom middle' : 'top middle')"
@@ -39,6 +40,7 @@ export default class TextWithTooltip extends Vue {
   @Prop({ type: String, default: ""}) readonly width!: string;
   @Prop({ type: String, default: ""}) readonly iconClass!: string;
   @Prop({ type: Boolean }) readonly top!: boolean;
+  @Prop({ type: [Boolean, String, Object], default: true }) readonly target!: boolean | string | Element;
 
   parentWidth = "100%";
 

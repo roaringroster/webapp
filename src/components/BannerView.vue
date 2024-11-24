@@ -5,13 +5,25 @@
       leave-active-class="animated fadeOutUp"
     >
       <q-banner
-        v-if="isOffline && false"
+        v-if="isLoggedIn && (isOffline || !isConnected)"
+        inline-actions
         dense
-        class="bg-negative text-white text-center q-py-xs"
+        class="bg-grey-6 text-white text-center non-selectable offline-banner"
         style="height: 32px"
       >
-        <div class="text-caption text-weight-medium ellipsis">
-          {{ $t("offlineBanner") }}
+        <div class="text-caption text-weight-medium ellipsis row justify-center items-center">
+          <div>{{ isOffline ? $t("offlineBanner") : $t("noServerConnection") }}</div>
+          <q-btn
+            v-if="!isConnected"
+            icon="fas fa-rotate-right"
+            flat
+            dense
+            no-caps
+            round
+            size="sm"
+            class="q-ml-xs"
+            @click="() => reconnect()"
+          />
         </div>
       </q-banner>
     </transition>
@@ -80,6 +92,8 @@
 <style lang="sass">
 .text-shadow
   text-shadow: #0a0 0px 0px 15px
+.offline-banner
+  padding: 0 !important
 .default-banner
   display: block
   .q-banner__content, .q-banner__actions
@@ -94,9 +108,12 @@ import { EventBus } from "quasar";
 import { fileSize } from "src/boot/i18n";
 import { downloadAndInstall } from "src/boot/updater";
 import { UpdateAvailableInfo, UpdateInfo } from "src/boot/eventBus";
+import { useAccount } from "src/api/local2";
+import { isConnected, reconnect } from "src/api/repo";
 
 const bus = inject<EventBus>("bus");
 const { t } = useI18n();
+const { isLoggedIn } = useAccount();
 
 type Banner = {
   message: () => string;
@@ -139,50 +156,50 @@ function updateOfflineStatus() {
 }
 
 function updateAvailable(info: UpdateAvailableInfo) {
-      updateBanner.value = {
-        message: () => t("updateAvailable", {
-          ...info,
-          downloadSize: info.downloadSize
-            ? t("fileSizeUpdate", {fileSize: fileSize(info.downloadSize) })
-            : undefined
-        }),
-        classes: "banner-warning text-black",
-        actions: [{
-          label: () => t("remindLaterButton"),
-          action: () => updateBanner.value = undefined
-        }, {
-          label: () => t("Yes"),
-          action: () => {
-            if (info.storeUrl) {
-              const open = window.cordova?.InAppBrowser?.open ?? window.open;
-              open(info.storeUrl, "_system");
-            } else if (info.downloadUrls && info.downloadUrls.length > 0) {
-              void downloadAndInstall(info.downloadUrls);
+  updateBanner.value = {
+    message: () => t("updateAvailable", {
+      ...info,
+      downloadSize: info.downloadSize
+        ? t("fileSizeUpdate", {fileSize: fileSize(info.downloadSize) })
+        : undefined
+    }),
+    classes: "banner-warning text-black",
+    actions: [{
+      label: () => t("remindLaterButton"),
+      action: () => updateBanner.value = undefined
+    }, {
+      label: () => t("Yes"),
+      action: () => {
+        if (info.storeUrl) {
+          const open = window.cordova?.InAppBrowser?.open ?? window.open;
+          open(info.storeUrl, "_system");
+        } else if (info.downloadUrls && info.downloadUrls.length > 0) {
+          void downloadAndInstall(info.downloadUrls);
 
-              /* Maybe add direct links to app stores:
-                https://f-droid.org/de/packages/${process.env.APP_ID}/
-                https://play.google.com/store/apps/details?id=${process.env.APP_ID}
-                But it makes even more sense to check if the new version has passed review and is available in store:
-                https://f-droid.org/api/v1/packages/${process.env.APP_ID}
-                (google play store has no API)
-              */
-            }
+          /* Maybe add direct links to app stores:
+            https://f-droid.org/de/packages/${process.env.APP_ID}/
+            https://play.google.com/store/apps/details?id=${process.env.APP_ID}
+            But it makes even more sense to check if the new version has passed review and is available in store:
+            https://f-droid.org/api/v1/packages/${process.env.APP_ID}
+            (google play store has no API)
+          */
+        }
 
-            updateBanner.value = undefined;
-          }
-        }],
+        updateBanner.value = undefined;
       }
-    }
+    }],
+  }
+}
 
 function updateUnavailable(info: UpdateInfo) {
-    updateBanner.value = {
-      message: () => t("updateUnavailable", {version: info.installedVersion}),
-      actions: [{
-        label: () => t("OK"),
-        action: () => updateBanner.value = undefined
-      }],
-    }
+  updateBanner.value = {
+    message: () => t("updateUnavailable", {version: info.installedVersion}),
+    actions: [{
+      label: () => t("OK"),
+      action: () => updateBanner.value = undefined
+    }],
   }
+}
 
 onMounted(() => {
   window.addEventListener("online", updateOfflineStatus);

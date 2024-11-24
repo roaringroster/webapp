@@ -8,12 +8,13 @@
       <div v-if="absences.length" class="column q-gutter-sm">
         <div v-if="illnessAbsences.length">
           <div>
-            {{ $t("illnessAbsences", illnessAbsences.length) }} 🤒🤕
+            🤒 {{ $t("illnessAbsences", illnessAbsences.length) }}
           </div>
           <ol class="no-bullet">
             <li
               v-for="(absence, index) in illnessAbsences"
               :key="index"
+              class="indent"
             >{{ absence }}</li>
           </ol>
         </div>
@@ -25,6 +26,7 @@
             <li
               v-for="(absence, index) in otherAbsences"
               :key="index"
+              class="indent"
             >{{ absence }}</li>
           </ol>
         </div>

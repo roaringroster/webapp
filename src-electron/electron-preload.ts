@@ -32,7 +32,8 @@ import { contextBridge } from "electron"
 import { ipcRenderer } from "electron"
 
 const secureEventTypes = [
-    "did-change-locale"
+    "did-change-locale",
+    "handle-open-url",
 ] as const
 export type SecureEventType = (typeof secureEventTypes)[number]
 
@@ -45,6 +46,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     addListener: (event: SecureEventType, handler: (...args: unknown[]) => void) => {
         if (secureEventTypes.includes(event)) {
             ipcRenderer.on(event, (_, ...args) => handler(...args))
+            ipcRenderer.send("did-add-listener", event)
         }
     },
 
@@ -56,16 +58,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
 
     checkForUpdates: (isInitiatedByUser = true) => 
         ipcRenderer.send("check-for-updates", isInitiatedByUser),
-
-    vault: {
-        get: (service: string, account: string): Promise<string | undefined> => {
-            return ipcRenderer.invoke("get-password", service, account)
-        },
-        set: async (service: string, account: string, password: string): Promise<void> => {
-            return ipcRenderer.invoke("set-password", service, account, password);
-        },
-        remove: async (service: string, account: string): Promise<boolean> => {
-            return ipcRenderer.invoke("remove-password", service, account);
-        }
-    }
+    
 })

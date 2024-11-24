@@ -1,5 +1,5 @@
 import { CustomField, LabeledValue } from "./generic";
-import { IdentifiableType, createIdentifiable } from "./identifiable";
+import { BaseType, createBase } from "./base";
 
 type ContactProps = {
   firstName: string;
@@ -20,7 +20,7 @@ type ContactProps = {
   customFields: CustomField<any>[];
 }
 
-export type Contact = IdentifiableType & ContactProps;
+export type Contact = BaseType & ContactProps;
 
 export type ContactKeys = keyof ContactProps;
 
@@ -50,7 +50,7 @@ export const createContact = ({
   notes = "",
   customFields = [],
 }: Partial<ContactProps> = {}): Contact => ({
-  ...createIdentifiable(),
+  ...createBase(),
   firstName,
   lastName,
   birthday,
@@ -73,11 +73,15 @@ export function getUsername(value?: Contact) {
   return [value?.firstName, value?.lastName].filter(Boolean).join(" ");
 }
 
-export function getName(value: Contact) {
-  if (value.isOrganization) {
-    return value.organization.trim();
+export function getName(value: Contact | null, fallback = "") {
+  if (value) {
+    if (value.isOrganization) {
+      return value.organization.trim() || fallback;
+    } else {
+      return [value.degree, value.firstName, value.lastName].filter(Boolean).join(" ").trim() || fallback;
+    }
   } else {
-    return [value.degree, value.firstName, value.lastName].filter(Boolean).join(" ").trim();
+    return fallback;
   }
 }
 

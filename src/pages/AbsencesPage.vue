@@ -86,22 +86,25 @@
           v-for="(event, index) in getEvents(scope)"
           :key="index"
         >
-          <q-badge
+          <q-btn
             :color="colorForAbsenceReason(event.absence.reason)"
-            @click="editAbsence(event.absence)"
-            :style="event.style"
-            :class="['absence-event cursor-pointer q-pa-none'].concat(event.classes)"
+            @click="editAbsence(event.absence, event.userId)"
+            no-caps
             rounded
+            :style="event.style"
+            :class="['absence-event q-pa-none'].concat(event.classes)"
+            :id="event.id"
           >
             <text-with-tooltip
               :text="event.label"
               :tooltip="[event.label, event.absence.comment].filter(Boolean).join(' – ')"
+              :target="'#' + event.id"
               width="200px"
               :icon-class="!event.absence.comment ? 'hidden' : ''"
               top
-              class="full-width text-weight-medium ellipsis q-px-sm q-py-xs"
+              class="full-width text-weight-medium ellipsis q-px-sm cursor-pointer"
             />
-          </q-badge>
+          </q-btn>
         </template>
       </template>
     </q-calendar-scheduler>
@@ -133,8 +136,9 @@
     min-width: 148px
 .absence-event
   position: absolute
-  top: 10px
-  height: 24px
+  top: 8px
+  height: 28px
+  min-height: auto
   box-shadow: 0px 2px 5px #ccc
   &.no-left-radius
     border-bottom-left-radius: 0
@@ -149,76 +153,134 @@ import { Ref, computed, ref, toRaw, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { QPopupProxy, useQuasar } from "quasar";
 import { QCalendarScheduler } from "@quasar/quasar-ui-qcalendar";
-import { v4 } from "uuid";
 import { locale } from "src/boot/i18n";
-import { useChangeHistory, useDocument } from "src/api/repo";
-import { findOrCreate } from "src/api/repo";
+import { getOrganization, useOrganizationDocument, useDocument2 } from "src/api/repo";
+import { useAccount } from "src/api/local2";
 import { toUTC } from "src/helper/date";
-import { Absence, AbsenceList, createAbsenceList } from "src/models/absence";
+import { Contact, getName } from "src/models/contact";
+import { Absence, AbsenceList } from "src/models/absence";
 import { colorForAbsenceReason } from "src/models/organization";
 import AbsenceSheet from "src/components/AbsenceSheet.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
+import { v4 } from "uuid";
 
 const $q = useQuasar();
 const { t } = useI18n();
-
-// - Automerge
-
-type TeamMembers = {members: {label: string; value: string;}[]};
-
-const teamMembersId = findOrCreate<TeamMembers>("demo_teammembers", { members: [
-  { label: "Alice", value: v4() },
-  { label: "Bob", value: v4() },
-  { label: "Charlie", value: v4() },
-  { label: "Dave", value: v4() },
-  { label: "Eve", value: v4() },
-]});
-const teamMembers = useDocument<TeamMembers>(teamMembersId);
-const members = computed(() => teamMembers.doc.value?.members || [])
-
-const absenceListId = findOrCreate<AbsenceList>("demo_absencelist", createAbsenceList());
-const absenceList = useDocument<AbsenceList>(absenceListId);
-
-useChangeHistory(() => absenceList.doc.value, "absences");
-
-onUnmounted(() => {
-  teamMembers.cleanup();
-  absenceList.cleanup();
-});
-
-// teamMembersId.then(value => console.log(value, "teamMembersId"));
-// absenceListId.then(value => console.log(value, "absenceListId"));
+const { getAccountRef } = useAccount();
 
 // – Data
 
-const absences = computed(() => absenceList.doc.value?.absences || []);
+const account = getAccountRef();
+const currenUserId = computed(() => account.value?.user.userId)
+const team = getOrganization();
+const orgHandle = useOrganizationDocument();
+const memberHandles = computed(() => {
+  // console.log(teamHandle.doc.value?.members, team?.members());
+  return Object.entries(orgHandle.doc.value?.members || {})
+    .map(([userId, member]) => ({
+      userId,
+      user: team?.members(userId),
+      contact: useDocument2<Contact>(member.contactId),
+      absences: useDocument2<AbsenceList>(member.absencesId),
+    }))
+});
+const members = computed(() => memberHandles.value
+  .map(member => ({
+    label: getName(member.contact.doc.value, member.user?.userName || member.userId),
+    value: member.userId,
+  }))
+  // ToDo: remove dummy data
+  .concat([
+    {
+      label: "Alice Adams", 
+      value: v4(),
+    },
+    { 
+      label: "Bob Brown", 
+      value: v4(),
+    },
+    { 
+      label: "Charlie Clark", 
+      value: v4(),
+    },
+    { 
+      label: "Dave Diaz", 
+      value: v4(),
+    },
+    { 
+      label: "Eve Evans", 
+      value: v4(),
+    },
+  ])
+  .sort((a, b) => {
+    // the current user's account first, then alphabetical
+    if (a.value == currenUserId.value) {
+      return -1;
+    } else if (b.value == currenUserId.value) {
+      return 1;
+    } else {
+      return a.label.localeCompare(b.label);
+    }
+  })
+);
+
+onUnmounted(() => {
+  orgHandle.cleanup();
+  memberHandles.value.forEach(member => {
+    member.contact.cleanup();
+    member.absences.cleanup();
+  })
+})
 
 function addAbsence() {
   $q.dialog({
     component: AbsenceSheet,
-    componentProps: { teamMembers: members.value }
+    componentProps: {
+      userId: currenUserId.value || "",
+      teamMembers: members.value,
+      isNew: true
+    }
   })
-  .onOk((absence: Absence) => {
-    absenceList.changeDoc(doc => doc.absences.push(absence));
+  .onOk(({absence, userId}: {absence: Absence, userId: string}) => {
+    const member = memberHandles.value.find(member => userId == member.userId);
+
+    if (userId && member) {
+      member.absences.changeDoc(doc => doc.absences.push(absence));
+    }
   });
 }
 
-function editAbsence(absence: Absence) {
+function editAbsence(absence: Absence, userId: string) {
   $q.dialog({
     component: AbsenceSheet,
     componentProps: {
       modelValue: toRaw(absence),
-      teamMembers: members.value
+      userId,
+      teamMembers: members.value,
+      isNew: false
     }
   })
-  .onOk((newValue?: Absence) => {
-    const index = absences.value.indexOf(absence);
+  .onOk(({absence: newAbsence, userId: newUserId}: {absence?: Absence, userId: string}) => {
+    const member = memberHandles.value.find(member => userId == member.userId);
+    const index = member?.absences.doc.value?.absences.indexOf(absence) ?? -1;
 
+    // ensure that original user still exists with original absence
     if (index >= 0) {
-      if (newValue) {
-        absenceList.changeDoc(doc => doc.absences[index] = newValue);
+      // 1. absence was maybe edited, but refers still to the same user
+      if (newAbsence && userId == newUserId) {
+        member?.absences.changeDoc(doc => doc.absences[index] = newAbsence);
+      // 2. absence was either deleted or moved to a different user
       } else {
-        absenceList.changeDoc(doc => doc.absences.splice(index, 1));
+        member?.absences.changeDoc(doc => doc.absences.splice(index, 1));
+      }
+
+      // 3. absence was maybe edited and moved to a different user
+      if (newAbsence && userId != newUserId) {
+        const newMember = memberHandles.value.find(member => newUserId == member.userId);
+
+        if (newUserId && newMember) {
+          newMember.absences.changeDoc(doc => doc.absences.push(newAbsence));
+        }
       }
     }
   });
@@ -251,15 +313,18 @@ type QCalendarScope = {
 function getEvents(scope: QCalendarScope) {
   const start = new Date(scope.days.at(0)?.date + "T00:00:00.000Z").getTime();
   const end = new Date(scope.days.at(-1)?.date + "T23:59:59.999Z").getTime();
+  const userId = scope.resource.value;
 
-  return absences.value
-    .filter(absence => 
-      absence.absenteeId == scope.resource.value
-        && absence.start.getTime() <= end
-        && absence.end.getTime() >= start
+  return memberHandles.value
+    .find(member => member.userId == userId)
+    ?.absences.doc.value?.absences
+    .filter(absence =>
+      absence.start.getTime() <= end && absence.end.getTime() >= start
     )
-    .map(absence => ({
+    .map((absence, index) => ({
+      id: `absence-${userId}-${index}`,
       absence,
+      userId,
       label: t(absence.reason),
       style: {
         left: getLeft(absence, start, scope.cellWidth),

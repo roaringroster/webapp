@@ -1,7 +1,29 @@
 import { Platform } from "quasar";
 
-export function promise<T>(method: (...args: any[]) => void, ...args: any[]): Promise<T> {
-    return new Promise((resolve, reject) => method.apply(window, args.concat([resolve, reject])));
+export async function promiseForErrorHandling<T>(
+  method: (
+    reject: (reason?: any) => void,
+    cleanupIfRejectedOrUnhandledThrow: (cleanupHandler: () => void) => void
+  ) => Promise<T>
+) {
+  return new Promise<T>(async (resolve, reject) => {
+    let cleanupHandler: (() => void) | undefined;
+    const setCleanupHandler = (handler: () => void) => cleanupHandler = handler;
+
+    try {
+      const result = await method(
+        (reason?: any) => {
+          cleanupHandler?.();
+          reject(reason);
+        }, 
+        setCleanupHandler
+      );
+      resolve(result);
+    } catch (error) {
+      cleanupHandler?.();
+      reject(error);
+    }
+  });
 }
 
 export function sanitizeHTML(html: string) {
@@ -80,3 +102,14 @@ export function onLongPress(
     target.removeEventListener("pointerleave", clear)
   }
 }
+
+export function validCustomSchemes() {
+    const customScheme = process.env.URL_SCHEME;
+    const schemeComponents = customScheme?.split(".") || [];
+    return [
+        schemeComponents.slice(0, 2).join("."),
+        schemeComponents.join(".")
+    ];
+}
+
+export const InvitationCodeLength = 29;

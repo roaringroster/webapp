@@ -26,6 +26,12 @@
 		"i18n-ally.pathMatcher": "{locale}/index.json",
 		"i18n-ally.sourceLanguage": "de-DE",
 		"i18n-ally.displayLanguage": "de-DE",
-		"i18n-ally.keystyle": "nested"
+		"i18n-ally.keystyle": "nested",
+		"files.exclude": {
+			"**/*.rpyc": true,
+			"**/*.rpa": true,
+			"**/*.rpymc": true,
+			"**/cache/": true
+		}
 	}
 }

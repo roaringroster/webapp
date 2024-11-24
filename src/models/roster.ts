@@ -1,4 +1,5 @@
-import { IdentifiableType, UUIDv4, createIdentifiable } from "./identifiable";
+import { DocumentId } from "@automerge/automerge-repo";
+import { BaseType, createBase } from "./base";
 import { fromIsoTime } from "./generic";
 
 
@@ -10,7 +11,7 @@ export type WeekSchedule = {
   weekStart: Date;
   shifts: Shift[];
   status: "draft" | "approved" | "discarded";
-  notify: false;
+  notify: boolean;
 };
 
 export type Shift = {
@@ -30,20 +31,20 @@ export type Shift = {
    *      There should be at least one key present: for the week day of startTime.
    * value: List of IDs of assigned workers for that day .
    */
-  assignments: Record<number, UUIDv4[]>;
+  assignments: Record<number, DocumentId[]>;
   // alternative assignment model:
   // assignments: {
   //   weekday: number;
-  //   workerId: UUIDv4;
+  //   workerId: DocumentId;
   // }[];
 };
 
-export type Roster = IdentifiableType & RosterProps;
+export type Roster = BaseType & RosterProps;
 
 export const createRoster = ({
   weeks = [],
 }: Partial<RosterProps> = {}): Roster => ({
-  ...createIdentifiable(),
+  ...createBase(),
   weeks,
 });
 

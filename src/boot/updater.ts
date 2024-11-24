@@ -157,7 +157,7 @@ export async function downloadAndInstall(urls: string[]) {
         };
         try {
             await ApkUpdater.download(url.replace(/\.apk$/, ".zip"), options);
-        } catch (error) {
+        } catch {
             await ApkUpdater.download(url, options);
         }
         await ApkUpdater.install();

@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
-import { useAPI } from "src/api";
 import { RouteLocationRaw } from "vue-router";
+// import { useAPI } from "src/api";
+import { useAccount } from "src/api/local2";
 
 
 export const useRedirectStore = defineStore("redirect", {
@@ -14,7 +15,8 @@ export const useRedirectStore = defineStore("redirect", {
       this.redirectPath = "";
 
       return path 
-        || await useAPI().getLocalValue<string>("currentPath") 
+        // || await useAPI().getLocalValue<string>("currentPath") 
+        || useAccount().getAccountRef().value?.currentPath
         || { name: "overview" };
     },
   },

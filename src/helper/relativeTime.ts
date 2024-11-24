@@ -8,9 +8,10 @@ const units = {
   second: 1000
 } as Record<Intl.RelativeTimeFormatUnit, number>
 
-export function timeago(date: Date, locale: string, options: Intl.RelativeTimeFormatOptions = {}) {
-  const formatter = new Intl.RelativeTimeFormat(locale, Object.assign({ numeric: "auto" }, options))
-  const elapsed = date.getTime() - Date.now();
+export function timeago(date: Date | number, locale: string, options: Intl.RelativeTimeFormatOptions = {}) {
+  const formatter = new Intl.RelativeTimeFormat(locale, Object.assign({ numeric: "auto" }, options));
+  const timestamp = date instanceof Date ? date.getTime() : date;
+  const elapsed = timestamp - Date.now();
   const absoluteElapsed = Math.abs(elapsed);
 
   for (const unit in units) {

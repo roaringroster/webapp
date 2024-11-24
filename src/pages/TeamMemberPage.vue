@@ -57,8 +57,7 @@ import { RouteRecordName, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useAPI } from "src/api";
 import { didExpire } from "src/helper/expiration";
-import { createUser } from "src/models/user";
-import { Contact, getName } from "src/models/contact";
+import { Contact } from "src/models/contact";
 import SplitView from "src/components/SplitView.vue";
 import NavigationItems, { NavigationItem } from "src/components/NavigationItems.vue";
   import TeamMemberView from "src/components/TeamMemberView.vue";
@@ -80,20 +79,20 @@ const memberItems = computed(() => members.value.map(({name, memberId}) => ({
 } as NavigationItem)))
 
 function addMember() {
-  const { user, contact } = createUser();
-  const name = getName(contact);
-  const memberId = user.id;
-  members.value.push({ name, memberId, contact });
+  // const { user, contact } = createUser();
+  // const name = getName(contact);
+  // const memberId = user.id;
+  // members.value.push({ name, memberId, contact });
 }
 
 onMounted(async () => {
   const currentUser = await api.getCurrentUser();
 
   if (currentUser) {
-    const { user, contact } = currentUser;
-    const name = getName(contact);
-    const memberId = user.id;
-    members.value.push({ name, memberId, contact });
+    // const { user, contact } = currentUser;
+    // const name = getName(contact);
+    // const memberId = user.id;
+    // members.value.push({ name, memberId, contact });
   }
 
   await router.replace({

@@ -1,5 +1,5 @@
 import { CustomField } from "./generic";
-import { IdentifiableType, createIdentifiable } from "./identifiable";
+import { BaseType, createBase } from "./base";
 
 type WorkAgreementsProps = {
   employeeId: string;
@@ -63,7 +63,7 @@ type WorkAgreementsProps = {
   */
 };
 
-export type WorkAgreements = IdentifiableType & WorkAgreementsProps;
+export type WorkAgreements = BaseType & WorkAgreementsProps;
 
 
 export const createWorkAgreements = ({
@@ -79,7 +79,7 @@ export const createWorkAgreements = ({
   grossSalary = null,
   salaryNotes = "",
 }: Partial<WorkAgreementsProps> = {}): WorkAgreements => ({
-  ...createIdentifiable(),
+  ...createBase(),
   employeeId,
   jobTitle,
   jobDescription,

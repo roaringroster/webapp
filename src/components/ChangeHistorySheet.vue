@@ -108,14 +108,15 @@
 </style>
 
 <script setup lang="ts">
-import { computed, isProxy, onMounted, PropType, Ref, ref, toRaw, watch } from "vue";
+import { computed, isProxy, onMounted, onUnmounted, PropType, Ref, ref, toRaw, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useQuasar, useDialogPluginComponent, QTableProps, QTreeNode } from "quasar";
 import * as Automerge from "@automerge/automerge";
 import { fileSize, tv } from "src/boot/i18n";
-import { IdentifiableType } from "src/models/identifiable";
+import { BaseType } from "src/models/base";
 import EditingSheet from "src/components/EditingSheet.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
+import { getOrganization } from "src/api/repo";
 
 type Row = {
   hash: string;
@@ -142,11 +143,11 @@ const { t, d } = useI18n();
 
 const props = defineProps({
   document: {
-    type: Object as PropType<Automerge.Doc<IdentifiableType>>,
+    type: Object as PropType<Automerge.Doc<BaseType>>,
     required: true
   },
   title: {
-    type: String as PropType<string>,
+    type: String,
     default: "withoutDesignation"
   }
 });
@@ -223,13 +224,29 @@ const columns: Ref<QTableProps["columns"]> = computed(() => [{
 }]);
 
 
+const team = getOrganization();
+const usernameMap: Ref<Record<string, string>> = ref({});
+
+team?.on("updated", onTeamUpdated);
+onUnmounted(() => team?.off("updated", onTeamUpdated));
+
+function onTeamUpdated() {
+  usernameMap.value = {};
+  team?.members().forEach(member => 
+    usernameMap.value[member.userId] = member.userName
+  );
+}
+
+onTeamUpdated();
+
+
 function hasModifications(): boolean {
   return Object.keys(modifications.value).length > 0;
 };
 
 function getModifiedBy(message: string | null, ) {
   const by = JSON.parse(message || "{}")?.by;
-  return by || t("unknownUser") // + ` (${by?.slice(0, 6)}…)`
+  return usernameMap.value[by] || by || t("unknownUser") // + ` (${by?.slice(0, 6)}…)`
 };
 
 function getDescription(message: string | null, ) {

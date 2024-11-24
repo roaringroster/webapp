@@ -1,9 +1,9 @@
 import { EventBus } from "quasar"
 import { boot } from "quasar/wrappers"
-import { Contact } from "src/models/contact";
-import { User, UserSettings } from "src/models/user";
+// import { Contact } from "src/models/contact";
+// import { User, UserSettings } from "src/models/user";
 
-declare module "@vue/runtime-core" {
+declare module "vue" {
     interface ComponentCustomProperties {
         $bus: EventBus;
     }
@@ -23,7 +23,8 @@ const bus = new EventBus<{
   "did-change-locale": (locale: string) => void;
   "update-available": (updateInfo: UpdateAvailableInfo) => void;
   "update-unavailable": (updateInfo: UpdateInfo) => void;
-  "did-login": (userData: {user: User, userSettings: UserSettings, contact: Contact}) => void;
+  // "did-login": (userData: {user: User, userSettings: UserSettings, contact: Contact}) => void;
+  "did-login": () => void;
   "did-logout": () => void;
   "did-debug": (value: any) => void;
   "toggle-drawer": () => void;

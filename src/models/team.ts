@@ -1,25 +1,34 @@
-import { IdentifiableType, createIdentifiable } from "./identifiable";
+import { BaseType, createBase } from "./base";
+import { User } from "./user";
+
+type AuthUserId = string;
 
 type TeamProps = {
   name: string;
-  selectionOptions: {
-    shiftRoles: {
-      name: string;
-      description: string;
-      color: string;
-    }[];
-  };
+  members: Record<AuthUserId, User>;
+  admins: AuthUserId[];
+  // selectionOptions: {
+  //   shiftRoles: {
+  //     name: string;
+  //     description: string;
+  //     color: string;
+  //   }[];
+  // };
 }
 
-export type Team = IdentifiableType & TeamProps;
+export type Team = BaseType & TeamProps;
 
 export const createTeam = ({
   name = "",
-  selectionOptions = {
-    shiftRoles: [],
-  }
+  members = {},
+  admins = [],
+  // selectionOptions = {
+  //   shiftRoles: [],
+  // }
 }: Partial<TeamProps> = {}): Team => ({
-  ...createIdentifiable(),
+  ...createBase(),
   name,
-  selectionOptions
+  members,
+  admins,
+  // selectionOptions
 });

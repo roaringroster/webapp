@@ -7,8 +7,8 @@ import { toRaw } from "vue";
 import { EncryptedDatabase } from "src/database/EncryptedDatabase";
 import Vault from "src/database/Vault";
 import { didExpire } from "src/helper/expiration";
-import { User, UserSettings, createUser } from "src/models/user";
-import { IdentifiableType, UUIDv4 } from "src/models/identifiable";
+import { User } from "src/models/user";
+// import { IdentifiableType } from "src/models/identifiable";
 import { Contact } from "src/models/contact";
 import { bus } from "src/boot/eventBus";
 import { WorkAgreements } from "src/models/workAgreements";
@@ -18,7 +18,7 @@ export default class LocalAccountApi {
     private db?: EncryptedDatabase;
     private currentUser?: {
         user: Automerge.Doc<User>;
-        userSettings: Automerge.Doc<UserSettings>;
+        // userSettings: Automerge.Doc<UserSettings>;
         contact: Automerge.Doc<Contact>;
         workAgreements: Automerge.Doc<WorkAgreements>;
     };
@@ -141,7 +141,7 @@ export default class LocalAccountApi {
     }
 
     get userId() {
-        return this.currentUser?.user.id;
+        return Automerge.getObjectId(this.currentUser?.user);
     }
 
     get userEmail() {
@@ -185,7 +185,7 @@ export default class LocalAccountApi {
         }
 
         this.currentUser = userData;
-        bus.emit("did-login", userData);
+        bus.emit("did-login");
     }
 
     async logout() {
@@ -197,7 +197,7 @@ export default class LocalAccountApi {
         }
     }
 
-    async registerUser(username: string, password: string, locale = "") {
+    async registerUser(username: string, password: string /*, locale = ""*/) {
         if (!username) {
             throw new Error("UsernameMissing")
         }
@@ -224,21 +224,21 @@ export default class LocalAccountApi {
         const name = this.dbPrefix + username;
         const db = new EncryptedDatabase(name, key);
 
-        const items = createUser();
-        items.userSettings.locale = locale;
+        // const items = createUser();
+        // items.userSettings.locale = locale;
 
         await db.open();
         this.db = db;
-        await Promise.all(
-            Object.values(items).map(item => this.createDocument(item, items.user.id))
-        );
-        await db.local.bulkAdd([{
-            id: "verification",
-            value: true
-        },{
-            id: "userId",
-            value: items.user.id
-        }]);
+        // await Promise.all(
+        //     Object.values(items).map(item => this.createDocument(item, items.user.id))
+        // );
+        // await db.local.bulkAdd([{
+        //     id: "verification",
+        //     value: true
+        // },{
+        //     id: "userId",
+        //     value: items.user.id
+        // }]);
         db.close();
         this.db = undefined;
     }
@@ -281,15 +281,15 @@ export default class LocalAccountApi {
             return;
         }
 
-        const userSettings = await this.getDocumentById<UserSettings>(user.userSettingsId);
+        // const userSettings = await this.getDocumentById<UserSettings>(user.userSettingsId);
         const contact = await this.getDocumentById<Contact>(user.contactId);
         const workAgreements = await this.getDocumentById<WorkAgreements>(user.workAgreementsId);
 
-        if (!userSettings || !contact || !workAgreements) {
+        if (/*!userSettings ||*/ !contact || !workAgreements) {
             return;
         }
 
-        return { user, userSettings, contact, workAgreements };
+        return { user, /*userSettings,*/ contact, workAgreements };
     }
 
     async deleteLocalAccount(username: string) {
@@ -313,7 +313,7 @@ export default class LocalAccountApi {
 
     // === private methods for CRUD access and conversion of generic CRDT documents in database ===
 
-    async getDocumentById<T extends IdentifiableType>(id: UUIDv4) {
+    async getDocumentById<T>(id: string) {
         this.assertLoggedIn();
 
         const item = await this.db?.synced.get(id);
@@ -325,7 +325,7 @@ export default class LocalAccountApi {
         }
     }
 
-    async getDocumentsById<T extends IdentifiableType>(idList: UUIDv4[]) {
+    async getDocumentsById<T>(idList: string[]) {
         this.assertLoggedIn();
 
         const dataset = await this.db?.synced.bulkGet(idList) || [];
@@ -336,7 +336,7 @@ export default class LocalAccountApi {
         );
     }
 
-    async createDocument<T extends IdentifiableType>(value: T, userId = this.userId, overwrite = false) {
+    async createDocument<T>(value: T, userId = this.userId, overwrite = false) {
         this.assertLoggedIn();
         this.assertCanWriteData();
 
@@ -344,8 +344,9 @@ export default class LocalAccountApi {
         const time = Math.floor(Date.now() / 1000);
         const message = JSON.stringify({ by: userId });
         document = Automerge.change(document, { time, message }, doc => Object.assign(doc, value));
+        const id = Automerge.getObjectId(document) || "";
         const item = {
-            id: value.id,
+            id,
             value: Automerge.save(document)
         };
 
@@ -358,7 +359,7 @@ export default class LocalAccountApi {
         return document;
     }
 
-    async updateDocument<T extends IdentifiableType>(doc: Automerge.Doc<T>, changeFn: Automerge.ChangeFn<T> | Partial<T>) {
+    async updateDocument<T extends object>(doc: Automerge.Doc<T>, changeFn: Automerge.ChangeFn<T> | Partial<T>) {
         this.assertLoggedIn();
         this.assertCanWriteData();
 
@@ -367,7 +368,7 @@ export default class LocalAccountApi {
         }
 
         doc = toRaw(doc);
-        const { id } = doc;
+        const id = Automerge.getObjectId(doc) || "";
         const time = Math.floor(Date.now() / 1000);
         const message = JSON.stringify({ by: this.userId });
         const localDoc = Automerge.change(doc, { time, message }, changeFn);

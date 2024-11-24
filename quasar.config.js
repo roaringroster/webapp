@@ -32,18 +32,7 @@ env.IS_TESTFLIGHT = process.env.IS_TESTFLIGHT;
 module.exports = configure(function (ctx) {
   return {
     // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts
-    supportTS: {
-      tsCheckerConfig: {
-        eslint: {
-          enabled: true,
-          files: "./src/**/*.{ts,tsx,js,jsx,vue}",
-          /* Fixing the heap allocation problem while type checking with ForkTsCheckerWebpackPlugin and Webpack 4 by doubling the memory limit.
-          The files in src-cordova are causing the increase in memory usage and type checking duration (twice as long).
-          Alternatively, they could be excluded by including only src directories except src-cordova in tsconfig.json ("include": ["src", "src-electron"]) */
-          memoryLimit: 4096,
-        },
-      }
-    },
+    supportTS: true,
 
     // https://v2.quasar.dev/quasar-cli-webpack/prefetch-feature
     // preFetch: true,
@@ -59,6 +48,7 @@ module.exports = configure(function (ctx) {
       "localeChange",
       "updater",
       "setup",
+      "openURL",
     ],
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-css
@@ -190,6 +180,7 @@ module.exports = configure(function (ctx) {
           "Apache 2.0",
           "ISC",
           "LGPL",
+          "LGPL-3.0",
           "Unlicense",
           "CC0-1.0",
           "BSD-3-Clause",
@@ -208,7 +199,9 @@ module.exports = configure(function (ctx) {
           "rechoir": "MIT"
         }
 
-        config.plugins = (config.plugins || []).concat([
+        config.plugins = config.plugins || [];
+
+        config.plugins.push(
           new LicenseWebpackPlugin({
             outputFilename: "oss-licenses.json",
             perChunkOutput: false,
@@ -276,7 +269,7 @@ module.exports = configure(function (ctx) {
                 })
               : []
           })
-        ]);
+        );
       },
 
     },
@@ -430,6 +423,10 @@ module.exports = configure(function (ctx) {
         appId: env.APP_ID,
         productName: "RoaringRoster",
         copyright: "Copyright © Michael Kamphausen",
+        protocols: [{
+          name: "RoaringRoster URL",
+          schemes: [env.URL_SCHEME]
+        }],
         mac: {
           target: [{
             target: "zip",
@@ -440,9 +437,10 @@ module.exports = configure(function (ctx) {
           hardenedRuntime: true,
           entitlements: "src-electron/build/entitlements.mac.plist",
           entitlementsInherit: "src-electron/build/entitlements.mac.plist",
-          asarUnpack: [ // fixes error related to signing that appeared when launching the production app
-            "node_modules/keytar"
-          ],
+          notarize: false, // we're using the afterSign hook for notariziation instead (see below)
+          extendInfo: {
+            "NSCameraUsageDescription": "This app needs access to the camera for scanning QR codes and documents."
+          },
         },
         win: {
           target: [{
@@ -461,6 +459,7 @@ module.exports = configure(function (ctx) {
             url: env.UPDATE_URL
           }
         },
+        afterPack: "src-electron/scripts/afterPack.js",
         afterSign: "src-electron/scripts/afterSign.js",
         publish: [{
         //   provider: "github"

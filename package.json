@@ -24,55 +24,59 @@
   },
   "dependencies": {
     "@automerge/automerge": "^2.0.3",
-    "@automerge/automerge-repo": "^1.1.0",
-    "@automerge/automerge-repo-network-websocket": "^1.1.0",
+    "@automerge/automerge-repo": "^1.2.1",
+    "@automerge/automerge-repo-network-websocket": "^1.2.1",
     "@automerge/automerge-repo-storage-indexeddb": "^1.1.0",
-    "@localfirst/auth-provider-automerge-repo": "^5.4.1",
-    "@quasar/extras": "^1.16.11",
+    "@localfirst/auth-provider-automerge-repo": "^6.0.0-alpha.6",
+    "@quasar/extras": "^1.16.13",
     "@yeger/vue-masonry-wall": "^5.0.2",
     "argon2-browser": "^1.18.0",
+    "chart.js": "^4.4.6",
     "core-js": "^3.6.5",
     "dexie": "^4.0.1",
     "dexie-encrypted": "^2.0.0",
     "fs-extra": "^11.1.1",
     "indexeddbshim": "^10.1.0",
-    "keytar": "^7.9.0",
     "luxon": "^3.4.2",
     "pinia": "^2.0.11",
-    "quasar": "^2.15.2",
+    "qrcode": "^1.5.3",
+    "quasar": "^2.17.4",
     "sqlite3": "5.1.6",
-    "ua-parser-js": "^1.0.37",
-    "vue": "^3.3.7",
+    "ua-parser-js": "^1.0.39",
+    "vue": "^3.5.6",
+    "vue-chartjs": "^5.3.2",
     "vue-facing-decorator": "^3.0.3",
-    "vue-i18n": "^9.6.1",
+    "vue-i18n": "^10.0.4",
+    "vue-qrcode-reader": "^5.5.7",
     "vue-router": "^4.0.0"
   },
   "devDependencies": {
     "@electron/notarize": "^2.1.0",
-    "@quasar/app-webpack": "^3.12.4",
+    "@quasar/app-webpack": "^3.15.1",
     "@quasar/quasar-app-extension-qcalendar": "^4.0.0-beta.15",
     "@quasar/quasar-app-extension-qmarkdown": "^2.0.0-beta.10",
     "@types/argon2-browser": "^1.18.1",
     "@types/luxon": "^3.3.2",
-    "@types/node": "^20.5.7",
+    "@types/node": "^22.4.0",
+    "@types/qrcode": "^1.5.5",
     "@types/ua-parser-js": "^0.7.39",
-    "@types/uuid": "^9.0.3",
-    "@typescript-eslint/eslint-plugin": "^7.0.1",
-    "@typescript-eslint/parser": "^7.0.1",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.1.0",
+    "@typescript-eslint/parser": "^8.1.0",
     "apk-update": "^1.0.3",
     "base64-loader": "^1.0.0",
     "dotenv": "^16.3.1",
     "electron": "^26.4.2",
-    "electron-builder": "^24.6.4",
+    "electron-builder": "^25.0.5",
     "electron-updater": "^6.1.4",
-    "eslint": "8.57",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-vue": "^9.0.0",
     "license-webpack-plugin": "^4.0.2",
     "prettier": "^3.0.3"
   },
   "overrides": {
-    "dexie": "^4.0.1"
+    "dexie": "$dexie",
+    "fork-ts-checker-webpack-plugin": "9.0.2"
   },
   "browserslist": [
     "last 10 Chrome versions",
@@ -89,5 +93,13 @@
     "node": ">= 12.22.1",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
+  },
+  "electronLanguagesInfoPlistStrings": {
+    "en": {
+      "NSCameraUsageDescription": "This app needs access to the camera for scanning QR codes and documents."
+    },
+    "de": {
+      "NSCameraUsageDescription": "Diese App benötigt Zugriff auf die Kamera zum Scannen von QR-Codes und Dokumenten."
+    }
   }
 }

@@ -1,7 +1,16 @@
-import { IdentifiableType, createIdentifiable } from "./identifiable";
+import { DocumentId } from "@automerge/automerge-repo";
+import { BaseType, createBase } from "./base";
+import { DeletedUser, User } from "./user";
+
+type AuthUserId = string;
 
 type OrganizationProps = {
   name: string;
+  teams: {
+    docId: DocumentId;
+  }[];
+  members: Record<AuthUserId, User>;
+  formerMembers: Record<AuthUserId, DeletedUser>;
   selectionOptions: {
     absenceReasons: {
       title: string;
@@ -10,7 +19,7 @@ type OrganizationProps = {
   };
 }
 
-export type Organization = IdentifiableType & OrganizationProps;
+export type Organization = BaseType & OrganizationProps;
 
 export const PredefinedAbsenceReasons = [
   "vacation", 
@@ -24,6 +33,9 @@ export const PredefinedAbsenceReasons = [
 
 export const createOrganization = ({
   name = "",
+  teams = [],
+  members = {},
+  formerMembers = {},
   selectionOptions = {
     absenceReasons: PredefinedAbsenceReasons
       .map(title => ({
@@ -32,8 +44,11 @@ export const createOrganization = ({
     })),
   }
 }: Partial<OrganizationProps> = {}): Organization => ({
-  ...createIdentifiable(),
+  ...createBase(),
   name,
+  teams,
+  members,
+  formerMembers,
   selectionOptions
 });
 

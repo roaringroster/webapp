@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, session, shell } from "electron"
 import { $i18n } from "./i18n"
+import { validCustomSchemes } from "../../src/helper/utils";
 
 /** 
  * disable all session permissions requests from remote content (which should never be loaded anyway) 
@@ -81,6 +82,7 @@ function isAppUrlOrigin(url: string) {
 
 function isAllowedScheme(url: string) {
     const parsedUrl = new URL(url);
-    const allowList = ["mailto:", "tel:", "maps:", "geo:"];
+    const allowList = ["mailto:", "tel:", "maps:", "geo:"]
+        .concat(validCustomSchemes().map(value => value + ":"));
     return allowList.includes(parsedUrl.protocol);
 }

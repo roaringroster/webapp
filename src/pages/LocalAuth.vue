@@ -21,10 +21,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue";
-import Auth from "src/components/AuthView.vue";
+import Auth from "src/components/AuthView2.vue";
 import LanguageMenu from "src/components/LanguageMenu.vue";
-
-onMounted(() =>  document.body.classList.add("bg-primary-gradient"));
-onUnmounted(() =>  document.body.classList.remove("bg-primary-gradient"));
 </script>

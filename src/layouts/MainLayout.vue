@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh Lpr lff">
+  <q-layout view="hHh Lpr lff" class="bg-white">
     <q-header class="bg-white print-hide">
       <q-toolbar
         :class="'shadow-3 bg-primary-gradient ' + ($q.screen.lt.sm ? 'q-px-none' : '')"
@@ -71,16 +71,32 @@
 import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { useQuasar } from "quasar";
+import { useQuasar, QLayout, useMeta } from "quasar";
+import { locale } from "src/boot/i18n";
 import DocumentMenu from "src/components/DocumentMenu.vue";
 import Banner from "src/components/BannerView.vue";
 import NavigationDrawer from "src/components/NavigationDrawer.vue";
-import { useAPI } from "src/api";
+// import { useAPI } from "src/api";
+import { useAccount } from "src/api/local2";
 
 const route = useRoute();
 const { t, te } = useI18n();
 const { screen } = useQuasar();
-const api = useAPI();
+// const api = useAPI();
+const { isLoggedIn } = useAccount();
+
+// const isDemo = false;
+useMeta({
+  // title: "RoaringRoster" + (isDemo ? " – " + t("demoAppTitle") : " App" ),
+  meta: {
+    // description: { name: "description", content: t("appDescription") },
+    google: { name: "google", content: "notranslate" },
+    contentLanguage: {
+      "http-equiv": "Content-Language",
+      content: locale.value
+    }
+  }
+});
 
 const isTransitioning = ref(false);
 
@@ -94,11 +110,12 @@ const title = computed(() => {
   }
 });
 
-const hasDrawer = computed(() => api.isLoggedIn || isTransitioning.value);
+const hasDrawer = computed(() => isLoggedIn.value || isTransitioning.value);
 const hasMenuButton = computed(() => hasDrawer.value && screen.lt.md);
 
 const modalSheetComponent = computed(() => {
   const sheet = route.params.sheet as string;
   return (route.meta.sheets as Record<string, any>)?.[sheet];
 });
+
 </script>

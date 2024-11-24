@@ -343,6 +343,7 @@
 
 <script lang="ts">
 import { Component, Model, Prop, Watch, Vue } from "vue-facing-decorator";
+import { getObjectId } from "@automerge/automerge";
 import { LabeledValue } from "src/models/generic";
 import { Contact, ContactKeys, PostalAddress, emailLabels, getName, makeEmailAddress, makePhoneNumber, makePostalAddress, makeUrl, phoneLabels, postalAddressAsSearchString, postalLabels, predefinedLabels, urlLabels } from "src/models/contact";
 import NoDataItem from "src/components/NoDataItem.vue";
@@ -630,7 +631,7 @@ class ContactView extends Vue {
         noCaps: true
       }
     }).onOk(() => {
-      this.$emit("delete", this.contact.id);
+      this.$emit("delete", getObjectId(this.contact));
     });
   }
   change(changes: Partial<Contact>) {

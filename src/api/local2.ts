@@ -2,17 +2,21 @@ import { Ref, computed, ref } from "vue";
 import Dexie from "dexie";
 import argon2 from "argon2-browser";
 import nacl from "tweetnacl";
-import { createUser, createDevice, UserWithSecrets, DeviceWithSecrets } from "@localfirst/auth";
+import { ShareId } from "@localfirst/auth-provider-automerge-repo";
+import { DocumentId } from "@automerge/automerge-repo";
+import { createUser, createDevice, UserWithSecrets, DeviceWithSecrets, Base58 } from "@localfirst/auth";
 import { UAParser } from "ua-parser-js";
 import { bus } from "src/boot/eventBus";
 import { EncryptedDatabase } from "src/database/EncryptedDatabase";
 import Vault from "src/database/Vault";
 import { didExpire } from "src/helper/expiration";
+import { useQuasar } from "quasar";
 
 const dbPrefix = "accountlocal.";
 
 const db: Ref<EncryptedDatabase | null> = ref(null);
 const isLoggedIn = computed(() => db.value?.isOpen() == true);
+const currentAccount: Ref<LocalAccount | null> = ref(null);
 
 // === username methods ===
 
@@ -122,12 +126,10 @@ async function decryptLocalKey(username: string, password: string): Promise<Uint
 
 // === account registration and deletion ===
 
-async function registerAccount(username: string, password: string, locale = "") {
+async function registerAccount(username: string, password: string, locale = "", isDeviceOnly = false) {
   await assertValidRegistrationParams(username, password);
 
-  const account = createLocalAccount(username, locale);
-  await persistAccountOnRegistration(account, password);
-  return account;
+  return createLocalAccount(username, locale, isDeviceOnly);
 }
 
 async function persistAccountOnRegistration(account: LocalAccount, password: string) {
@@ -155,10 +157,8 @@ async function deleteAccount(username: string) {
         throw new Error("UsernameDoesNotExist")
     }
 
-    if (isLoggedIn.value) {
-        const account = await getAccount();
-
-        if (username == account.user.userName) {
+    if (isLoggedIn.value && currentAccount.value) {
+        if (username == currentAccount.value.user.userName) {
             await logout();
         }
     }
@@ -203,20 +203,29 @@ async function login(username: string, password: string) {
         throw new Error("UserDoesNotExist");
     }
 
-    // bus.emit("did-login", account); // ToDo uncomment
+    currentAccount.value = account;
+    // await updateDeviceTypeIfNeeded(account);
+    deleteExpiredInvitations();
+
+    bus.emit("did-login");
 
     return account;
 }
 
-async function logout() {
+function logout() {
     if (db.value) {
         db.value.close();
         db.value = null;
+        currentAccount.value = null;
         bus.emit("did-logout");
     }
 }
 
 // === read and update account ===
+
+function getAccountRef() {
+    return currentAccount;
+}
 
 async function getAccount() {
     assertLoggedIn();
@@ -228,37 +237,49 @@ async function getAccount() {
     return item?.value as LocalAccount;
 }
 
-async function updateAccount(changes: ((value: LocalAccount) => void) | Partial<LocalAccount>) {
+async function updateAccount(changes: ((value: LocalAccount) => void) | Partial<LocalAccount>, account?: LocalAccount) {
     assertCanWriteData();
 
-    const account = await getAccount();
-
-    if (typeof changes != "function") {
-        changes = value => Object.assign(value, changes);
+    if (!account) {
+        account = await getAccount();
     }
 
-    changes(account);
+    let changeFn: (value: LocalAccount) => void;
 
+    if (typeof changes != "function") {
+        changeFn = value => Object.assign(value, changes);
+    } else {
+        changeFn = changes;
+    }
+
+    changeFn(account);
     await db.value?.local.put({id: "account", value: account});
+    currentAccount.value = account;
 }
 
-async function getDeviceSettings() {
-    return (await getAccount()).settings;
+async function updateDeviceSettings(settings: ((value: DeviceSettings) => void)) {
+    await updateAccount((value: LocalAccount) => settings(value.settings));
 }
 
-async function updateDeviceSettings(settings: ((value: DeviceSettings) => void) | DeviceSettings) {
-    await updateAccount(
-        typeof settings != "function"
-            ? {settings}
-            : (value: LocalAccount) => settings(value.settings)
-    );
-}
+// changes to device are not synced, it does not make sense to update device type only locally
+// async function updateDeviceTypeIfNeeded(account: LocalAccount) {
+//     const deviceType = getDeviceType();
+
+//     if (account.device.deviceInfo?.deviceType != deviceType) {
+//         await updateAccount(
+//             account => account.device.deviceInfo.deviceType = deviceType, 
+//             account
+//         );
+//     }
+// }
 
 // === change username and password ===
 
 async function changeUsername(username: string, password: string) {
     assertValidLoginParams(username, password);
     assertLoggedIn();
+
+    throw Error("NotImplemented");
 }
 
 async function changePassword(oldPassword: string, newPassword: string) {
@@ -290,20 +311,63 @@ export type LocalAccount = {
     user: UserWithSecrets;
     device: DeviceWithSecrets;
     settings: DeviceSettings;
-    activeTeam?: string;
+    organizations: Organization[];
+    activeOrganization?: ShareId;
+    activeTeam?: DocumentId;
+    currentPath: string;
 }
 
-type DeviceSettings = {
-    locale: string;
+export type PartialLocalAccount = Omit<LocalAccount, "user"> & {
+    user?: UserWithSecrets;
+}
+
+type Organization = {
+    shareId: ShareId;
     websocketServer: string;
 };
 
-function getDeviceName() {
-    const { browser, os, device } = UAParser(navigator.userAgent)
-    return `${device.model ?? os.name} (${browser.name})`
+type DeviceSettings = {
+    locale: string;
+    defaultWebsocketServer: string;
+};
+
+function getDeviceType() {
+    const $q = useQuasar();
+    const { device, os, browser } = UAParser(navigator.userAgent);
+
+    const deviceInfo = [device.vendor, device.model].filter(Boolean);
+    const deviceType = device.type;
+
+    if (!$q.platform.is.electron && !$q.platform.is.cordova && !!browser.name) {
+        deviceInfo.unshift(browser.name, "–");
+    }
+
+    if (!deviceInfo.length && !!deviceType) {
+        deviceInfo.push(deviceType.charAt(0).toUpperCase() + deviceType.slice(1));
+    }
+
+    if (os.name) {
+        if (deviceInfo.length) {
+            let name = os.name;
+
+            if (device.model?.toLowerCase() == "ipad" 
+                && device.vendor?.toLocaleLowerCase() == "apple")
+            {
+                name = "iPadOS"
+            }
+
+            deviceInfo.push(`(${name})`)
+        } else {
+            deviceInfo.push(os.name)
+        }
+    }
+
+    const deviceName = deviceInfo.join(" ");
+
+    return { deviceName, deviceType };
 }
 
-function getServerAddress() {
+function getDefaultWebsocketServer() {
     const server = process.env.SYNC_SERVER;
 
     if (!server) {
@@ -313,13 +377,90 @@ function getServerAddress() {
     return server;
 }
 
-function createLocalAccount(username: string, locale = ""): LocalAccount {
-    const user = createUser(username);
-    const device = createDevice(user.userId, getDeviceName());
-    const websocketServer = getServerAddress();
-    const settings = {locale, websocketServer};
+function createLocalAccount(username: string, locale = "", isDeviceOnly = false): PartialLocalAccount {
+    const user: UserWithSecrets | undefined = !isDeviceOnly ? createUser(username) : undefined;
+    const userId = user?.userId || username;
+    const { deviceName, deviceType } = getDeviceType();
+    const deviceInfo = { deviceType };
+    const device = createDevice({ userId, deviceName, deviceInfo });
+    // const device = createDevice(user?.userId || username, getDeviceName());
+    const defaultWebsocketServer = getDefaultWebsocketServer();
+    const settings: DeviceSettings = { locale, defaultWebsocketServer };
+    const organizations: Organization[] = [];
+    const currentPath = "";
 
-    return {user, device, settings};
+    return {user, device, settings, organizations, currentPath};
+}
+
+// === read and update invitations ===
+
+type InvitationSeed = {
+    seed: string;
+    expiration?: number;
+};
+export type InvitationSeeds = Record<Base58, InvitationSeed>;
+
+function getInvitationsIdForOrganization() {
+    const shareId = currentAccount.value?.activeOrganization;
+
+    if (!shareId) {
+        throw new Error("NoTeam");
+    }
+
+    return "invitations_" + shareId;
+}
+
+async function getInvitations() {
+    assertLoggedIn();
+
+    const id = getInvitationsIdForOrganization();
+    const invitations = 
+        ((await db.value?.local.get(id))?.value || {}) as InvitationSeeds;
+    const now = Date.now();
+    let didDeleteItems = false;
+
+    // delete expired invitations first
+    Object.entries(invitations).forEach(([id, invitation]) => {
+        if (invitation.expiration != undefined && invitation.expiration < now) {
+            delete invitations[id as Base58];
+            didDeleteItems = true;
+        }
+    })
+
+    // update invitations in database if some were deleted
+    if (didDeleteItems) {
+        await db.value?.local.put({id, value: invitations});
+    }
+
+    return invitations;
+}
+
+async function addInvitation(id: Base58, value: InvitationSeed) {
+    assertLoggedIn();
+    assertCanWriteData();
+
+    const invitations = await getInvitations();
+    invitations[id] = value;
+    await db.value?.local.put({id: getInvitationsIdForOrganization(), value: invitations});
+
+    return invitations;
+}
+
+async function deleteInvitation(id: Base58) {
+    assertLoggedIn();
+
+    const invitations = await getInvitations();
+
+    if (invitations[id]) {
+        delete invitations[id];
+        await db.value?.local.put({id: getInvitationsIdForOrganization(), value: invitations});
+    }
+
+    return invitations;
+}
+
+async function deleteExpiredInvitations() {
+    return await getInvitations();
 }
 
 // === hook ===
@@ -328,15 +469,18 @@ export function useAccount() {
     return { 
         allUsernames, 
         isLoggedIn, 
-        login, 
-        logout, 
+        loginAccount: login, 
+        logoutAccount: logout, 
         registerAccount, 
+        persistAccountOnRegistration, 
         deleteAccount,
-        getAccount,
+        getAccountRef,
         updateAccount,
-        getDeviceSettings,
         updateDeviceSettings,
         changeUsername,
-        changePassword
+        changePassword,
+        getInvitations,
+        addInvitation,
+        deleteInvitation
     }
 }

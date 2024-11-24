@@ -115,6 +115,7 @@ if (Platform.is.cordova) {
         
         if (Platform.is.android && "sqlitePlugin" in window) {
             // implicit dependency of indexeddbshim
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             regeneratorRuntime;
 
             const databaseOptions = (name: string) => ({

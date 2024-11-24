@@ -1,15 +1,24 @@
 <template>
-  <widget-container :title="'Requests'">
+  <widget-container :title="$t('requests')">
     <q-card-section class="q-pt-none">
-      <span
-        v-for="i in Math.ceil(Math.random() * 3)"
-        :key="i"
-      >Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua.</span>
+      <div
+        v-for="(item, key) in requests"
+        :key="key"
+        class="q-mb-sm"
+      >{{ item }}</div>
     </q-card-section>
   </widget-container>
 </template>
 
+<style lang="sass">
+</style>
+
 <script setup lang="ts">
-import WidgetContainer from "src/components/WidgetContainer.vue"
+import WidgetContainer from "src/components/WidgetContainer.vue";
+
+const requests = [
+  `⚠️ Eve Evans ist krank: wer kann wann Schichten übernehmen?`,
+  `Es gibt noch 5 offene Schichten in der Woche 24.–30.11. – hast du Zeit?`,
+  `Wer ist bereit die Schicht zu tauschen: mit Dave Diaz am 1.12. 17–23 Uhr?`,
+];
 </script>

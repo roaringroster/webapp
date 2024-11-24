@@ -1,0 +1,8 @@
+{
+  "config_ios": {
+    "NSCameraUsageDescription": "Diese App benötigt Zugriff auf die Kamera zum Scannen von QR-Codes und Dokumenten.",
+    "NSPhotoLibraryAddUsageDescription": "Diese App benötigt die Berechtigung, Bilder zum Teilen auf deinen Wunsch zur Fotomediathek hinzufügen zu können.",
+    "NSPhotoLibraryUsageDescription": "Diese App benötigt die Berechtigung, Bilder auf deinen Wunsch aus der Fotomediathek auswählen oder hinzufügen zu können."
+  },
+  "config_android": {}
+}

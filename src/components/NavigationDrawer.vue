@@ -17,23 +17,25 @@
         </q-list>
       </q-expansion-item>
       <q-expansion-item
+        v-if="teamIds.length > 0"
         v-model="isTeamExpanded"
-        :label="teams.at(team)"
+        :label="teamNames.at(team)"
         :caption="$t('team')"
         switch-toggle-side
         :header-class="headerClass(isTeamExpanded, teamItems)"
       >
         <q-list>
           <expansion-select
-            v-model="team"
+            :model-value="team"
+            @update:model-value="onUpdateTeam"
             :label="$t('selectTeam')"
-            :items="teams.map((label, value) => ({label, value}))"
+            :items="teamNames.map((label, value) => ({label, value}))"
           />
           <navigation-section :items="teamItems" />
         </q-list>
       </q-expansion-item>
       <q-expansion-item
-        v-if="isDev"
+        v-if="organizations.length > 0"
         v-model="isOrganizationExpanded"
         :label="organizations.at(organization)"
         :caption="$t('organization')"
@@ -86,41 +88,57 @@
 </style>
 
 <script setup lang="ts">
-import { Ref, computed, onUnmounted, ref } from "vue";
+import { computed, onUnmounted, Ref, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
 import { useQuasar } from "quasar";
+import { Doc, DocumentId } from "@automerge/automerge-repo";
 import { bus } from "src/boot/eventBus";
 import { checkForUpdates } from "src/boot/updater";
-import { useAPI } from "src/api";
+import { logout } from "src/boot/openURL";
+// import { useAPI } from "src/api";
+import { useAccount } from "src/api/local2";
 import { useRedirectStore } from "src/stores/redirectStore";
 import { expirationDate, didExpire } from "src/helper/expiration";
-import { getUsername, Contact } from "src/models/contact";
+// import { getUsername, Contact } from "src/models/contact";
 import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 import NavigationSection, { NavigationItem } from "src/components/NavigationSection.vue";
 import ExpansionSelect from "src/components/ExpansionSelect.vue";
+import { cleanupAll, useDocuments, useOrganizationDocument, whenReady } from "src/api/repo";
+import { Team } from "src/models/team";
+// import { onMounted } from "vue";
 
 const { screen } = useQuasar();
 const { t, d } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const redirectStore = useRedirectStore();
-const api = useAPI();
+// const api = useAPI();
+const { getAccountRef, updateAccount } = useAccount();
 
 const appname = process.env.APP_NAME || "";
 const appversion = process.env.APP_VERSION || "0";
 const isDev = process.env.DEV;
 
 const isVisible = ref(screen.gt.sm);
-const contact: Ref<Contact | null> = ref(null);
+// const contact: Ref<Contact | null> = ref(null);
+const account = getAccountRef();
+const username = computed(() => account.value?.user.userName || "");
 
-(async () => {
-  contact.value = (await api.getCurrentUser())?.contact ?? null;
-})()
+// async function updateUsername() {
+//   username.value = (await getAccountNotThrowing())?.user.userName || "";
+// }
 
-const username = computed(() => {
-  return getUsername(contact.value || undefined) || api.username;
-})
+// onMounted(updateUsername);
+// bus.on("did-login", updateUsername);
+
+// (async () => {
+//   contact.value = (await api.getCurrentUser())?.contact ?? null;
+// })()
+
+// const username = computed(() => {
+  // return getUsername(contact.value || undefined) || api.username;
+// })
 const appVersion = computed(() => t("currentVersion") + ": " + appversion);
 const expirationWarning = computed(() => 
     expirationDate 
@@ -131,13 +149,15 @@ const expirationWarning = computed(() =>
       : ""
 );
 
-const organizationItems = computed(() => isDev 
-  ? [{
-    label: t("organizationSettings"),
-    icon: "fas fa-gears",
-    route: "organizationSettings",
-  }]
-  : []);
+const organizationItems = computed(() => [{
+  label: t("organizationSettings"),
+  icon: "fas fa-gears",
+  route: "organizationSettings",
+},{
+  label: t("organizationMembers"),
+  icon: "fas fa-people-roof",
+  route: "organizationMembers",
+}]);
 
 const teamItems = computed(() => [{
   label: t("roster"),
@@ -147,18 +167,27 @@ const teamItems = computed(() => [{
   label: t("absences"),
   icon: "fas fa-suitcase",
   route: "absences",
+},{
+  label: t("contacts"),
+  icon: "fas fa-address-book",
+  route: "contacts",
 }].concat(
   isDev
-  ? [{
-      label: t("teamMembers"),
-      icon: "fas fa-users",
-      route: "teamMembers",
-    },{
-      label: t("teamSettings"),
-      icon: "fas fa-users-gear",
-      route: "teamSettings",
-    }]
-  : [])
+    ? [{
+        label: t("agreements"),
+        icon: "fas fa-file-contract",
+        route: "agreements",
+      // },{
+      //   label: t("teamMembers"),
+      //   icon: "fas fa-users",
+      //   route: "teamMembers",
+      }]
+    : []
+).concat({
+  label: t("teamSettings"),
+  icon: "fas fa-users-gear",
+  route: "teamSettings",
+})
 );
 
 const userItems = computed(() => [{
@@ -169,6 +198,10 @@ const userItems = computed(() => [{
   label: t("userData"),
   icon: "fas fa-circle-user",
   route: "userData",
+},{
+  label: t("userAvailability"),
+  icon: "fas fa-calendar-check",
+  route: "userAvailability",
 },{
   label: t("userSettings"),
   icon: "fas fa-user-cog",
@@ -220,11 +253,50 @@ const isTeamExpanded = ref(true);
 const isOrganizationExpanded = ref(hasActiveItem(organizationItems.value));
 const isAppExpanded = ref(hasActiveItem(appItems.value));
 
-const teams = computed(() => ["Carnaby Street"/*, "Portobello Road", "Covent Garden"*/]);
+const orgHandle = useOrganizationDocument();
+// "Caffè Cooperativo"
+const organizations = computed(() => [orgHandle.doc.value?.name].filter(Boolean) as string[]);
+const organization = ref(0);
+
+watch(
+  () => orgHandle.doc.value?.teams,
+  async value => {
+    console.log("org teams changed");
+    const userId = account.value?.user.userId;
+    const docIds = value?.map(({ docId }) => docId) || [];
+    teamHandles = useDocuments<Team>(docIds);
+    await whenReady(teamHandles);
+    teams.value = [];
+    teamIds.value = [];
+    teamHandles.forEach(({ doc, docId }) => {
+      // ToDo: uncomment outcommented part
+      if (!!userId && !!doc.value && !!doc.value.members[userId]) {
+        teams.value.push(doc);
+        teamIds.value.push(docId);
+      }
+    });
+    const index = teamIds.value.findIndex(id => id == account.value?.activeTeam);
+
+    if (index >= 0) {
+      team.value = index;
+    } else {
+      team.value = 0;
+      // auto-assign a team
+      await updateAccount({ activeTeam: teamIds.value.at(0) });
+    }
+  }
+);
+let teamHandles: ReturnType<typeof useDocuments<Team>> = [];
+// "Carnaby Street", "Portobello Road", "Covent Garden"
+const teamIds: Ref<DocumentId[]> = ref([]);
+const teams: Ref<Ref<Doc<Team>>[]> = ref([]);
+const teamNames = computed(() => teams.value.map(team => team.value.name));
 const team = ref(0);
 
-const organizations = computed(() => ["Caffè Cooperativo"]);
-const organization = ref(0);
+function onUpdateTeam(value: number) {
+  team.value = value;
+  updateAccount({activeTeam: teamIds.value[value]});
+}
 
 function openDrawer() {
   isVisible.value = true;
@@ -253,15 +325,6 @@ function hasActiveItem(items: NavigationItem[]) {
   return !!items.find(item => !!item.route && !!route.matched.find(route => route.name == item.route));
 }
 
-async function logout() {
-  // first logout, then navigate to login page so that the state change in api.isLoggedIn is detected, 
-  // e.g. in MainLayout for updating the toolbar buttons
-  await api.logout();
-  void await router.replace({name: "login"});
-  // prevent redirectPath being set to the current path before logout
-  redirectStore.redirectPath = "";
-}
-
 bus.on("toggle-drawer", toggleDrawer);
 bus.on("open-drawer", openDrawer);
 bus.on("close-drawer", closeDrawer);
@@ -270,6 +333,7 @@ onUnmounted(() => {
   bus.off("toggle-drawer", toggleDrawer);
   bus.off("open-drawer", openDrawer);
   bus.off("close-drawer", closeDrawer);
+  cleanupAll([orgHandle, ...teamHandles]);
 });
 
 </script>

@@ -123,7 +123,7 @@ import { useI18n } from "vue-i18n";
 import { useQuasar, date, useDialogPluginComponent } from "quasar";
 import { locale } from "src/boot/i18n";
 import { createShift, Shift, shiftDuration, shiftEndsNextDay } from "src/models/roster";
-import { equals } from "src/models/identifiable";
+import { equals } from "src/models/base";
 import { duration } from "src/helper/relativeTime";
 import { alwaysInt } from "src/helper/input";
 import EditingSheet from "src/components/EditingSheet.vue";

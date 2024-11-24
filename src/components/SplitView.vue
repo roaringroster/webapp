@@ -43,7 +43,7 @@ import { Vue, Component, Prop, Ref } from "vue-facing-decorator";
 @Component({
   emits: ["update:is-collapsed", "did-show-before", "did-show-after"]
 })
-export default class SplitViewView extends Vue {
+export default class SplitView extends Vue {
   @Prop({ type: Number, default: 300 }) readonly minSlotWidth!: number;
   @Prop({ type: Number, default: 0 }) readonly scrollOffsetTop!: number;
   @Ref() readonly beforeContainer!: HTMLElement;
@@ -65,7 +65,7 @@ export default class SplitViewView extends Vue {
     return Math.round(this.minSlotWidth * 100 / this.width);
   }
 
-  private onResize() {
+  onResize() {
     this.width = (this.$el as HTMLElement).offsetWidth;
     const wasCollapsed = this.isCollapsed;
     this.isCollapsed = this.width <= this.minSlotWidth * 2;

@@ -13,22 +13,25 @@
   "author": "Michael Kamphausen",
   "license": "AGPL-3.0",
   "devDependencies": {
-    "cordova-android": "^12.0.1",
+    "cordova-android": "^13.0.0",
     "cordova-clipboard": "^1.3.0",
-    "cordova-ios": "^7.0.0",
+    "cordova-ios": "github:michaelkamphausen/cordova-ios#feature/mediacapture-permission",
     "cordova-plugin-advanced-http": "^3.3.1",
     "cordova-plugin-androidx-adapter": "^1.1.3",
-    "cordova-plugin-apkupdater": "^5.0.0",
-    "cordova-plugin-device": "^2.1.0",
-    "cordova-plugin-file": "^8.0.1",
+    "cordova-plugin-apkupdater": "^5.0.1",
+    "cordova-plugin-customurlscheme": "^5.0.2",
+    "cordova-plugin-device": "^3.0.0",
+    "cordova-plugin-file": "^8.1.0",
     "cordova-plugin-inappbrowser": "^6.0.0",
     "cordova-plugin-ionic-keyboard": "^2.2.0",
-    "cordova-plugin-localization-strings": "^5.0.5",
+    "cordova-plugin-localization-strings": "^5.0.6",
     "cordova-plugin-printer": "^0.8.0",
     "cordova-plugin-secure-key-store": "github:michaelkamphausen/cordova-plugin-secure-key-store",
     "cordova-plugin-splashscreen": "^6.0.2",
     "cordova-plugin-statusbar": "^4.0.0",
+    "cordova-plugin-x-socialsharing": "^6.0.4",
     "cordova-sqlite-storage": "^6.1.0",
+    "cordova.plugins.diagnostic": "^7.2.1",
     "es6-promise-plugin": "^4.2.2"
   },
   "cordova": {
@@ -38,28 +41,39 @@
         "ANDROIDBLACKLISTSECURESOCKETPROTOCOLS": "SSLv3,TLSv1"
       },
       "cordova-plugin-androidx-adapter": {},
-      "cordova-plugin-device": {},
       "cordova-plugin-ionic-keyboard": {},
       "cordova-clipboard": {},
-      "cordova-plugin-localization-strings": {
-        "TRANSLATION_PATH": "translations/app/"
-      },
       "cordova-plugin-printer": {
         "ANDROID_SUPPORT_V4_VERSION": "28.+"
       },
       "cordova-plugin-secure-key-store": {},
       "cordova-sqlite-storage": {},
       "es6-promise-plugin": {},
-      "cordova-plugin-apkupdater": {},
       "cordova-plugin-statusbar": {},
       "cordova-plugin-inappbrowser": {},
+      "cordova-plugin-apkupdater": {},
+      "cordova-plugin-localization-strings": {
+        "TRANSLATION_PATH": "translations/app/"
+      },
+      "cordova-plugin-customurlscheme": {
+        "URL_SCHEME": "app.roaringroster.dev"
+      },
       "cordova-plugin-file": {
         "ANDROIDX_WEBKIT_VERSION": "1.4.0"
+      },
+      "cordova-plugin-x-socialsharing": {
+        "PHOTO_LIBRARY_ADD_USAGE_DESCRIPTION": "This app requires permission to add images to the photo library for sharing at your request.",
+        "PHOTO_LIBRARY_USAGE_DESCRIPTION": "This app requires permission to select or add images from the photo library at your request."
+      },
+      "cordova-plugin-device": {},
+      "cordova.plugins.diagnostic": {
+        "ANDROIDX_VERSION": "1.0.0",
+        "ANDROIDX_APPCOMPAT_VERSION": "1.3.1"
       }
     },
     "platforms": [
-      "ios",
-      "android"
+      "android",
+      "ios"
     ]
   }
 }

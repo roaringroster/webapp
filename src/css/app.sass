@@ -5,13 +5,14 @@
 ::-moz-selection
   background: var(--q-primary)
   color: #ffffff
+body
+  -webkit-user-select: none
+  -webkit-touch-callout: none
 .selectable
   -webkit-user-select: auto
   -moz-user-select: auto
   -ms-user-select: auto
   user-select: auto
-#q-app
-  background-color: #ffffff
 .q-tab
   @media screen and (max-width: $breakpoint-xs-max)
     padding: 0 4px
@@ -239,3 +240,24 @@ body.q-ios-padding .q-notifications__list--top
   border-color: var(--q-accent)
 .border-extra
   border-color: var(--q-extra)
+.section-heading
+  font-size: 1.25rem
+  font-weight: 500
+  line-height: 2.5rem
+  letter-spacing: 0.00937em
+  border-bottom: 1px solid #ccc
+  margin-top: 2rem
+  margin-bottom: .5rem
+  &.q-mt-none
+    margin-top: 0
+  &+ div
+    padding-left: 40px
+    @media screen and (max-width: $breakpoint-sm-max)
+      padding-left: 16px
+.border-top-grey
+  border-top: 1px solid #cccccc
+.border-bottom-grey
+  border-bottom: 1px solid #cccccc
+.indent
+  margin-left: 16px
+  text-indent: -16px

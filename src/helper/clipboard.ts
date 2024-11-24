@@ -1,5 +1,5 @@
 import { copyToClipboard } from "quasar";
-import { promise as promisify } from "./utils";
+import { promisify } from "./cordova";
 
 declare global {
     interface CordovaPlugins {

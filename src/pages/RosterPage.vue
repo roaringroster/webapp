@@ -406,10 +406,10 @@
     border-top: 0px none
   .q-calendar-scheduler__day
     flex-basis: 100%
+    border-top: 1px solid rgb(224, 224, 224)
     min-width: max(14.28%, 110px)
     @media (max-width: $breakpoint-xs-max)
       min-width: calc(50vw - 8px)
-    border-top: 1px solid rgb(224, 224, 224)
   .no-shifts, .spacer
     background-color: #ffffff !important
     border-right: 0px none
@@ -512,18 +512,21 @@ import { Ref, computed, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { QPopupProxy, date, useQuasar } from "quasar";
 import { QCalendarScheduler } from "@quasar/quasar-ui-qcalendar";
+import { DocumentId } from "@automerge/automerge-repo";
 import { v4 } from "uuid";
 import { locale } from "src/boot/i18n";
 import { selectBehavior } from "src/helper/utils";
 import { getWeek, toUTC } from "src/helper/date";
 import { showWarning } from "src/helper/warning";
-import { Shift, WeekSchedule, createRoster, createWorkSchedule } from "src/models/roster";
+import { useDemoStore } from "src/stores/demoStore";
+import { Roster, Shift, WeekSchedule, createRoster, createWorkSchedule } from "src/models/roster";
 import { Availability, AvailabilityList, createAvailabilityList } from "src/models/availability";
 import ShiftSheet from "src/components/ShiftSheet.vue";
 import SelectDialog from "src/components/SelectDialog.vue";
 
 const $q = useQuasar();
 const { t, d } = useI18n();
+const store = useDemoStore();
 
 // – Navigation
 
@@ -554,7 +557,11 @@ const statusColor = {
 
 // - Roster
 
-const roster = ref(createRoster());
+if (!store.$state.docs.roster) {
+  store.$state.docs.roster = createRoster();
+}
+
+const roster = computed(() => store.$state.docs.roster as Roster);
 
 const existingSchedule = computed((): WeekSchedule | null => 
   roster.value.weeks.find(week => 
@@ -697,9 +704,9 @@ const resources = computed(() =>
     shiftIndex: index
   } as Resource)).concat(schedule.value.shifts.length > 0 ? [] : [{
     type: "no-shifts",
-  }]).concat(schedule.value.shifts.length == 0 || !isEditable.value ? [] : [{
+  }]).concat(!isEditable.value ? [] : [{
     type: "spacer",
-  }]).concat(schedule.value.shifts.length == 0 || !isEditable.value || !showAvailableMembers.value
+  }]).concat(!isEditable.value || !showAvailableMembers.value
     ? [] 
     : teamMembers.value.map((member) => ({
         type: "member",
@@ -731,13 +738,13 @@ function getAssignments(scope: QCalendarScope) {
 
       return { memberId, label, state };
     }).concat(isFullyAssigned && isEditable.value ? [{
-      memberId: "",
+      memberId: "" as DocumentId,
       label: "+",
       state: "additional",
     }] : [])
 }
 
-function setAssignment(scope: QCalendarScope, index: number, value: string | null) {
+function setAssignment(scope: QCalendarScope, index: number, value: DocumentId | null) {
   const shiftIndex = scope.resource?.shiftIndex;
   const weekday = scope.timestamp?.weekday;
 
@@ -759,7 +766,7 @@ function matchAssignment(scope: QCalendarScope, state: string) {
 
     if (!!member && selectedRow.value !== null && weekday) {
       const assignments = schedule.value.shifts[selectedRow.value]?.assignments[weekday];
-      assignments.push(member.value);
+      assignments.push(member.value as DocumentId);
     }
   }
 }
@@ -779,7 +786,7 @@ function getAvailability(scope: QCalendarScope) {
       const label = timeRange(item.start, item.end);
       let state = "normal";
       const assigned = schedule.value.shifts.find(shift => 
-        shift.assignments[weekday]?.includes(member.value) 
+        shift.assignments[weekday]?.includes(member.value as DocumentId) 
           && matchShiftAvailability(shift, item, timestamp)
       ) != undefined;
       const selectedShift = selectedRow.value !== null
@@ -839,7 +846,6 @@ type AvailableTeamMembers = ({
     available: boolean;
     disable: boolean;
     sortIndex: number;
-    id: string;
     schema: number;
     availabilities: Availability[];
     label: string;
@@ -863,7 +869,7 @@ function availableTeamMembers(scope: QCalendarScope, index: number) {
       const isAssigned = schedule.value.shifts.find(shift2 => 
           // ToDo: assignment could end on the following day:
           // ToDo: check start and end time of shift:
-          shift2.assignments[weekday]?.includes(member.value)
+          shift2.assignments[weekday]?.includes(member.value as DocumentId)
             && (shift != shift2 || shift2.assignments[weekday]?.[index] != member.value)
         ) != undefined
       const available =

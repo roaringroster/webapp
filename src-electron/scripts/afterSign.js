@@ -8,6 +8,10 @@ const { notarize } = require("@electron/notarize");
 
 exports.default = async function afterSign(context) {
     await notarizing(context);
+    console.log(
+        "  \x1b[34m•\x1b[0m",
+        "notarization    successfully completed for macOS using afterSign hook"
+    );
 }
 
 // source: https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/

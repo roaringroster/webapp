@@ -1,4 +1,5 @@
-import { IdentifiableType, UUIDv4, createIdentifiable } from "./identifiable";
+import { DocumentId } from "@automerge/automerge-repo";
+import { BaseType, createBase } from "./base";
 
 type AbsenceListProps = {
   absences: Absence[];
@@ -6,7 +7,6 @@ type AbsenceListProps = {
 
 export type Absence = {
   createdAt: Date;
-  absenteeId: UUIDv4;
   reason: string; // e.g. vacation, illness, homeOffice, school, …
   /** UTC timestamp. 00:00:00 indicates full day, 12:00:00 half day absence. */
   start: Date;
@@ -16,23 +16,22 @@ export type Absence = {
   comment: string;
   approvals: {
     date: Date;
-    colleagueId: UUIDv4;
+    colleagueId: DocumentId;
   }[];
   //documents: File[];
 };
 
-export type AbsenceList = IdentifiableType & AbsenceListProps;
+export type AbsenceList = BaseType & AbsenceListProps;
 
 export const createAbsenceList = ({
   absences = [],
 }: Partial<AbsenceListProps> = {}): AbsenceList => ({
-  ...createIdentifiable(),
+  ...createBase(),
   absences,
 });
 
 export const createAbsence = ({
   createdAt = new Date(),
-  absenteeId = "",
   reason = "",
   start = new Date(new Date().toISOString().substring(0,11) + "00:00:00Z"),
   end = new Date(new Date().toISOString().substring(0,11) + "23:59:59Z"),
@@ -40,9 +39,8 @@ export const createAbsence = ({
   comment = "",
   approvals = [],
 }: Partial<Absence> = {}): Absence => ({
-  ...createIdentifiable(),
+  ...createBase(),
   createdAt,
-  absenteeId,
   reason,
   start,
   end,
