@@ -8,7 +8,7 @@
     <div class="fit column no-wrap q-pt-sm scroll q-gutter-y-lg">
       <q-expansion-item
         v-model="isUserExpanded"
-        :label="username"
+        :label="accountStore.userName"
         switch-toggle-side
         :header-class="headerClass(isUserExpanded, userItems)"
       >
@@ -17,19 +17,19 @@
         </q-list>
       </q-expansion-item>
       <q-expansion-item
-        v-if="teamIds.length > 0"
+        v-if="accountStore.teams.length > 0"
         v-model="isTeamExpanded"
-        :label="teamNames.at(team)"
+        :label="accountStore.team?.name || $t('noTeamSelected')"
         :caption="$t('team')"
         switch-toggle-side
         :header-class="headerClass(isTeamExpanded, teamItems)"
       >
         <q-list>
           <expansion-select
-            :model-value="team"
-            @update:model-value="onUpdateTeam"
+            :model-value="teamId || ''"
+            @update:model-value="teamId = $event"
             :label="$t('selectTeam')"
-            :items="teamNames.map((label, value) => ({label, value}))"
+            :items="teams"
           />
           <navigation-section :items="teamItems" />
         </q-list>
@@ -88,24 +88,21 @@
 </style>
 
 <script setup lang="ts">
-import { computed, onUnmounted, Ref, ref, watch } from "vue";
+import { computed, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter, useRoute } from "vue-router";
 import { useQuasar } from "quasar";
-import { Doc, DocumentId } from "@automerge/automerge-repo";
 import { bus } from "src/boot/eventBus";
 import { checkForUpdates } from "src/boot/updater";
 import { logout } from "src/boot/openURL";
 // import { useAPI } from "src/api";
-import { useAccount } from "src/api/local2";
 import { useRedirectStore } from "src/stores/redirectStore";
 import { expirationDate, didExpire } from "src/helper/expiration";
 // import { getUsername, Contact } from "src/models/contact";
 import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 import NavigationSection, { NavigationItem } from "src/components/NavigationSection.vue";
 import ExpansionSelect from "src/components/ExpansionSelect.vue";
-import { cleanupAll, useDocuments, useOrganizationDocument, whenReady } from "src/api/repo";
-import { Team } from "src/models/team";
+import { useAccountStore } from "src/stores/accountStore";
 // import { onMounted } from "vue";
 
 const { screen } = useQuasar();
@@ -114,7 +111,7 @@ const router = useRouter();
 const route = useRoute();
 const redirectStore = useRedirectStore();
 // const api = useAPI();
-const { getAccountRef, updateAccount } = useAccount();
+const accountStore = useAccountStore();
 
 const appname = process.env.APP_NAME || "";
 const appversion = process.env.APP_VERSION || "0";
@@ -122,8 +119,6 @@ const isDev = process.env.DEV;
 
 const isVisible = ref(screen.gt.sm);
 // const contact: Ref<Contact | null> = ref(null);
-const account = getAccountRef();
-const username = computed(() => account.value?.user.userName || "");
 
 // async function updateUsername() {
 //   username.value = (await getAccountNotThrowing())?.user.userName || "";
@@ -150,13 +145,13 @@ const expirationWarning = computed(() =>
 );
 
 const organizationItems = computed(() => [{
-  label: t("organizationSettings"),
-  icon: "fas fa-gears",
-  route: "organizationSettings",
-},{
   label: t("organizationMembers"),
   icon: "fas fa-people-roof",
   route: "organizationMembers",
+},{
+  label: t("organizationSettings"),
+  icon: "fas fa-gears",
+  route: "organizationSettings",
 }]);
 
 const teamItems = computed(() => [{
@@ -253,50 +248,18 @@ const isTeamExpanded = ref(true);
 const isOrganizationExpanded = ref(hasActiveItem(organizationItems.value));
 const isAppExpanded = ref(hasActiveItem(appItems.value));
 
-const orgHandle = useOrganizationDocument();
 // "Caffè Cooperativo"
-const organizations = computed(() => [orgHandle.doc.value?.name].filter(Boolean) as string[]);
+const organizations = computed(() => [accountStore.organization?.name].filter(Boolean) as string[]);
 const organization = ref(0);
 
-watch(
-  () => orgHandle.doc.value?.teams,
-  async value => {
-    console.log("org teams changed");
-    const userId = account.value?.user.userId;
-    const docIds = value?.map(({ docId }) => docId) || [];
-    teamHandles = useDocuments<Team>(docIds);
-    await whenReady(teamHandles);
-    teams.value = [];
-    teamIds.value = [];
-    teamHandles.forEach(({ doc, docId }) => {
-      // ToDo: uncomment outcommented part
-      if (!!userId && !!doc.value && !!doc.value.members[userId]) {
-        teams.value.push(doc);
-        teamIds.value.push(docId);
-      }
-    });
-    const index = teamIds.value.findIndex(id => id == account.value?.activeTeam);
-
-    if (index >= 0) {
-      team.value = index;
-    } else {
-      team.value = 0;
-      // auto-assign a team
-      await updateAccount({ activeTeam: teamIds.value.at(0) });
-    }
-  }
-);
-let teamHandles: ReturnType<typeof useDocuments<Team>> = [];
-// "Carnaby Street", "Portobello Road", "Covent Garden"
-const teamIds: Ref<DocumentId[]> = ref([]);
-const teams: Ref<Ref<Doc<Team>>[]> = ref([]);
-const teamNames = computed(() => teams.value.map(team => team.value.name));
-const team = ref(0);
-
-function onUpdateTeam(value: number) {
-  team.value = value;
-  updateAccount({activeTeam: teamIds.value[value]});
-}
+const teamId = computed({
+  get: () => accountStore.account?.activeTeam,
+  set: value => accountStore.updateAccount(account => account.activeTeam = value)
+});
+const teams = computed(() => accountStore.teams.map(({ id, name }) => ({
+  label: name,
+  value: id
+})));
 
 function openDrawer() {
   isVisible.value = true;
@@ -333,7 +296,6 @@ onUnmounted(() => {
   bus.off("toggle-drawer", toggleDrawer);
   bus.off("open-drawer", openDrawer);
   bus.off("close-drawer", closeDrawer);
-  cleanupAll([orgHandle, ...teamHandles]);
 });
 
 </script>

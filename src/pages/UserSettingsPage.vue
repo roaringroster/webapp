@@ -26,7 +26,7 @@
       <change-password-view/>
     </div>
 
-    <member-list :member-id="account?.user.userId"/>
+    <member-list :member-id="accountStore.userId"/>
   </q-page>
 </template>
 
@@ -34,15 +34,14 @@
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { locale, i18n } from "src/boot/i18n";
-import { useAccount } from "src/api/local2";
 import { selectBehavior } from "src/helper/utils";
 import { alwaysString } from "src/helper/input";
 import { didExpire } from "src/helper/expiration";
 import MemberList from "src/components/MemberList.vue";
 import ChangePasswordView from "src/components/ChangePasswordView.vue";
+import { useAccountStore } from "src/stores/accountStore";
 
 const { t } = useI18n();
-const { getAccountRef } = useAccount();
 
 const localeOptions = computed(() => i18n.availableLocales.map(value => ({
   label: t(value.toLowerCase()),
@@ -51,7 +50,7 @@ const localeOptions = computed(() => i18n.availableLocales.map(value => ({
 
 const isDisabled = computed(() => didExpire());
 
-const account = getAccountRef();
-const serverAddress = ref(account.value?.settings.websocketServer || "");
+const accountStore = useAccountStore();
+const serverAddress = ref(accountStore.account?.organizations.find(({ shareId }) => shareId == accountStore.account?.activeOrganization)?.websocketServer || "");
 
 </script>

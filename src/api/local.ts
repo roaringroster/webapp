@@ -7,7 +7,7 @@ import { toRaw } from "vue";
 import { EncryptedDatabase } from "src/database/EncryptedDatabase";
 import Vault from "src/database/Vault";
 import { didExpire } from "src/helper/expiration";
-import { User } from "src/models/user";
+import { Member } from "src/models/user";
 // import { IdentifiableType } from "src/models/identifiable";
 import { Contact } from "src/models/contact";
 import { bus } from "src/boot/eventBus";
@@ -17,7 +17,7 @@ export default class LocalAccountApi {
     private dbPrefix = "account.";
     private db?: EncryptedDatabase;
     private currentUser?: {
-        user: Automerge.Doc<User>;
+        user: Automerge.Doc<Member>;
         // userSettings: Automerge.Doc<UserSettings>;
         contact: Automerge.Doc<Contact>;
         workAgreements: Automerge.Doc<WorkAgreements>;
@@ -275,7 +275,7 @@ export default class LocalAccountApi {
             return;
         }
 
-        const user = await this.getDocumentById<User>(value);
+        const user = await this.getDocumentById<Member>(value);
 
         if (!user) {
             return;

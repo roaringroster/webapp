@@ -154,8 +154,8 @@ import { useI18n } from "vue-i18n";
 import { QPopupProxy, useQuasar } from "quasar";
 import { QCalendarScheduler } from "@quasar/quasar-ui-qcalendar";
 import { locale } from "src/boot/i18n";
-import { getOrganization, useOrganizationDocument, useDocument2 } from "src/api/repo";
-import { useAccount } from "src/api/local2";
+import { getOrganization, useDocument2 } from "src/api/repo";
+import { useAccountStore } from "src/stores/accountStore";
 import { toUTC } from "src/helper/date";
 import { Contact, getName } from "src/models/contact";
 import { Absence, AbsenceList } from "src/models/absence";
@@ -166,20 +166,17 @@ import { v4 } from "uuid";
 
 const $q = useQuasar();
 const { t } = useI18n();
-const { getAccountRef } = useAccount();
+const accountStore = useAccountStore();
 
 // – Data
 
-const account = getAccountRef();
-const currenUserId = computed(() => account.value?.user.userId)
-const team = getOrganization();
-const orgHandle = useOrganizationDocument();
+const authTeam = getOrganization();
 const memberHandles = computed(() => {
   // console.log(teamHandle.doc.value?.members, team?.members());
-  return Object.entries(orgHandle.doc.value?.members || {})
+  return Object.entries(accountStore.organization?.members || {})
     .map(([userId, member]) => ({
       userId,
-      user: team?.members(userId),
+      user: authTeam?.members(userId),
       contact: useDocument2<Contact>(member.contactId),
       absences: useDocument2<AbsenceList>(member.absencesId),
     }))
@@ -214,9 +211,9 @@ const members = computed(() => memberHandles.value
   ])
   .sort((a, b) => {
     // the current user's account first, then alphabetical
-    if (a.value == currenUserId.value) {
+    if (a.value == accountStore.userId) {
       return -1;
-    } else if (b.value == currenUserId.value) {
+    } else if (b.value == accountStore.userId) {
       return 1;
     } else {
       return a.label.localeCompare(b.label);
@@ -225,7 +222,6 @@ const members = computed(() => memberHandles.value
 );
 
 onUnmounted(() => {
-  orgHandle.cleanup();
   memberHandles.value.forEach(member => {
     member.contact.cleanup();
     member.absences.cleanup();
@@ -236,7 +232,7 @@ function addAbsence() {
   $q.dialog({
     component: AbsenceSheet,
     componentProps: {
-      userId: currenUserId.value || "",
+      userId: accountStore.userId,
       teamMembers: members.value,
       isNew: true
     }

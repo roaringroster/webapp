@@ -58,6 +58,9 @@ import * as AppSettings from "src/database/AppSettings";
 import { registerOrganization, deleteStorage, getOrganizationOrThrow, logoutWithAuth } from "src/api/repo";
 import { LocalAccount, useAccount } from "src/api/local2";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
+import { bus } from "src/boot/eventBus";
+import { useAccountStore } from "src/stores/accountStore";
+
 
 const { 
   registerAccount, 
@@ -66,6 +69,7 @@ const {
   logoutAccount,
   deleteAccount,
 } = useAccount();
+const accountStore = useAccountStore();
 
 const emit = defineEmits(["done"]);
 
@@ -87,21 +91,25 @@ const canCreateOrganization = computed(() =>
 async function createOrganization() {
   errorMessageText.value = "";
   isLoading.value = true;
+  const username = newUsername.value;
+  const password = newPassword1.value;
+  const organizationName = newOrganizationName.value;
 
   if (canCreateOrganization.value) {
     try {
-      let account = await registerAccount(newUsername.value, newPassword1.value, 
-        locale.value) as LocalAccount;
-      const { organization, teamDocId } = await registerOrganization(account, newOrganizationName.value);
+      let account = await registerAccount(username, password, locale.value) as LocalAccount;
+      const { organization, teamId } = await registerOrganization(account, organizationName);
       account.organizations = [organization];
       account.activeOrganization = organization.shareId;
-      account.activeTeam = teamDocId;
-      await persistAccountOnRegistration(account, newPassword1.value);
+      account.activeTeam = teamId;
+      await persistAccountOnRegistration(account, password);
 
       // login
-      account = await loginAccount(newUsername.value, newPassword1.value);
+      account = await loginAccount(username, password);
       getOrganizationOrThrow();
-      await AppSettings.set("lastLoginUsername", newUsername.value);
+      await accountStore.login();
+      bus.emit("did-login");
+      await AppSettings.set("lastLoginUsername", username);
 
       emit("done");
 
@@ -116,10 +124,10 @@ async function createOrganization() {
         try {
           // we need the catch method, because deleteAccount will likely throw and
           // prevent deleteStorage from being executed
-          await deleteAccount(newUsername.value).catch(() => {});
+          await deleteAccount(username).catch(() => {});
           // with a catch method like above, deleteStorage won't delete;
           // sometimes it doesn't delete anyway, it is not reliable
-          await deleteStorage(newUsername.value);
+          await deleteStorage(username);
         } catch { }
       }
     }

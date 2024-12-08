@@ -1,11 +1,10 @@
 import { BaseType, createBase } from "./base";
-import { User } from "./user";
 
 type AuthUserId = string;
 
 type TeamProps = {
   name: string;
-  members: Record<AuthUserId, User>;
+  members: AuthUserId[];
   admins: AuthUserId[];
   // selectionOptions: {
   //   shiftRoles: {
@@ -20,7 +19,7 @@ export type Team = BaseType & TeamProps;
 
 export const createTeam = ({
   name = "",
-  members = {},
+  members = [],
   admins = [],
   // selectionOptions = {
   //   shiftRoles: [],

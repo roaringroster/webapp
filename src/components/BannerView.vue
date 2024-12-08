@@ -13,7 +13,7 @@
       >
         <div class="text-caption text-weight-medium ellipsis row justify-center items-center">
           <div>{{ isOffline ? $t("offlineBanner") : $t("noServerConnection") }}</div>
-          <q-btn
+          <!-- <q-btn
             v-if="!isConnected"
             icon="fas fa-rotate-right"
             flat
@@ -23,7 +23,7 @@
             size="sm"
             class="q-ml-xs"
             @click="() => reconnect()"
-          />
+          /> -->
         </div>
       </q-banner>
     </transition>

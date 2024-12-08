@@ -7,6 +7,7 @@ import { useAccount } from "src/api/local2";
 import { logoutWithAuth } from "src/api/repo";
 import { useRedirectStore } from "src/stores/redirectStore";
 import { validCustomSchemes } from "src/helper/utils";
+import { useAccountStore } from "src/stores/accountStore";
 
 const { isLoggedIn, logoutAccount } = useAccount();
 
@@ -88,4 +89,17 @@ export async function logout(to: RouteLocationRaw = {name: "auth"}) {
     // prevent redirectPath being set to the current path before logout
     const redirectStore = useRedirectStore();
     redirectStore.redirectPath = "";
+    const accountStore = useAccountStore();
+    accountStore.logout();
+    
+    reset();
+}
+
+/**
+ * @deprecated
+ * ToDo: remove as soon as we learned how to reliably disconnect and destroy 
+ * Repo, AuthProvider and NetworkAdapter on logout
+ */
+function reset() {
+    setTimeout(() => location.reload(), 750);
 }

@@ -5,8 +5,7 @@
   >
     <q-input
       :label="$t('name')"
-      :model-value="doc?.name"
-      @update:model-value="changeDoc(doc => doc.name = alwaysString($event))"
+      v-model="teamName"
       :debounce="debounce"
     />
     <MemberList/>
@@ -14,18 +13,18 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted } from "vue";
-import { useDocument2 } from "src/api/repo";
-import { useAccount } from "src/api/local2";
+import { computed } from "vue";
+import { useAccountStore } from "src/stores/accountStore";
 import { debounce, alwaysString } from "src/helper/input";
 import MemberList from "src/components/MemberList.vue";
-import { Team } from "src/models/team";
 
-const { getAccountRef } = useAccount();
+const accountStore = useAccountStore();
 
-const account = getAccountRef();
-const { doc, changeDoc, cleanup } = useDocument2<Team>(account.value?.activeTeam || "");
-
-onUnmounted(() => cleanup());
+const teamName = computed({
+  get: () => accountStore.team?.name || "",
+  set: value => accountStore.teamHandle?.changeDoc(team => 
+    team.name = alwaysString(value)
+  )
+});
 
 </script>

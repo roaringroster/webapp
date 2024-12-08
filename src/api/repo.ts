@@ -7,14 +7,15 @@ import { AuthProvider, ShareId, getShareId } from "@localfirst/auth-provider-aut
 import { AuthenticatedNetworkAdapter } from "@localfirst/auth-provider-automerge-repo/dist/AuthenticatedNetworkAdapter";
 import * as Auth from "@localfirst/auth";
 import { eventPromise } from "@localfirst/shared";
+import Dexie from "dexie";
 import { useChangeHistoryStore } from "src/stores/changeHistoryStore";
 import { i18n } from "src/boot/i18n";
-import { LocalAccount, PartialLocalAccount, useAccount } from "src/api/local2";
+import { getCaseSensitiveUsername, LocalAccount, PartialLocalAccount, useAccount } from "src/api/local2";
 import { promiseForErrorHandling } from "src/helper/utils";
 
 // import { useAPI } from "src/api";
 import * as AppSettings from "src/database/AppSettings";
-import { User, createUser } from "src/models/user";
+import { Member, createMember } from "src/models/user";
 import { createOrganization, Organization } from "src/models/organization";
 import { createTeam, Team } from "src/models/team";
 // import { createContact } from "src/models/contact";
@@ -29,7 +30,10 @@ const staticRepo = new Repo({
   // network: [new BrowserWebSocketClientAdapter("wss://localhost:3030")],
   storage: new IndexedDBStorageAdapter("rr_demo"),
 });
+
 const dbPrefix = "account.";
+
+export type AuthTeam = Auth.Team;
 
 type AuthRepo = {
   repo: Repo;
@@ -50,33 +54,20 @@ export async function registerOrganization(account: LocalAccount, name: string) 
   const organization = { shareId, websocketServer };
   await setAuthRepo({ auth, repo, network });
 
-  const member = createUser(repo);
-  const members: Record<string, User> = {};
+  const member = createMember(authTeam);
+  const members: Record<string, Member> = {};
   members[account.user?.userId] = member;
 
   const admins = [account.user?.userId];
-  const team = createTeam({name: t("newTeam"), members, admins});
-  const teamHandle = repo.create<Team>();
-  const teamDocId = teamHandle.documentId;
-  teamHandle.change((doc: DocumentId) => 
-    Object.assign(doc, team)
-  );
+  const team = createTeam({name: t("newTeam") + " 1", members: Object.keys(members), admins});
+  const teamId = createDocument(team, authTeam);
 
-  const teams = [{ docId: teamDocId }];
-  const orgHandle = repo.create<Organization>();
-  orgHandle.change((doc: Organization) => 
-    Object.assign(doc, createOrganization({ name, members, teams }))
-  );
+  const teams = [teamId];
+  const organizationId = createDocument(createOrganization({ name, members, teams }), authTeam);
 
-  authTeam.addMessage({ type: "ROOT_DOCUMENT_ID", payload: orgHandle.documentId });
-  addDocument(authTeam, orgHandle.documentId);
-  addDocument(authTeam, teamHandle.documentId);
-  addDocument(authTeam, member.contactId);
-  addDocument(authTeam, member.workAgreementsId);
-  addDocument(authTeam, member.availabilityId);
-  addDocument(authTeam, member.absencesId);
+  authTeam.addMessage({ type: "ROOT_DOCUMENT_ID", payload: organizationId });
   
-  return { team, organization, teamDocId };
+  return { team, organization, teamId };
 }
 
 export async function joinOrganization(account: PartialLocalAccount, invitationCode: string) {
@@ -87,7 +78,7 @@ export async function joinOrganization(account: PartialLocalAccount, invitationC
     const invitationSeed = invitationCode.slice(12, 28) as Auth.Base58;
     // if there is no user yet during device admission to team, the username is in userId of device
     const userName = account.user?.userName || account.device.userId;
-    let teamDocId: DocumentId | undefined = undefined;
+    let teamId: DocumentId | undefined = undefined;
 
     const { auth, repo, network } = await initializeAuthRepo(account);
     await setAuthRepo({ auth, repo, network });
@@ -108,16 +99,16 @@ export async function joinOrganization(account: PartialLocalAccount, invitationC
       auth.once("joined", ({ user }) => resolve(user));
     });
 
-    const team = auth.getTeam(shareId);
+    const authTeam = auth.getTeam(shareId);
 
-    if (!team) {
+    if (!authTeam) {
       console.error("no team");
       throw new Error("GenericError");
     }
 
     // a new member is admitted and not just a new device
     if (account.user != undefined) {
-      const documentId = getRootDocumentId(team);
+      const documentId = getRootDocumentId(authTeam);
 
       if (!documentId) {
         console.error("no team document: missing id");
@@ -126,29 +117,23 @@ export async function joinOrganization(account: PartialLocalAccount, invitationC
 
       const handle = repo.find<Organization>(documentId);
       await handle?.whenReady();
-      const member = createUser(repo);
+      const member = createMember(authTeam);
       handle.change((doc: Organization) => doc.members[user.userId] = member);
 
       // ToDo: needs to be removed or updated when user is assigned to a team before or after joining an organization
       const doc = await handle.doc() as Doc<Organization>;
-      teamDocId = Object.values(doc.teams).at(0)?.docId;
-      if (teamDocId) {
-        const teamHandle = repo.find<Team>(teamDocId);
-        teamHandle.change((doc: Team) => doc.members[user.userId] = member);
+      teamId = Object.values(doc.teams).at(0);
+      if (teamId) {
+        const teamHandle = repo.find<Team>(teamId);
+        await teamHandle.whenReady();
+        teamHandle.change((doc: Team) => {
+          doc.members.push(user.userId);
+        });
       }
-
-      addDocument(team, member.contactId);
-      addDocument(team, member.workAgreementsId);
-      addDocument(team, member.availabilityId);
-      addDocument(team, member.absencesId);
     }
 
-    return { team, organization, user, teamDocId };
+    return { organization, user, teamId };
   });
-}
-
-if (process.env.DEV) {
-  (window as any).getOrganization = getOrganization;
 }
 
 async function initializeAuthRepo(account: PartialLocalAccount) {
@@ -156,8 +141,9 @@ async function initializeAuthRepo(account: PartialLocalAccount) {
   const server = settings.defaultWebsocketServer;
   // if there is no user yet during device admission to team, the username is in userId of device
   const username = user?.userName || device.userId;
+  const dbName = dbPrefix + (await getCaseSensitiveUsername(username, dbPrefix) || username);
 
-  const storage = new IndexedDBStorageAdapter(dbPrefix + username);
+  const storage = new IndexedDBStorageAdapter(dbName);
   const auth = new AuthProvider({ user, device, storage, server });
   const httpProtocol = window.location.protocol;
   const wsProtocol = httpProtocol == "http:"
@@ -217,19 +203,19 @@ async function initializeAuthRepo(account: PartialLocalAccount) {
 }
 
 export async function reconnect(account?: PartialLocalAccount) {
-  console.log("RECONNECT")
-  if (!account && !!currentAccount.value) {
-    account = currentAccount.value;
-  }
+  // console.log("RECONNECT")
+  // if (!account && !!currentAccount.value) {
+  //   account = currentAccount.value;
+  // }
 
-  if (account) {
-    await loginWithAuth(account);
-  }
+  // if (account) {
+  //   await loginWithAuth(account);
+  // }
 }
 
 async function setAuthRepo(value?: AuthRepo) {
   if (authRepo != undefined) {
-    console.log("removeAllListeners")
+    // console.log("removeAllListeners");
     authRepo.auth.removeAllListeners();
     authRepo.repo.removeAllListeners();
     authRepo.network.forEach(network => network.disconnect());
@@ -255,6 +241,32 @@ export function getRepo() {
 }
 
 export async function deleteStorage(username: string) {
+  if (!username) {
+      throw new Error("UsernameMissing")
+  }
+
+  const caseSensitiveUsername = await getCaseSensitiveUsername(username, dbPrefix);
+  const name = dbPrefix + caseSensitiveUsername;
+
+  if (!caseSensitiveUsername || !await Dexie.exists(name)) {
+      throw new Error("UsernameDoesNotExist")
+  }
+
+  /*
+  For the following code to work and not being blocked, automerge-repo-storage-indexeddb
+  needs to close the db on versionchange event in it's createDatabasePromise method:
+
+  request.onsuccess = event => {
+      const db = event.target.result;
+      db.onversionchange = function() {
+          db.close()
+      }
+      resolve(db);
+  };
+
+  source: https://dev.to/ivandotv/handling-indexeddb-upgrade-version-conflict-368a 
+    (via https://github.com/dexie/Dexie.js/issues/1779)
+  */
   return new Promise<void>((resolve, reject) => {
     const request = indexedDB.deleteDatabase(dbPrefix + username);
     request.onsuccess = () => resolve();
@@ -304,15 +316,30 @@ function getShareForTeam(team: Auth.Team) {
   return authRepo?.auth.getShare(shareId);
 }
 
-export function addDocument(team: Auth.Team, id: DocumentId) {
+
+export function createDocument<T extends object>(initialValue: T, team: Auth.Team) {
+  if (!authRepo) {
+    throw new Error("NotLoggedIn");
+  }
+
+  const handle = authRepo.repo.create<T>();
+  handle.change((doc: T) => 
+    Object.assign(doc, initialValue)
+  );
+
+  addDocument(handle.documentId, team);
+
+  return handle.documentId;
+}
+
+export function addDocument(id: DocumentId, team: Auth.Team, ) {
   getShareForTeam(team)?.documentIds?.add(id);
 }
 
-export function removeDocument(team: Auth.Team, id: DocumentId) {
+export function removeDocument(id: DocumentId, team: Auth.Team) {
   getShareForTeam(team)?.documentIds?.delete(id);
   authRepo?.repo.delete(id);
 }
-
 
 /**
  * Returns a handle with a reactive document and change function for the 
@@ -336,7 +363,9 @@ export function useDocument2<T>(id: string) {
 
   const onChange = (h: DocHandleChangePayload<T>) => doc.value = h.doc;
 
-  const cleanup = () => handle?.off("change", onChange)
+  const cleanup = () => {
+    handle?.off("change", onChange)
+  };
 
   const documentId = isValidAutomergeUrl(id)
     ? id
@@ -351,14 +380,14 @@ export function useDocument2<T>(id: string) {
   return { doc, docId: id as DocumentId, changeDoc, cleanup, handle }
 }
 
-export function useDocuments<T>(docIdList: string[]) {
+export function useDocuments<T>(docIdList: string[] = []) {
   return docIdList.map(docId => useDocument2<T>(docId));
 }
 
 type HasHandle<T> = {
-  cleanup: () => DocHandle<T>
-  handle: DocHandle<T>
-}
+  cleanup: () => void;
+  handle: DocHandle<T>;
+};
 
 export async function whenReady(handles: HasHandle<any>[]) {
   return await Promise.all(handles.map(handle => handle.handle.whenReady()));
@@ -367,6 +396,17 @@ export async function whenReady(handles: HasHandle<any>[]) {
 export function cleanupAll(handles: HasHandle<any>[]) {
   handles.forEach(({ cleanup }) => cleanup());
 }
+
+export function updateHandles<T>(source: WatchSource, handlesRef: Ref<HasHandle<T>[]>) {
+   watch(
+    source,
+    (value: string[] | undefined) => {
+      cleanupAll(handlesRef.value);
+      handlesRef.value = useDocuments<T>(value);
+    }
+  );
+}
+
 
 /** @deprecated */
 export function useDocument<T>(id: string | Promise<string>) {
@@ -422,12 +462,7 @@ export function useChangeHistory<T>(source: WatchSource<A.Doc<T> | null>, title:
 
 
 export function useOrganizationDocument() {
-  const team = getOrganization();
-
-  if (!team) {
-    throw new Error("UserHasNoOrganization");
-  }
-
+  const team = getOrganizationOrThrow();
   const docId = getRootDocumentId(team);
 
   if (!docId) {
@@ -435,46 +470,6 @@ export function useOrganizationDocument() {
   }
 
   const handle = useDocument2<Organization>(docId);
-
-  // if (process.env.DEV) {
-  //   handle.handle.whenReady().then(() => {
-  //     if (Object.keys(handle.doc.value?.members).length == 0) {
-  //       console.log("add user documents", handle.doc.value);
-  //       const repo = authRepo.repo
-  //       const user = createUser(repo);
-  //       const members = {};
-  //       members[account.value.user.userId] = user;
-  //       handle.changeDoc(doc => Object.assign(doc, createTeam({members})));
-  //       addDocument(team, user.contactId);
-  //       addDocument(team, user.workAgreementsId);
-  //       addDocument(team, user.availabilityId);
-  //       addDocument(team, user.absencesId);
-  //     } else {
-  //       console.log("update user documents", handle.doc.value);
-  //       const member = handle.doc.value.members[Object.keys(handle.doc.value.members).at(0)];
-  //       const contact = useDocument2(member.contactId);
-  //       contact.handle.whenReady().then(() => {
-  //         contact.changeDoc(doc => Object.assign(doc, createContact()));
-  //         contact.cleanup();
-  //       });
-  //       const workAgreements = useDocument2(member.workAgreementsId);
-  //       workAgreements.handle.whenReady().then(() => {
-  //         workAgreements.changeDoc(doc => Object.assign(doc, createWorkAgreements()));
-  //         workAgreements.cleanup();
-  //       });
-  //       const availability = useDocument2(member.availabilityId);
-  //       availability.handle.whenReady().then(() => {
-  //         availability.changeDoc(doc => Object.assign(doc, createAvailabilityList()));
-  //         availability.cleanup();
-  //       });
-  //       const absences = useDocument2(member.absencesId);
-  //       absences.handle.whenReady().then(() => {
-  //         absences.changeDoc(doc => Object.assign(doc, createAbsenceList()));
-  //         absences.cleanup();
-  //       });
-  //     }
-  //   })
-  // }
 
   return handle;
 }

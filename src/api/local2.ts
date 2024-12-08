@@ -6,11 +6,11 @@ import { ShareId } from "@localfirst/auth-provider-automerge-repo";
 import { DocumentId } from "@automerge/automerge-repo";
 import { createUser, createDevice, UserWithSecrets, DeviceWithSecrets, Base58 } from "@localfirst/auth";
 import { UAParser } from "ua-parser-js";
+import { Platform } from "quasar";
 import { bus } from "src/boot/eventBus";
 import { EncryptedDatabase } from "src/database/EncryptedDatabase";
 import Vault from "src/database/Vault";
 import { didExpire } from "src/helper/expiration";
-import { useQuasar } from "quasar";
 
 const dbPrefix = "accountlocal.";
 
@@ -26,10 +26,10 @@ async function allUsernames() {
         .map(name => name.substring(dbPrefix.length))
 }
 
-async function getCaseSensitiveUsername(username: string) {
+export async function getCaseSensitiveUsername(username: string, prefix = dbPrefix) {
     return (await Dexie.getDatabaseNames())
-        .find(name => name.toLowerCase() == (dbPrefix + username).toLowerCase())
-        ?.substring(dbPrefix.length)
+        .find(name => name.toLowerCase() == (prefix + username).toLowerCase())
+        ?.substring(prefix.length)
 }
 
 function isValidUsername(username: string) {
@@ -39,7 +39,8 @@ function isValidUsername(username: string) {
 }
 
 async function exists(username: string) {
-    return (await getCaseSensitiveUsername(username)) != undefined;
+    return (await getCaseSensitiveUsername(username)) != undefined
+        || (await getCaseSensitiveUsername(username, "account.")) != undefined;
 }
 
 // === assertions ===
@@ -151,9 +152,10 @@ async function deleteAccount(username: string) {
         throw new Error("UsernameMissing")
     }
 
-    const name = dbPrefix + await getCaseSensitiveUsername(username);
+    const caseSensitiveUsername = await getCaseSensitiveUsername(username);
+    const name = dbPrefix + caseSensitiveUsername;
 
-    if (!await Dexie.exists(name)) {
+    if (!caseSensitiveUsername || !await Dexie.exists(name)) {
         throw new Error("UsernameDoesNotExist")
     }
 
@@ -332,13 +334,11 @@ type DeviceSettings = {
 };
 
 function getDeviceType() {
-    const $q = useQuasar();
     const { device, os, browser } = UAParser(navigator.userAgent);
-
     const deviceInfo = [device.vendor, device.model].filter(Boolean);
     const deviceType = device.type;
 
-    if (!$q.platform.is.electron && !$q.platform.is.cordova && !!browser.name) {
+    if (!Platform.is.electron && !Platform.is.cordova && !!browser.name) {
         deviceInfo.unshift(browser.name, "–");
     }
 

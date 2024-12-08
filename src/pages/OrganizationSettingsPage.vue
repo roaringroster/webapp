@@ -5,20 +5,24 @@
   >
     <q-input
       :label="$t('organizationName2')"
-      :model-value="doc?.name"
-      @update:model-value="changeDoc(doc => doc.name = alwaysString($event))"
+      v-model="organizationName"
       :debounce="debounce"
     />
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { onUnmounted } from "vue";
-import { useOrganizationDocument } from "src/api/repo";
+import { computed } from "vue";
+import { useAccountStore } from "src/stores/accountStore";
 import { debounce, alwaysString } from "src/helper/input";
 
-const { doc, changeDoc, cleanup } = useOrganizationDocument();
+const accountStore = useAccountStore();
 
-onUnmounted(() => cleanup());
+const organizationName = computed({
+  get: () => accountStore.organization?.name || "",
+  set: value => accountStore.organizationHandle?.changeDoc(org => 
+    org.name = alwaysString(value)
+  )
+});
 
 </script>

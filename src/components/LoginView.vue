@@ -65,6 +65,8 @@ import { useAccount } from "src/api/local2";
 import { loginWithAuth, logoutWithAuth, deleteStorage, getOrganizationOrThrow } from "src/api/repo";
 import { sanitizeHTML, selectBehavior } from "src/helper/utils";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
+import { bus } from "src/boot/eventBus";
+import { useAccountStore } from "src/stores/accountStore";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -75,6 +77,7 @@ const {
   logoutAccount,
   deleteAccount,
 } = useAccount();
+const accountStore = useAccountStore();
 
 const emit = defineEmits(["done", "update:accountlist"]);
 
@@ -96,6 +99,8 @@ async function login() {
     const account = await loginAccount(username.value, password.value);
     await loginWithAuth(account);
     getOrganizationOrThrow();
+    await accountStore.login();
+    bus.emit("did-login");
     await AppSettings.set("lastLoginUsername", username.value);
 
     emit("done");

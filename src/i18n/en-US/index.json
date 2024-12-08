@@ -351,5 +351,6 @@
   "notifications": "Notifications",
   "requests": "Requests",
   "organizationMembers": "Membership Administration",
-  "contacts": "Contacts"
+  "contacts": "Contacts",
+  "noTeamSelected": "No team selected"
 }

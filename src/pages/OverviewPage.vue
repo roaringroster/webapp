@@ -26,7 +26,7 @@ import { computed } from "vue";
 import { date } from "quasar";
 import MasonryWall from "@yeger/vue-masonry-wall";
 import { DocumentId } from "@automerge/automerge-repo";
-import { useAccount } from "src/api/local2";
+import { useAccountStore } from "src/stores/accountStore";
 import { createContact } from "src/models/contact";
 import { Absence, createAbsence } from "src/models/absence";
 import { createShift } from "src/models/roster";
@@ -38,12 +38,9 @@ import ShiftWidget from "src/components/ShiftWidget.vue";
 import VacationWidget from "src/components/VacationWidget.vue";
 
 const { startOfDate, addToDate } = date;
-const { getAccountRef } = useAccount();
+const accountStore = useAccountStore();
 
 // – Data
-
-const account = getAccountRef();
-const currenUserId = computed(() => account.value?.user.userId)
 
 const makeContact = (firstName: string, lastName: string, birthday: Date) =>
   createContact({firstName, lastName, birthday: startOfDate(birthday, "day", true)})
@@ -52,9 +49,9 @@ const makeAbsence = (name: string, reason: string, end: Date) =>
   ({ name, absence: createAbsence({reason, end}) })
 
 const assignments = {
-  1: [currenUserId.value as DocumentId],
-  3: [currenUserId.value as DocumentId],
-  5: [currenUserId.value as DocumentId],
+  1: [accountStore.userId as DocumentId],
+  3: [accountStore.userId as DocumentId],
+  5: [accountStore.userId as DocumentId],
 }
 const shifts = [
   createShift({assignments})
@@ -100,7 +97,7 @@ const widgets = computed(() => [
     props: {},
   }, {
     component: ShiftWidget,
-    props: { shifts, userId: currenUserId.value },
+    props: { shifts, userId: accountStore.userId },
   }, {
     component: AbsenceWidget, 
     props: { absences },

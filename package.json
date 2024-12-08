@@ -23,12 +23,12 @@
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
-    "@automerge/automerge": "^2.0.3",
+    "@automerge/automerge": "^2.2.8",
     "@automerge/automerge-repo": "^1.2.1",
     "@automerge/automerge-repo-network-websocket": "^1.2.1",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.1.0",
-    "@localfirst/auth-provider-automerge-repo": "^6.0.0-alpha.6",
-    "@quasar/extras": "^1.16.13",
+    "@automerge/automerge-repo-storage-indexeddb": "^1.2.1",
+    "@localfirst/auth-provider-automerge-repo": "^6.0.0",
+    "@quasar/extras": "^1.16.15",
     "@yeger/vue-masonry-wall": "^5.0.2",
     "argon2-browser": "^1.18.0",
     "chart.js": "^4.4.6",

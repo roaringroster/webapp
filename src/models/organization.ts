@@ -1,16 +1,14 @@
 import { DocumentId } from "@automerge/automerge-repo";
 import { BaseType, createBase } from "./base";
-import { DeletedUser, User } from "./user";
+import { Member } from "./user";
 
 type AuthUserId = string;
 
 type OrganizationProps = {
   name: string;
-  teams: {
-    docId: DocumentId;
-  }[];
-  members: Record<AuthUserId, User>;
-  formerMembers: Record<AuthUserId, DeletedUser>;
+  teams: DocumentId[];
+  members: Record<AuthUserId, Member>;
+  formerUserNames: Record<AuthUserId, string>;
   selectionOptions: {
     absenceReasons: {
       title: string;
@@ -35,7 +33,7 @@ export const createOrganization = ({
   name = "",
   teams = [],
   members = {},
-  formerMembers = {},
+  formerUserNames = {},
   selectionOptions = {
     absenceReasons: PredefinedAbsenceReasons
       .map(title => ({
@@ -48,7 +46,7 @@ export const createOrganization = ({
   name,
   teams,
   members,
-  formerMembers,
+  formerUserNames,
   selectionOptions
 });
 

@@ -42,7 +42,9 @@
             style="width: 56px; height: 56px"
           >
             <signature
-              :userName="member.userName"
+              :signature="signatures?.[member.userId]"
+              :userName="!signatures ? member.userName : undefined"
+              fallback="?"
               class="self-center bg-grey-7"
               color="white"
               style="font-size: 1.1em"
@@ -85,33 +87,33 @@
               @click.stop
             >
               <template v-slot:admin-toggle>
-                  <q-item 
-                    tag="label"
-                    class="q-pl-sm q-py-xs"
-                    @click.stop
-                  >
-                    <q-item-section side class="q-pr-sm">
-                      <q-checkbox 
-                        :model-value="hasAdminRole(member)" 
-                        @update:model-value="toggleAdminRole(member)"
-                        :disable="!isAdmin"
-                        color="primary"
-                        keep-color
+                <q-item 
+                  tag="label"
+                  class="q-pl-sm q-py-xs"
+                  @click.stop
+                >
+                  <q-item-section side class="q-pr-sm">
+                    <q-checkbox 
+                      :model-value="hasAdminRole(member)" 
+                      @update:model-value="toggleAdminRole(member)"
+                      :disable="!isAdmin"
+                      color="primary"
+                      keep-color
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>
+                      {{ hasAdminRole(member) ? $t('hasAdminRole') : $t('hasNoAdminRole') }}
+                    </q-item-label>
+                    <q-item-label caption class="text-primary text-italic" lines="1">
+                      <text-with-tooltip 
+                        :text="hasAdminRole(member) ? t('dropAdminRoleCaption') : t('assignAdminRoleCaption')"
+                        :tooltip="$t('organizationRolesDescription')"
+                        width="400px"
                       />
-                    </q-item-section>
-                    <q-item-section>
-                      <q-item-label>
-                        {{ hasAdminRole(member) ? $t('hasAdminRole') : $t('hasNoAdminRole') }}
-                      </q-item-label>
-                      <q-item-label caption class="text-primary text-italic" lines="1">
-                        <text-with-tooltip 
-                          :text="hasAdminRole(member) ? t('dropAdminRoleCaption') : t('assignAdminRoleCaption')"
-                          :tooltip="$t('organizationRolesDescription')"
-                          width="400px"
-                        />
-                      </q-item-label>
-                    </q-item-section>
-                  </q-item>
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
               </template>
               <template v-slot:admin-hint>
                 <q-item style="max-width: 360px">
@@ -166,7 +168,7 @@
               <span v-else>
                 {{ device.deviceName }}
                 <span 
-                  v-if="account?.device.deviceId == device.deviceId"
+                  v-if="accountStore.account?.device.deviceId == device.deviceId"
                   class="text-italic"
                 >
                   – {{ $t("thisDevice") }}
@@ -220,51 +222,52 @@
 </style>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref, Ref, watch } from "vue";
+import { computed, onUnmounted, PropType, ref, Ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { QExpansionItem, QInput, useQuasar } from "quasar";
-import { Member, Device, InvitationState, UnixTimestamp, Base58, ADMIN } from "@localfirst/auth";
+import { Member as AuthMember, Device, InvitationState, UnixTimestamp, Base58, ADMIN } from "@localfirst/auth";
 import { base58 } from "@localfirst/crypto";
+import { useAccountStore } from "src/stores/accountStore";
 import { InvitationSeeds, useAccount } from "src/api/local2";
-import { cleanupAll, getOrganization, removeDocument, useDocument2, useDocuments, useOrganizationDocument, whenReady } from "src/api/repo";
+import { getOrganization, removeDocument, useDocument2 } from "src/api/repo";
 import { didExpire } from "src/helper/expiration";
 import { InvitationCodeLength } from "src/helper/utils";
-import { Organization } from "src/models/organization";
-import { Contact, getName } from "src/models/contact";
-import { Team } from "src/models/team";
 import Signature from "src/components/Signature.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import ActionMenu from "src/components/ActionMenu.vue";
 import InvitationSheet from "src/components/InvitationSheet.vue";
 import InvitationItem from "src/components/InvitationItem.vue";
+import { Contact, getUsername } from "src/models/contact";
 
 const $q = useQuasar();
 const { t } = useI18n();
 
 const isDisabled = computed(() => didExpire());
 
-const { 
-  getAccountRef, 
+const {
   getInvitations, 
   addInvitation, 
   deleteInvitation
 } = useAccount();
-const account = getAccountRef();
+const accountStore = useAccountStore();
 
 const props = defineProps({
-  memberId: String
+  memberId: String,
+  signatures: {
+    type: Object as PropType<Record<string, string>>
+  }
 })
 
-const team = getOrganization();
+const authTeam = getOrganization();
 const isAdmin: Ref<boolean> = ref(false);
-const members: Ref<Member[]> = ref([]);
+const members: Ref<AuthMember[]> = ref([]);
 const adminCount = computed(() => 
-  members.value.filter(({userId}) => team?.memberIsAdmin(userId)).length
+  members.value.filter(({userId}) => authTeam?.memberIsAdmin(userId)).length
 );
 const invitations: Ref<InvitationState[]> = ref([]);
 
-team?.on("updated", onTeamUpdated);
-onUnmounted(() => team?.off("updated", onTeamUpdated));
+authTeam?.on("updated", onTeamUpdated);
+onUnmounted(() => authTeam?.off("updated", onTeamUpdated));
 watch(
   () => props.memberId,
   (newValue) => {
@@ -279,11 +282,12 @@ watch(
 );
 
 function onTeamUpdated() {
-  const userId = account.value?.user.userId;
-  isAdmin.value = !!userId && !!team && team.has(userId) && team.memberIsAdmin(userId);
-  members.value = (team?.members() || [])
+  const userId = accountStore.userId;
+  isAdmin.value = !!userId && !!authTeam && authTeam.has(userId) 
+    && authTeam.memberIsAdmin(userId);
+  members.value = (authTeam?.members() || [])
     .filter(member => !props.memberId || member.userId == props.memberId);
-  invitations.value = Object.values(team?.state.invitations || {})
+  invitations.value = Object.values(authTeam?.state.invitations || {})
     .filter(invitation => 
       !invitation.revoked 
         && Date.now() <= invitation.expiration
@@ -309,8 +313,8 @@ function inviteMemberSheet() {
     component: InvitationSheet
   })
   .onOk(async ({expiration, maxUses}: {expiration: UnixTimestamp, maxUses: number}) => {
-    if (team && isAdmin.value) {
-      let { seed, id } = team.inviteMember({expiration, maxUses});
+    if (authTeam && isAdmin.value) {
+      let { seed, id } = authTeam.inviteMember({expiration, maxUses});
       seed = seed + seedExtension(true);
       invitationSeeds.value = await addInvitation(id, {expiration, seed});
     }
@@ -350,22 +354,22 @@ function titleCaption() {
 const memberItems: Ref<QExpansionItem[]> = ref([]);
 
 function hasAdminRole(member: {userId: string}) {
-  return team?.memberIsAdmin(member.userId) || false;
+  return authTeam?.memberIsAdmin(member.userId) || false;
 }
 
 function isCurrentUser(member: {userId: string}) {
-  return account.value?.user.userId == member.userId;
+  return accountStore.userId == member.userId;
 }
 
 function isOnlyAdmin(member: {userId: string}) {
   return hasAdminRole(member) && adminCount.value == 1;
 }
 
-function captionForMember(member: Member) {
+function captionForMember(member: AuthMember) {
   return getCaption(member.devices?.length, invitationsForUserId(member.userId).length);
 }
 
-function memberActionItems(member: Member, index: number) {
+function memberActionItems(member: AuthMember, index: number) {
   return [
     {
       customType: "admin-toggle",
@@ -395,80 +399,71 @@ function memberActionItems(member: Member, index: number) {
 }
 
 async function inviteDevice() {
-  if (!team) {
+  if (!authTeam) {
     return;
   }
   
   const expiration = Date.now() + 30 * 60_000 as UnixTimestamp;
-  let { seed, id } = team.inviteDevice({ expiration });
+  let { seed, id } = authTeam.inviteDevice({ expiration });
   seed = seed + seedExtension(false);
   invitationSeeds.value = await addInvitation(id, {expiration, seed});
 }
 
-function toggleAdminRole(member: Member) {
-  if (!team || isOnlyAdmin(member)) {
+function toggleAdminRole(member: AuthMember) {
+  if (!authTeam || isOnlyAdmin(member)) {
     return;
   }
 
   if (hasAdminRole(member)) {
-    team.removeMemberRole(member.userId, ADMIN)
+    authTeam.removeMemberRole(member.userId, ADMIN)
   } else {
-    team.addMemberRole(member.userId, ADMIN)
+    authTeam.addMemberRole(member.userId, ADMIN)
   }
 }
 
-async function removeMember(member: Member) {
-  if (!team || isOnlyAdmin(member)) {
+async function removeMember(authMember: AuthMember) {
+  if (!authTeam || isOnlyAdmin(authMember)) {
     return;
   }
   
-  const id = member.userId;
-  team.remove(id);
+  const id = authMember.userId;
+  authTeam.remove(id);
+  const member = accountStore.organization?.members[id];
 
-  const orgHandle = useOrganizationDocument();
-  await orgHandle.handle?.whenReady(); // ensure handle.doc will not be null
-  const user = orgHandle.doc.value?.members[id];
+  if (member) {
+    const memberContactHandle = useDocument2<Contact>(member.contactId);
+    memberContactHandle.handle.whenReady();
 
-  if (user) {
-    const teamIds = orgHandle.doc.value?.teams.map(({ docId }) => docId) || [];
-    const teamHandles = useDocuments<Team>(teamIds);
-    const userContactHandle = useDocument2<Contact>(user.contactId);
-    const handleList = [...teamHandles, userContactHandle];
-    await whenReady(handleList);
-
-    const name = getName(userContactHandle.doc.value);
-    orgHandle.changeDoc((doc: Organization) => {
-      doc.formerMembers[id] = { name };
+    const name = getUsername(memberContactHandle.doc.value) || authMember.userName;
+    accountStore.organizationHandle?.changeDoc(doc => {
+      doc.formerUserNames[id] = name;
       delete doc.members[id];
     });
-    removeDocument(team, user.contactId);
-    removeDocument(team, user.absencesId);
-    removeDocument(team, user.availabilityId);
-    removeDocument(team, user.workAgreementsId);
+    removeDocument(member.contactId, authTeam);
+    removeDocument(member.workAgreementsId, authTeam);
+    removeDocument(member.absencesId, authTeam);
+    removeDocument(member.availabilityId, authTeam);
 
     // remove userId from member and admin lists of all teams
-    teamHandles.forEach(({ doc, changeDoc }) => {
-      const value = doc.value;
+    accountStore.allTeamHandles.forEach(({ doc, changeDoc }) => {
+      if (!!doc && (doc.members.includes(id) || doc.admins.includes(id))) {
+        changeDoc(team => {
+          const memberIndex = [...team.members].indexOf(id);
+          const adminIndex = [...team.admins].indexOf(id);
 
-      if (value && (Object.keys(value.members).includes(id) || value.admins.includes(id))) {
-        changeDoc(doc => {
-          if (Object.keys(doc.members).includes(id)) {
-            delete doc.members[id];
+          if (memberIndex >= 0) {
+            team.members.splice(memberIndex, 1);
           }
 
-          const index = doc.admins.indexOf(id);
-
-          if (index >= 0) {
-            doc.admins.splice(index, 1);
+          if (adminIndex >= 0) {
+            team.admins.splice(adminIndex, 1);
           }
         })
       }
     });
 
-    cleanupAll(handleList);
+    memberContactHandle.cleanup();
   }
-
-  orgHandle.cleanup();
 }
 
 // - device actions
@@ -501,7 +496,7 @@ function onChangeDeviceName() {
 }
 
 function removeDevice(id: string) {
-  team?.removeDevice(id);
+  authTeam?.removeDevice(id);
 }
 
 function deviceIcon(device: Device) {

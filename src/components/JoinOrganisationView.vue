@@ -93,6 +93,8 @@ import { InvitationCodeLength } from "src/helper/utils";
 import { requestPermissions, useDiagnostic } from "src/helper/cordova";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import QRCodeScanner from "src/components/QRCodeScanner.vue";
+import { bus } from "src/boot/eventBus";
+import { useAccountStore } from "src/stores/accountStore";
 
 const route = useRoute();
 const $q = useQuasar();
@@ -103,6 +105,7 @@ const {
   logoutAccount,
   deleteAccount,
 } = useAccount();
+const accountStore = useAccountStore();
 
 const emit = defineEmits(["done"]);
 
@@ -148,26 +151,30 @@ const canUseCamera = window.isSecureContext == true
 async function joinOrganisation() {
   errorMessageText.value = "";
   isLoading.value = true;
+  const username = newUsername.value;
+  const password = newPassword1.value;
 
   if (canCreateAccount.value) {
     try {
-      let account = await registerAccount(newUsername.value, newPassword1.value, 
+      let account = await registerAccount(username, password, 
         locale.value, isDeviceInvitation.value);
-      const { organization, user, teamDocId } = await joinOrganization(account, invitationCode.value)
+      const { organization, user, teamId } = await joinOrganization(account, invitationCode.value)
         .catch(error => { throw error });
       account.organizations = [organization];
       account.activeOrganization = organization.shareId;
-      account.activeTeam = teamDocId;
+      account.activeTeam = teamId;
       account.device.userId = user.userId;
       account.user = account.user || user;
       // ensure username is identical to input, because the one in auth chain might differ
-      account.user.userName = newUsername.value;
-      await persistAccountOnRegistration(account as LocalAccount, newPassword1.value);
+      account.user.userName = username;
+      await persistAccountOnRegistration(account as LocalAccount, password);
 
       // login
-      account = await loginAccount(newUsername.value, newPassword1.value);
+      account = await loginAccount(username, password);
       getOrganizationOrThrow();
-      await AppSettings.set("lastLoginUsername", newUsername.value);
+      await accountStore.login();
+      bus.emit("did-login");
+      await AppSettings.set("lastLoginUsername", username);
 
       emit("done");
 
@@ -182,10 +189,10 @@ async function joinOrganisation() {
         try {
           // we need the catch method, because deleteAccount will likely throw and
           // prevent deleteStorage from being executed
-          await deleteAccount(newUsername.value).catch(() => {});
+          await deleteAccount(username).catch(() => {});
           // with a catch method like above, deleteStorage won't delete;
           // sometimes it doesn't delete anyway, it is not reliable
-          await deleteStorage(newUsername.value);
+          await deleteStorage(username);
         } catch { }
       }
     }

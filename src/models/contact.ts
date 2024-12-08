@@ -1,7 +1,8 @@
-import { CustomField, LabeledValue } from "./generic";
+import { DateTime } from "luxon";
 import { BaseType, createBase } from "./base";
+import { CustomFieldListType, LabeledValue } from "./generic";
 
-type ContactProps = {
+export type ContactProps = CustomFieldListType & {
   firstName: string;
   lastName: string;
   birthday: Date | null;
@@ -17,7 +18,6 @@ type ContactProps = {
   postalAddresses: LabeledValue<PostalAddress>[];
   urls: LabeledValue<string>[];
   notes: string;
-  customFields: CustomField<any>[];
 }
 
 export type Contact = BaseType & ContactProps;
@@ -69,11 +69,11 @@ export const createContact = ({
   customFields,
 });
 
-export function getUsername(value?: Contact) {
+export function getUsername(value?: ContactProps | null) {
   return [value?.firstName, value?.lastName].filter(Boolean).join(" ");
 }
 
-export function getName(value: Contact | null, fallback = "") {
+export function getName(value: ContactProps | null, fallback = "") {
   if (value) {
     if (value.isOrganization) {
       return value.organization.trim() || fallback;
@@ -116,13 +116,13 @@ function findNewLabel<T>(existingValues: LabeledValue<T>[] = [], allLabels: stri
   }
 };
 
-export function makePhoneNumber(value: Contact, preferredLabel?: string) {
+export function makePhoneNumber(value: ContactProps, preferredLabel?: string) {
   return makeLabeledValue("", value.phoneNumbers, phoneLabels, preferredLabel);
 }
-export function makeEmailAddress(value: Contact, preferredLabel?: string) {
+export function makeEmailAddress(value: ContactProps, preferredLabel?: string) {
   return makeLabeledValue("", value.emailAddresses, emailLabels, preferredLabel);
 }
-export function makePostalAddress(value: Contact, country: string, preferredLabel?: string) {
+export function makePostalAddress(value: ContactProps, country: string, preferredLabel?: string) {
   return makeLabeledValue({
     street1: "",
     postalCode: "",
@@ -131,6 +131,24 @@ export function makePostalAddress(value: Contact, country: string, preferredLabe
     country: country
   }, value.postalAddresses, postalLabels, preferredLabel);
 }
-export function makeUrl(value: Contact, preferredLabel?: string) {
+export function makeUrl(value: ContactProps, preferredLabel?: string) {
   return makeLabeledValue("", value.urls, urlLabels, preferredLabel);
+}
+
+export function sortByLastName(a: ContactProps, b: ContactProps) {
+  return a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName);
+}
+
+export function age(contact: ContactProps, date = new Date()) {
+  return contact.birthday
+    ? Math.floor(
+      DateTime.fromJSDate(date)
+        .diff(DateTime.fromJSDate(contact.birthday), "years").years
+    ) : undefined;
+}
+
+export function hasBirthday(contact: ContactProps, date = new Date()) {
+  return contact.birthday &&
+    contact.birthday.getMonth() == date.getMonth() &&
+    contact.birthday.getDate() == date.getDate();
 }
