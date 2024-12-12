@@ -425,6 +425,7 @@ module.exports = configure(function (ctx) {
         appId: env.APP_ID,
         productName: "RoaringRoster",
         copyright: "Copyright © Michael Kamphausen",
+        nativeRebuilder: "legacy",
         protocols: [{
           name: "RoaringRoster URL",
           schemes: [env.URL_SCHEME]
