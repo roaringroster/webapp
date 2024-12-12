@@ -106,6 +106,7 @@ module.exports = configure(function (ctx) {
         BETA_EXPIRATION: "",
         APP_ID: "",
         UPDATE_URL: "",
+        INSTALL_URL: "",
         APPLE_APP_ID: "",
         ...env,        
         APP_VERSION: packageJson.version || 0,

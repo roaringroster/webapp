@@ -1,4 +1,5 @@
 import { Platform } from "quasar";
+import { appCustomURLScheme } from "./appInfo";
 
 export async function promiseForErrorHandling<T>(
   method: (
@@ -104,8 +105,7 @@ export function onLongPress(
 }
 
 export function validCustomSchemes() {
-    const customScheme = process.env.URL_SCHEME;
-    const schemeComponents = customScheme?.split(".") || [];
+    const schemeComponents = appCustomURLScheme?.split(".") || [];
     return [
         schemeComponents.slice(0, 2).join("."),
         schemeComponents.join(".")

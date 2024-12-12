@@ -35,6 +35,11 @@
         />
       </div>
       <div v-if="errorMessagePassword" class="q-mt-md text-negative">{{ errorMessagePassword }}</div>
+      <text-with-tooltip
+        :text="$t('passwordSecurityWarningTitle')"
+        :tooltip="$t('passwordSecurityWarning')"
+        class="q-mt-xs text-caption text-grey-8"
+      />
       <div class="q-mt-md row items-center">
         <q-btn
           :label="$t('changePassword')"
@@ -65,6 +70,7 @@ import { useI18n } from "vue-i18n";
 import { useAccount } from "src/api/local2";
 import { errorMessage } from "src/boot/i18n";
 import { notifySuccess } from "src/helper/notify";
+import TextWithTooltip from "src/components/TextWithTooltip.vue";
 
 const { t } = useI18n();
 const { changePassword } = useAccount();

@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useQuasar } from "quasar";
 import { locale, errorMessage, errorToString } from "src/boot/i18n";
 import * as AppSettings from "src/database/AppSettings";
 import { registerOrganization, deleteStorage, getOrganizationOrThrow, logoutWithAuth } from "src/api/repo";
@@ -60,7 +61,9 @@ import { LocalAccount, useAccount } from "src/api/local2";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import { bus } from "src/boot/eventBus";
 import { useAccountStore } from "src/stores/accountStore";
+import PasswordSecuritySheet from "src/components/PasswordSecuritySheet.vue";
 
+const $q = useQuasar();
 
 const { 
   registerAccount, 
@@ -107,11 +110,17 @@ async function createOrganization() {
       // login
       account = await loginAccount(username, password);
       getOrganizationOrThrow();
-      await accountStore.login();
-      bus.emit("did-login");
-      await AppSettings.set("lastLoginUsername", username);
 
-      emit("done");
+      $q.dialog({
+        component: PasswordSecuritySheet
+      })
+      .onOk(async () => {
+        await accountStore.login();
+        bus.emit("did-login");
+        await AppSettings.set("lastLoginUsername", username);
+
+        emit("done");
+      });
 
     } catch(error) {
       errorMessageText.value = errorMessage(error);

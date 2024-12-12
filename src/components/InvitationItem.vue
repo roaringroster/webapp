@@ -17,16 +17,66 @@
         <q-popup-edit 
           modelValue="" 
           auto-close
+          max-height="95vh"
           transition-show="scale"
           transition-hide="scale"
           class="q-pa-none"
         >
-          <q-img
-            :src="qrDataURL"
-            width="240px"
-            ratio="1"
-            style="cursor: zoom-out"
-          />
+          <div class="row items-center justify-center">
+            <div>
+              <q-img
+                :src="qrDataURL"
+                width="240px"
+                ratio="1"
+                style="cursor: zoom-out"
+              />
+            </div>
+            <div 
+              class="q-pa-md"
+              style="min-width: 240px; max-width: 420px"
+            >
+              <div class="text-h6 line-height-15">
+                {{ memberOrDeviceText(
+                  $t("memberInvitationInstructionTitle"), 
+                  $t("deviceInvitationInstructionTitle", { appName })) }}
+              </div>
+              <ol class="q-mb q-pl-lg">
+                <li>
+                  <simplified-markdown 
+                    :text="memberOrDeviceText(
+                      $t('memberInvitationInstructionStep1', { appName }), 
+                      $t('deviceInvitationInstructionStep1', { appName }))"
+                  />
+                </li>
+                <li>
+                  <simplified-markdown 
+                    :text="memberOrDeviceText(
+                      $t('memberInvitationInstructionStep2', {joinButtonLabel: t('addNewDevice')}), 
+                      $t('deviceInvitationInstructionStep2', {joinButtonLabel: t('addNewDevice')}))" 
+                  />
+                </li>
+                <li>
+                  <simplified-markdown 
+                    :text="memberOrDeviceText(
+                      $t('memberInvitationInstructionStep3'), 
+                      $t('deviceInvitationInstructionStep3'))" 
+                  />
+                </li>
+              </ol>
+              <q-btn
+                v-if="!isDisabled && isShareSupported"
+                :label="memberOrDeviceText(
+                  $t('memberInvitationShareButton'),
+                  $t('deviceInvitationShareButton'))"
+                no-caps
+                flat
+                rounded
+                dense
+                color="primary"
+                @click.stop="shareInvitation()"
+              />
+            </div>
+          </div>
         </q-popup-edit>
       </q-img>
       <q-icon 
@@ -46,6 +96,7 @@
               :text="invitationCodeTitle"
               :tooltip="invitationCodeHint"
               iconClass="text-grey-7"
+              class="selectable"
             />
           </q-item-label>
           <q-item-label 
@@ -114,12 +165,15 @@ import { notifySuccess } from "src/helper/notify";
 import { copyText } from "src/helper/clipboard";
 import { useQRCode } from "src/helper/qrcode";
 import { timeago } from "src/helper/relativeTime";
+import { appCustomURLScheme, appDownloadURL, appName } from "src/helper/appInfo";
+import { useAccountStore } from "src/stores/accountStore";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import ActionMenu from "src/components/ActionMenu.vue";
+import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 
 const { t } = useI18n();
 const $q = useQuasar();
-const customScheme = process.env.URL_SCHEME;
+const accountStore = useAccountStore();
 
 const emit = defineEmits(["revoke"]);
 
@@ -142,18 +196,24 @@ const invitationCode = computed(() =>
     : ""
 );
 const invitationUrl = computed(() => 
-  customScheme
-    ? customScheme + "://auth/invitation/" + invitationCode.value
+  appCustomURLScheme
+    ? appCustomURLScheme + "://auth/invitation/" + invitationCode.value
     : invitationCode.value
 );
 const qrDataURL = useQRCode(invitationUrl);
 
+function memberOrDeviceText(memberInvitationText: string, deviceInvitationText: string) {
+  return !props.invitation.userId
+    ? memberInvitationText
+    : deviceInvitationText;
+}
+
 const invitationCodeTitle = computed(() => {
   const code = invitationCode.value;
-  const isMemberInvitation = !props.invitation.userId;
-  const target = isMemberInvitation
-    ? t("newMembers", props.invitation.maxUses)
-    : t("newDevice")
+  const target = memberOrDeviceText(
+    t("newMembers", props.invitation.maxUses),
+    t("newDevice")
+  );
 
   if (!!invitationCode.value) {
     return t("invitationTitleWithCode", {target, code});
@@ -165,17 +225,35 @@ const invitationCodeHint = computed(() => {
   if (!invitationCode.value) {
     return t("missingInvitationCodeHint");
   } else {
-    return "";
+    return memberOrDeviceText(
+      t("memberInvitationCodeHint"), 
+      t("deviceInvitationCodeHint")
+    );
   }
 })
 
 const isShareSupported = computed(() => !!navigator.share || !!$q.platform.is.cordova);
 
 async function shareInvitation() {
-  const appname = process.env.APP_NAME || "";
   const code = invitationCode.value;
-  const subject = appname + " " + t("invitation");
-  const message = t("invitationMessage", {code});
+  const codeExpiration = timeToExpiration.value;
+  const expirationHint = props.invitation.expiration
+    ? t("invitationExpirationHint", { codeExpiration })
+    : ""
+  const invitationURL = invitationUrl.value;
+  const organizationName = accountStore.organization?.name || "";
+  const subject = appName + " " + t("invitation");
+  const appDescription = t("appDescriptionForInvitation");
+  const joinButtonLabel = t("addNewDevice");
+  const message = t(
+    "invitationMessage", 
+    {
+      appName, appDescription, appDownloadURL, 
+      organizationName,
+      code, invitationURL, expirationHint,
+      joinButtonLabel
+    }
+  ) + "\n\n";
 
   if (navigator.share) {
     await navigator.share({title: subject, text: message}).catch(() => {})
@@ -223,10 +301,15 @@ function revokeInvitation() {
   emit("revoke");
 }
 
+function formatExpiration() {
+  return props.invitation.expiration
+    ? timeago(props.invitation.expiration, locale.value) || ""
+    : t("never")
+}
 
-const timeToExpiration = ref(timeago(props.invitation.expiration, locale.value) || "");
+const timeToExpiration = ref(formatExpiration());
 const timer = setInterval(() => 
-  timeToExpiration.value = timeago(props.invitation.expiration, locale.value) || ""
+  timeToExpiration.value = formatExpiration()
 , 1000);
 
 onUnmounted(() => clearInterval(timer));

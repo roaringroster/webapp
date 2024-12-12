@@ -17,6 +17,7 @@
       :style="`width: 100%; max-width: ${safeMaxWidth}px;`"
     >
       <q-card-section
+        v-if="!noHeader"
         :class="['sheet-header row no-wrap items-center non-selectable no-scroll', headerClass]"
         style="min-height: 44px"
       >
@@ -182,6 +183,7 @@ class EditingSheet extends Vue {
   @Prop({ type: Boolean, default: false}) readonly doneButtonDisable!: boolean;
   @Prop({ type: Boolean, default: false }) readonly hasCloseButton!: boolean;
   @Prop({ type: Boolean, default: false }) readonly persistent!: boolean;
+  @Prop({ type: Boolean, default: false }) readonly noHeader!: boolean;
   @Prop({ type: Number, default: 900 }) readonly maxWidth!: number;
   @Prop({ type: String, default: "border-bottom-grey"}) readonly headerClass!: string;
   @Prop({ type: String, default: "q-mt-sm q-pb-lg scroll"}) readonly contentClass!: string;

@@ -19,6 +19,11 @@
           />
         </template>
       </q-input>
+      <text-with-tooltip
+        :text="$t('joinWithInvitationHint')"
+        :tooltip="$t('joinWithInvitationTooltip', {InvitationCodeLength})"
+        class="q-mt-md text-grey-8 text-caption"
+      />
       <q-btn
         :label="$t('continue')"
         :disabled="!isValidInvitationCode"
@@ -86,6 +91,8 @@ import { useRoute } from "vue-router";
 import { useQuasar } from "quasar";
 import { base58 } from "@localfirst/crypto";
 import { locale, errorMessage, errorToString } from "src/boot/i18n";
+import { bus } from "src/boot/eventBus";
+import { useAccountStore } from "src/stores/accountStore";
 import * as AppSettings from "src/database/AppSettings";
 import { LocalAccount, useAccount } from "src/api/local2";
 import { deleteStorage, getOrganizationOrThrow, joinOrganization, logoutWithAuth } from "src/api/repo";
@@ -93,8 +100,7 @@ import { InvitationCodeLength } from "src/helper/utils";
 import { requestPermissions, useDiagnostic } from "src/helper/cordova";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import QRCodeScanner from "src/components/QRCodeScanner.vue";
-import { bus } from "src/boot/eventBus";
-import { useAccountStore } from "src/stores/accountStore";
+import PasswordSecuritySheet from "src/components/PasswordSecuritySheet.vue";
 
 const route = useRoute();
 const $q = useQuasar();
@@ -172,11 +178,17 @@ async function joinOrganisation() {
       // login
       account = await loginAccount(username, password);
       getOrganizationOrThrow();
-      await accountStore.login();
-      bus.emit("did-login");
-      await AppSettings.set("lastLoginUsername", username);
 
-      emit("done");
+      $q.dialog({
+        component: PasswordSecuritySheet
+      })
+      .onOk(async () => {
+        await accountStore.login();
+        bus.emit("did-login");
+        await AppSettings.set("lastLoginUsername", username);
+
+        emit("done");
+      });
 
     } catch(error) {
       errorMessageText.value = errorMessage(error);

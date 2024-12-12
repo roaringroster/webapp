@@ -56,6 +56,9 @@
           </template>
         </q-input>
       </div>
+      <div class="q-mt-lg text-caption text-grey-8 line-height-12">
+        {{ t("teamMemberInvitationDescription", { appName }) }}
+      </div>
     </div>
   </editing-sheet>
 </template>
@@ -72,6 +75,7 @@ import { useI18n } from "vue-i18n";
 import { useDialogPluginComponent } from "quasar";
 import { locale } from "src/boot/i18n";
 import { selectBehavior } from "src/helper/utils";
+import { appName } from "src/helper/appInfo";
 import { timeago } from "src/helper/relativeTime";
 import { alwaysInt } from "src/helper/input";
 import EditingSheet from "src/components/EditingSheet.vue";
