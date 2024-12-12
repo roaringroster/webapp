@@ -82,7 +82,7 @@ export default boot(() => undefined);
 export async function logout(to: RouteLocationRaw = {name: "auth"}) {
     // first logout
     logoutAccount();
-    await logoutWithAuth();
+    await logoutWithAuth().catch(console.error); // could throw, e.g. when offline
     // then navigate to login page so that the state change in api.isLoggedIn is detected
     const router = await whenRouterExists();
     void await router.replace(to);

@@ -21,7 +21,7 @@
     "cordova-plugin-apkupdater": "^5.0.1",
     "cordova-plugin-customurlscheme": "^5.0.2",
     "cordova-plugin-device": "^3.0.0",
-    "cordova-plugin-file": "^8.1.0",
+    "cordova-plugin-file": "^8.1.3",
     "cordova-plugin-inappbrowser": "^6.0.0",
     "cordova-plugin-ionic-keyboard": "^2.2.0",
     "cordova-plugin-localization-strings": "^5.0.6",
@@ -31,7 +31,7 @@
     "cordova-plugin-statusbar": "^4.0.0",
     "cordova-plugin-x-socialsharing": "^6.0.4",
     "cordova-sqlite-storage": "^6.1.0",
-    "cordova.plugins.diagnostic": "^7.2.1",
+    "cordova.plugins.diagnostic": "^7.2.3",
     "es6-promise-plugin": "^4.2.2"
   },
   "cordova": {
@@ -58,9 +58,6 @@
       "cordova-plugin-customurlscheme": {
         "URL_SCHEME": "app.roaringroster.dev"
       },
-      "cordova-plugin-file": {
-        "ANDROIDX_WEBKIT_VERSION": "1.4.0"
-      },
       "cordova-plugin-x-socialsharing": {
         "PHOTO_LIBRARY_ADD_USAGE_DESCRIPTION": "This app requires permission to add images to the photo library for sharing at your request.",
         "PHOTO_LIBRARY_USAGE_DESCRIPTION": "This app requires permission to select or add images from the photo library at your request."
@@ -69,6 +66,9 @@
       "cordova.plugins.diagnostic": {
         "ANDROIDX_VERSION": "1.0.0",
         "ANDROIDX_APPCOMPAT_VERSION": "1.3.1"
+      },
+      "cordova-plugin-file": {
+        "ANDROIDX_WEBKIT_VERSION": "1.4.0"
       }
     },
     "platforms": [

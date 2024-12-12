@@ -101,6 +101,8 @@ module.exports = configure(function (ctx) {
         CSP_URLS: "",
         USE_FALLBACK_LICENSE: "",
         VAULTKEY: "",
+        SYNC_SERVER: "",
+        URL_SCHEME: "",
         BETA_EXPIRATION: "",
         APP_ID: "",
         UPDATE_URL: "",

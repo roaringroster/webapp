@@ -24,6 +24,7 @@ export const PredefinedAbsenceReasons = [
   "illness", 
   "school", 
   "homeOffice", 
+  "worksCouncil", 
   "specialLeave", 
   "overtimeReduction",
   "unpaidLeave",
