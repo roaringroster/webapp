@@ -396,7 +396,7 @@ function createLocalAccount(username: string, locale = "", isDeviceOnly = false)
 
 type InvitationSeed = {
     seed: string;
-    expiration?: number;
+    expiration: number;
 };
 export type InvitationSeeds = Record<Base58, InvitationSeed>;
 
@@ -421,9 +421,10 @@ async function getInvitations() {
 
     // delete expired invitations first
     Object.entries(invitations).forEach(([id, invitation]) => {
-        if (invitation.expiration != undefined && invitation.expiration < now) {
+        if (invitation.expiration != 0 && invitation.expiration < now) {
             delete invitations[id as Base58];
             didDeleteItems = true;
+            // ToDo: we also want to delete invitations that have used all their maxUses (and never expire)
         }
     })
 

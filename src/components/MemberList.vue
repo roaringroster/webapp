@@ -290,7 +290,7 @@ function onTeamUpdated() {
   invitations.value = Object.values(authTeam?.state.invitations || {})
     .filter(invitation => 
       !invitation.revoked 
-        && Date.now() <= invitation.expiration
+        && (!invitation.expiration || Date.now() <= invitation.expiration)
         && invitation.uses < invitation.maxUses
         && (!props.memberId || invitation.userId == props.memberId)
     );
