@@ -58,6 +58,17 @@
         autocapitalize="off"
         autocomplete="off"
       />
+      <reveal-button
+        v-if="isDev"
+        :label="$t('ownServerAddress') + '?'"
+        class="text-center"
+      >
+        <q-input
+          v-model="server"
+          :label="$t('ownServerAddress')"
+          :placeholder="$t('hostname')"
+        />
+      </reveal-button>
       <text-with-tooltip
         v-if="errorMessageText" 
         :text="errorMessageText"
@@ -98,9 +109,11 @@ import { LocalAccount, useAccount } from "src/api/local2";
 import { deleteStorage, getOrganizationOrThrow, joinOrganization, logoutWithAuth } from "src/api/repo";
 import { InvitationCodeLength } from "src/helper/utils";
 import { requestPermissions, useDiagnostic } from "src/helper/cordova";
+import { isDev } from "src/helper/appInfo";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import QRCodeScanner from "src/components/QRCodeScanner.vue";
 import PasswordSecuritySheet from "src/components/PasswordSecuritySheet.vue";
+import RevealButton from "src/components/RevealButton.vue";
 
 const route = useRoute();
 const $q = useQuasar();
@@ -142,6 +155,7 @@ const isDeviceInvitation = computed(() =>
 const newUsername = ref("");
 const newPassword1 = ref("");
 const newPassword2 = ref("");
+const server = ref("");
 const errorMessageText = ref("");
 const errorDebugInfo = ref("");
 const isLoading = ref(false);
@@ -164,7 +178,9 @@ async function joinOrganisation() {
     try {
       let account = await registerAccount(username, password, 
         locale.value, isDeviceInvitation.value);
-      const { organization, user, teamId } = await joinOrganization(account, invitationCode.value)
+      const { organization, user, teamId } = await joinOrganization(
+          account, invitationCode.value, server.value
+        )
         .catch(error => { throw error });
       account.organizations = [organization];
       account.activeOrganization = organization.shareId;

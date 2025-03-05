@@ -373,5 +373,7 @@
   "joinWithInvitationTooltip": "You need a {InvitationCodeLength}-digit invitation code or QR code to create a user account and join an organization or to register an additional device.\n\nIf you are not yet a member of an organization, you will receive the invitation code from an admin of the organization you want to join.\n\nAre you already a member and want to add this device as an additional one? You can create the invitation code yourself in your user settings on a device with which you were already logged in.",
   "passwordSecurityWarningTitle": "You are responsible for your user account and password",
   "passwordSecurityWarning": "Your user account and password are securely linked to this device. Your password is only valid for this device and is used to store your data securely and locally encrypted. Without your password, no one can decrypt your data. **If you lose your password, it cannot be recovered and you will no longer be able to log in with this device!** Please remember your password well and keep it safe, for example in a password manager.\n\nAlso remember: if you lose this device, only an admin can invite you back into the organization, unless you have registered another device with your user account. In your user settings, you can create an invitation code for other devices yourself. Your passwords on other devices may differ from this one, as each password is linked to the respective device and not to the user account.",
-  "passwordSecurityCheckbox": "I understand these security instructions"
+  "passwordSecurityCheckbox": "I understand these security instructions",
+  "hostname": "Hostname",
+  "ownServerAddress": "Own server"
 }

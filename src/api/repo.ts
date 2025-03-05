@@ -46,11 +46,11 @@ export const isConnected = ref(false);
 // const maxAutoReconnectAttempts = 3;
 // const autoReconnectAttempts = 0;
 
-export async function registerOrganization(account: LocalAccount, name: string) {
-  const { auth, repo, network } = await initializeAuthRepo(account);
+export async function registerOrganization(account: LocalAccount, name: string, server: string) {
+  const websocketServer = server || account.settings.defaultWebsocketServer;
+  const { auth, repo, network } = await initializeAuthRepo(account, websocketServer);
   const authTeam = await auth.createTeam(name);
   const shareId = getShareId(authTeam);
-  const websocketServer = account.settings.defaultWebsocketServer;
   const organization = { shareId, websocketServer };
   await setAuthRepo({ auth, repo, network });
 
@@ -70,17 +70,17 @@ export async function registerOrganization(account: LocalAccount, name: string) 
   return { team, organization, teamId };
 }
 
-export async function joinOrganization(account: PartialLocalAccount, invitationCode: string) {
+export async function joinOrganization(account: PartialLocalAccount, invitationCode: string, server: string) {
   return promiseForErrorHandling(async reject => {
     const shareId = invitationCode.slice(0, 12) as ShareId;
-    const websocketServer = account.settings.defaultWebsocketServer;
+    const websocketServer = server || account.settings.defaultWebsocketServer;
     const organization = { shareId, websocketServer };
     const invitationSeed = invitationCode.slice(12, 28) as Auth.Base58;
     // if there is no user yet during device admission to team, the username is in userId of device
     const userName = account.user?.userName || account.device.userId;
     let teamId: DocumentId | undefined = undefined;
 
-    const { auth, repo, network } = await initializeAuthRepo(account);
+    const { auth, repo, network } = await initializeAuthRepo(account, websocketServer);
     await setAuthRepo({ auth, repo, network });
 
     auth.on("localError", event => {
@@ -136,9 +136,10 @@ export async function joinOrganization(account: PartialLocalAccount, invitationC
   });
 }
 
-async function initializeAuthRepo(account: PartialLocalAccount) {
-  const {user, device, settings} = account;
-  const server = settings.defaultWebsocketServer;
+async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?: string) {
+  const { user, device, settings, organizations, activeOrganization } = account;
+  const organization = organizations.find(({ shareId }) => shareId == activeOrganization);
+  const server = websocketServer || organization?.websocketServer || settings.defaultWebsocketServer;
   // if there is no user yet during device admission to team, the username is in userId of device
   const username = user?.userName || device.userId;
   const dbName = dbPrefix + (await getCaseSensitiveUsername(username, dbPrefix) || username);

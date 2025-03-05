@@ -30,6 +30,17 @@
       autocapitalize="off"
       autocomplete="off"
     />
+    <reveal-button
+      v-if="isDev"
+      :label="$t('ownServerAddress') + '?'"
+      class="text-center"
+    >
+      <q-input
+        v-model="server"
+        :label="$t('ownServerAddress')"
+        :placeholder="$t('hostname')"
+      />
+    </reveal-button>
     <text-with-tooltip
       v-if="errorMessageText" 
       :text="errorMessageText"
@@ -61,7 +72,9 @@ import { LocalAccount, useAccount } from "src/api/local2";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import { bus } from "src/boot/eventBus";
 import { useAccountStore } from "src/stores/accountStore";
+import { isDev } from "src/helper/appInfo";
 import PasswordSecuritySheet from "src/components/PasswordSecuritySheet.vue";
+import RevealButton from "src/components/RevealButton.vue";
 
 const $q = useQuasar();
 
@@ -80,6 +93,7 @@ const newOrganizationName = ref("");
 const newUsername = ref("");
 const newPassword1 = ref("");
 const newPassword2 = ref("");
+const server = ref("");
 const errorMessageText = ref("");
 const errorDebugInfo = ref("");
 const isLoading = ref(false);
@@ -101,7 +115,7 @@ async function createOrganization() {
   if (canCreateOrganization.value) {
     try {
       let account = await registerAccount(username, password, locale.value) as LocalAccount;
-      const { organization, teamId } = await registerOrganization(account, organizationName);
+      const { organization, teamId } = await registerOrganization(account, organizationName, server.value);
       account.organizations = [organization];
       account.activeOrganization = organization.shareId;
       account.activeTeam = teamId;
