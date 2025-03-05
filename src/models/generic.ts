@@ -2,7 +2,8 @@
 export type CustomField<T> = {
   label: string;
   value: T;
-  dataType?: string;
+  dataType: string | null;
+  required: boolean;
 };
 
 export type CustomFieldListType = {
@@ -16,6 +17,9 @@ export type LabeledValue<T> = {
   value: T;
 };
 
+export function sortByLabel(a: LabeledValue<any>, b: LabeledValue<any>) {
+  return a.label.localeCompare(b.label);
+}
 
 
 export const fromIsoTime = (time: string) => 

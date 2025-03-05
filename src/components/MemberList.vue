@@ -229,7 +229,7 @@ import { Member as AuthMember, Device, InvitationState, UnixTimestamp, Base58, A
 import { base58 } from "@localfirst/crypto";
 import { useAccountStore } from "src/stores/accountStore";
 import { InvitationSeeds, useAccount } from "src/api/local2";
-import { getOrganization, removeDocument, useDocument2 } from "src/api/repo";
+import { getOrganization, removeDocument, useDocument } from "src/api/repo";
 import { didExpire } from "src/helper/expiration";
 import { InvitationCodeLength } from "src/helper/utils";
 import Signature from "src/components/Signature.vue";
@@ -431,7 +431,7 @@ async function removeMember(authMember: AuthMember) {
   const member = accountStore.organization?.members[id];
 
   if (member) {
-    const memberContactHandle = useDocument2<Contact>(member.contactId);
+    const memberContactHandle = useDocument<Contact>(member.contactId);
     memberContactHandle.handle.whenReady();
 
     const name = getUsername(memberContactHandle.doc.value) || authMember.userName;

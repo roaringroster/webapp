@@ -34,7 +34,7 @@
           @click="$router.push({name: 'addOrganization'})"
         />
         <q-btn
-          v-if="($route.name == 'addMemberDevice' && hasAccounts) || $route.name == 'addOrganization'"
+          v-if="($route.name == 'addMemberDevice' && hasAccounts) || $route.name == 'addOrganization' || $route.name == 'resetPassword'"
           :label="$t('cancel')"
           no-caps
           rounded

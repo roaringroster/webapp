@@ -7,12 +7,11 @@ import {
   Router,
 } from "vue-router";
 import routes from "./routes";
-// import { useAPI } from "src/api";
 import { useAccount } from "src/api/local2";
 import { useRedirectStore } from "src/stores/redirectStore";
 import { useChangeHistoryStore } from "src/stores/changeHistoryStore";
+import { appDefaultRoute } from "src/helper/appInfo";
 
-// const api = useAPI();
 const { isLoggedIn, updateAccount, allUsernames } = useAccount();
 
 /*
@@ -65,10 +64,9 @@ export default route(function (/* { store, ssrContext } */) {
 
       if (isLoggedIn.value) {
         if (to.matched.find(({ name }) => name == "auth")) {
-          next({ name: "overview" });
+          next({ name: appDefaultRoute });
         } else {
           updateAccount({currentPath: to.path});
-          // api.setLocalValue?.("currentPath", to.path);
           next();
         }
       } else {

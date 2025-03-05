@@ -81,6 +81,12 @@ export function errorMessage(error: any) {
   }
 };
 
+export function localizeIfPredefined(keyOrText: string, predefinedKeys: string[]) {
+  return predefinedKeys.includes(keyOrText)
+    ? i18n.global.t(keyOrText)
+    : keyOrText;
+}
+
 export function fileSize(value: number) {
   const units = ["Byte", "Kilobyte", "Megabyte", "Gigabyte", "Terabyte", "Petabyte"];
   const magnitude = value == 0

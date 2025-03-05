@@ -156,6 +156,7 @@ import { Component, Prop, Ref, Vue } from "vue-facing-decorator";
 import { RouteLocationRaw } from "vue-router";
 import { QCard } from "quasar";
 import { showWarning } from "src/helper/warning";
+import { equals } from "src/models/base";
 import SimplifiedMarkdown from "components/SimplifiedMarkdown.vue";
 
 export type DoneButton = {
@@ -168,7 +169,7 @@ export type DoneButton = {
   components: {
     SimplifiedMarkdown
   },
-  emits: ["ok", "hide"]
+  emits: ["ok", "hide", "beforeHide"]
 })
 class EditingSheet extends Vue {
   @Ref() readonly card?: QCard;
@@ -228,6 +229,8 @@ class EditingSheet extends Vue {
     if (element) {
       element.style.translate = "";
     }
+    
+    this.$emit("beforeHide");
   }
 
   async onHide() {
@@ -235,7 +238,7 @@ class EditingSheet extends Vue {
     ["sheet"].concat(this.paramsToRemoveOnClose)
       .forEach(key => delete params[key]);
 
-    if (JSON.stringify(params) != JSON.stringify(this.$route.params)) {
+    if (!equals(params, this.$route.params)) {
       await this.$router.replace({
         name: this.$route.name || "",
         params

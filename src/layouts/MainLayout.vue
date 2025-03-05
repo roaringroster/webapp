@@ -102,9 +102,12 @@ const isTransitioning = ref(false);
 
 const title = computed(() => {
   const name = route.name?.toString() || "";
+  const label = route.meta.label as string | undefined;
 
   if (name.length > 0 && name != "login" && te(name)) {
     return t(name);
+  } else if (!!label && te(label)) {
+    return t(label);
   } else {
     return "";
   }

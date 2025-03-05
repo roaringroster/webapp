@@ -33,34 +33,6 @@
       leave-active-class="animated fadeOutUp"
     >
       <q-banner
-        v-if="banner && showBanner"
-        dense
-        class="bg-positive text-white default-banner"
-      >
-        <div class="text-body2 text-center text-weight-medium text-shadow">
-          {{ banner.message }}
-        </div>
-        <template v-slot:action>
-            <q-btn
-              v-for="(action, index) in banner.actions"
-              :key="'action' + index"
-              flat
-              dense
-              no-caps
-              rounded
-              :label="action.label"
-              class="q-px-sm text-weight-bold text-shadow"
-              @click="action.action"
-            />
-        </template>
-      </q-banner>
-    </transition>
-
-    <transition
-      enter-active-class="animated fadeInDown"
-      leave-active-class="animated fadeOutUp"
-    >
-      <q-banner
         v-if="!!updateBanner && showUpdateBanner"
         dense
         :class="[updateBanner.classes ?? 'banner-positive text-black', 'default-banner']"
@@ -102,14 +74,15 @@
 </style>
 
 <script setup lang="ts">
-import { computed, inject, onMounted, Ref, ref, watch } from "vue";
+import { inject, onMounted, Ref, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { EventBus } from "quasar";
 import { fileSize } from "src/boot/i18n";
 import { downloadAndInstall } from "src/boot/updater";
 import { UpdateAvailableInfo, UpdateInfo } from "src/boot/eventBus";
 import { useAccount } from "src/api/local2";
-import { isConnected, reconnect } from "src/api/repo";
+import { isConnected } from "src/api/repo";
+import { equals } from "src/models/base";
 
 const bus = inject<EventBus>("bus");
 const { t } = useI18n();
@@ -121,30 +94,18 @@ type Banner = {
   actions: {
     label: () => string;
     action: () => void;
-  }[]
+  }[];
+  info: UpdateInfo | UpdateAvailableInfo;
 }
 
 const isOffline = ref(!window.navigator.onLine);
-const showBanner = ref(true);
 const showUpdateBanner = ref(true);
 const updateBanner: Ref<Banner | undefined> = ref(undefined);
-
-const banner = computed(() => undefined as Banner | undefined);
-
-watch(
-  () => banner,
-  (newValue, oldValue) => {
-    if (!!newValue && !!oldValue && JSON.stringify(newValue) != JSON.stringify(oldValue)) {
-      showBanner.value = false;
-      setTimeout(() => showBanner.value = true, 300);
-    }
-  }
-);
 
 watch(
   () => updateBanner,
   (newValue, oldValue) => {
-    if (!!newValue && !!oldValue && JSON.stringify(newValue) != JSON.stringify(oldValue)) {
+    if (!!newValue.value && !!oldValue.value && !equals(newValue.value.info, oldValue.value.info)) {
       showUpdateBanner.value = false;
       setTimeout(() => showUpdateBanner.value = true, 300);
     }
@@ -188,6 +149,7 @@ function updateAvailable(info: UpdateAvailableInfo) {
         updateBanner.value = undefined;
       }
     }],
+    info
   }
 }
 
@@ -198,6 +160,7 @@ function updateUnavailable(info: UpdateInfo) {
       label: () => t("OK"),
       action: () => updateBanner.value = undefined
     }],
+    info
   }
 }
 

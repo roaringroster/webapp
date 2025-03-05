@@ -98,6 +98,7 @@ import { logout } from "src/boot/openURL";
 // import { useAPI } from "src/api";
 import { useRedirectStore } from "src/stores/redirectStore";
 import { expirationDate, didExpire } from "src/helper/expiration";
+import { appContributingURL, appFeedbackAddress } from "src/helper/appInfo";
 // import { getUsername, Contact } from "src/models/contact";
 import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 import NavigationSection, { NavigationItem } from "src/components/NavigationSection.vue";
@@ -214,12 +215,12 @@ const appItems = computed(() => [{
 },{
   label: t("Feedback") + "…",
   icon: "far fa-comment",
-  action: () => location.href = "mailto:feedback@roaringroster.app?subject=Feedback",
+  action: () => location.href = `mailto:${appFeedbackAddress}?subject=Feedback`,
 },{
   label: t("Contribute") + "…",
   icon: "fab fa-github",
   action: () => {
-    const win = window.open("https://www.roaringroster.app/en/contributing/", "_blank");
+    const win = window.open(appContributingURL, "_blank");
 
     if (win) {
       win.opener = null;

@@ -63,6 +63,10 @@ import { Vue, Component, Prop } from "vue-facing-decorator";
 import { LabeledValue } from "src/models/generic";
 import SelectableInput from "src/components/SelectableInput.vue";
 
+/* ToDo: when tapping that triangle button of the SelectableInput's QSelect,
+   an unknown and unhandled error occurs leading to InvalidStateError.
+   But everything works fine despite the error. So we ignore it until we find a fix. */
+
 @Component({
   components: {
     SelectableInput

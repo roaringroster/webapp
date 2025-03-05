@@ -65,3 +65,7 @@ export function colorForAbsenceReason(title: string) {
     return "extra";
   }
 }
+
+export function getSignature(organization: Organization | null | undefined, userId: string) {
+  return "";
+}

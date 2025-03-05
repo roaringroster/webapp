@@ -1,5 +1,5 @@
 <template>
-  <div class="fullscreen bg-primary-gradient column">
+  <div class="fullscreen bg-fullscreen column">
     <q-toolbar class="fixed text-white self-start window-draggable" style="z-index: 100">
       <q-space />
       <q-btn

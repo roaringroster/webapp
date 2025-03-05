@@ -5,6 +5,7 @@
     :separator-class="!isCollapsed ? '' : 'hidden'"
     before-class="overflow-hidden"
     after-class="overflow-hidden"
+    class="split-view"
   >
     <q-resize-observer @resize="onResize" />
     <template v-slot:before>
@@ -16,7 +17,7 @@
     <template v-slot:after>
       <div
         ref="afterContainer"
-        :class="[isCollapsed ? 'q-px-xs' : 'q-pl-md']"
+        :class="[isCollapsed ? 'q-px-xs' : 'q-pl-md', 'p-pa-none']"
       >
         <slot name="after" />
         <q-btn
@@ -35,6 +36,12 @@
 </template>
 
 <style lang="sass">
+.split-view
+  @media print
+    .q-splitter__separator
+      display: none
+    .q-splitter__before
+      width: 0 !important
 </style>
 
 <script lang="ts">

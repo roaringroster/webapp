@@ -3,6 +3,7 @@ import { $i18n, changeLocale } from "./i18n"
 // import { createWindow } from "./window"
 import { isMac } from "./helper"
 import { checkForUpdates } from "./updater"
+import { appFeedbackAddress, appContributingURL } from "../../src/helper/appInfo";
 
 export function setupAppMenu() {
     const template = [
@@ -202,7 +203,7 @@ export function setupAppMenu() {
             submenu: [
                 // {
                 //     label: $i18n.t("Feedback"),
-                //     click: () => shell.openExternal("mailto:feedback@roaringroster.app?subject=Feedback"),
+                //     click: () => shell.openExternal(`mailto:${appFeedbackAddress}?subject=Feedback`),
                 //     id: "feedback",
                 // },
                 // {
@@ -212,7 +213,7 @@ export function setupAppMenu() {
                 // },
                 // {
                 //     label: $i18n.t("Contribute"),
-                //     click: () => shell.openExternal("https://www.roaringroster.app/en/contributing/"),
+                //     click: () => shell.openExternal(appContributingURL),
                 //     id: "contribute",
                 // },
                 // {
@@ -254,8 +255,14 @@ export function setMenuItemEnabled(id: string, enabled: boolean) {
     }
 }
 
-function print(menuItem: MenuItem, browserWindow?: BrowserWindow) {
-    browserWindow?.webContents.print()
+async function print(menuItem: MenuItem, browserWindow?: BrowserWindow) {
+    // bug in electron 26.x for Windows causes error 
+    // "webContents.print(): invalid print settings specified" 
+    // if no options with pageSize are provided,
+    // see https://github.com/electron/electron/issues/38598
+    await browserWindow?.webContents.print({
+        pageSize: "A4"
+    })
 }
 
 // function routeApp(menuItem: MenuItem, browserWindow?: BrowserWindow) {

@@ -98,6 +98,7 @@ module.exports = configure(function (ctx) {
       // chainWebpack (/* chain */) {}
 
       env: {
+        BACKEND: "",
         CSP_URLS: "",
         USE_FALLBACK_LICENSE: "",
         VAULTKEY: "",
@@ -108,7 +109,11 @@ module.exports = configure(function (ctx) {
         UPDATE_URL: "",
         INSTALL_URL: "",
         APPLE_APP_ID: "",
-        ...env,        
+        CONTRIBUTING_URL: "https://www.roaringroster.app/en/contributing/",
+        FEEDBACK_ADDRESS: "feedback@roaringroster.app",
+        DEFAULT_ROUTE: "overview",
+        APPSETTINGS_DBKEY: "117,92,224,103,245,209,145,178,128,123,202,194,188,164,94,181,168,87,48,227,202,184,246,191,156,141,232,100,188,212,15,224",
+        ...env,
         APP_VERSION: packageJson.version || 0,
         APP_BUILD: (new Date()).toISOString().replace(/\D/g, ""),
         APP_NAME: packageJson.productName || "",
@@ -119,11 +124,6 @@ module.exports = configure(function (ctx) {
           ...config.resolve.alias,
           "vue-facing-decorator": "vue-facing-decorator/dist/index-return-cons"
         };
-
-        config.resolve.fallback = {
-          ...config.resolve.fallback,
-          "crypto": false,
-        }
 
         /* pre-compiles all locale messages to enable the runtime-only version,
         otherwise the CSP header needs to allow unsafe-eval for script which should be avoided for security reasons */
@@ -149,6 +149,7 @@ module.exports = configure(function (ctx) {
           fs: false,
           Buffer: false,
           process: false,
+          crypto: false,
         };
         config.experiments = {
           ...config.experiments,
@@ -191,7 +192,9 @@ module.exports = configure(function (ctx) {
           "0BSD",
           "(MIT AND BSD-3-Clause)",
           "MIT or GPL-2.0",
-          "(MIT OR Apache-2.0)"
+          "(MIT OR Apache-2.0)",
+          "AGPL-3.0-or-later",
+          "(MPL-2.0 OR Apache-2.0)",
         ].includes(license);
         const licenseTypeOverrides = {
           "cordova-plugin-keyboard": "Apache-2.0",
@@ -452,6 +455,10 @@ module.exports = configure(function (ctx) {
             // arch: ["x64", "ia32"]
           }],
           icon: "src-electron/icons/icon.ico",
+        },
+        nsis: {
+          runAfterFinish: false,
+          perMachine: true,
         },
         linux: {
           target: [],

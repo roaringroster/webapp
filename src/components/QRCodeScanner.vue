@@ -7,6 +7,7 @@
     header-class=""
     content-class="q-py-none q-px-none"
     xs-content-class=""
+    @hide="emit('hide')"
   >
     <qrcode-stream
       :constraints="{ facingMode }"

@@ -5,7 +5,7 @@ type Keys = "lastUpdated"
     | "lastLoginUsername";
 
 async function accessDatabase<T>(operation: (database: EncryptedDatabase) => Promise<T>) {
-    const key = Uint8Array.from([117,92,224,103,245,209,145,178,128,123,202,194,188,164,94,181,168,87,48,227,202,184,246,191,156,141,232,100,188,212,15,224]);
+    const key = Uint8Array.from(process.env.APPSETTINGS_DBKEY?.split(",").map(value => parseInt(value)) || []);
     const db = new EncryptedDatabase("AppSettings", key);
 
     const result = await operation(db);

@@ -118,13 +118,10 @@ export type Tab = {
   badge?: string;
 };
 
-@Component({
-  emits: ["refresh"]
-})
+@Component
 export default class TabView extends Vue {
   @Prop({type: Array, default: []}) readonly tabs!: Tab[];
   @Prop({type: Number, default: 4}) readonly tabCount!: number;
-  @Prop({type: Boolean, default: false}) readonly pullToRefresh!: boolean;
   selectedTab = 0;
   routesPerTab: Partial<RouteLocationNormalized>[] = [];
   tabPanelEnterClass = "slideInRight";
@@ -192,9 +189,6 @@ export default class TabView extends Vue {
         this.tabCount - 1
       )
     );
-  }
-  get disablePullToRefresh() {
-    return !this.pullToRefresh || this.$route.meta?.disablePullToRefresh == true;
   }
 
   findChildrenRouteName(route?: RouteLocationNormalized, childrenRouteNames = this.childrenRouteNames) {

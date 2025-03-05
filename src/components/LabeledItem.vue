@@ -14,11 +14,12 @@
       <q-item-label 
         caption 
         :class="[
-          'col-4 ellipsis non-selectable', 
+          labelClass,
+          'ellipsis non-selectable', 
           item.action && !item.value.includes('\n') ? 'single-line-with-action' : ''
         ]"
       >{{ item.label }}</q-item-label>
-      <div class="col-8 row no-wrap items-center">
+      <div :class="[valueClass, 'row no-wrap items-center']">
         <q-item-label 
           :class="[
             'col pre-wrap', 
@@ -195,6 +196,8 @@ const delay = 500;
 export default class LabeledItem extends Vue {
   @Prop({ type: Object, required: true}) readonly item!: LabeledItemType;
   @Prop({ type: Boolean }) readonly compactLayout!: boolean;
+  @Prop({ type: String, default: "col-4" }) readonly labelClass!: string;
+  @Prop({ type: String, default: "col-8" }) readonly valueClass!: string;
 
   isCopied = false;
   showCopyCalloutButton = false;

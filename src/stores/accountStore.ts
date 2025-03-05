@@ -4,7 +4,7 @@ import { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge";
 import { DocHandle, DocumentId } from "@automerge/automerge-repo";
 import { Team as AuthTeam } from "@localfirst/auth";
 import { useAccount } from "src/api/local2";
-import { cleanupAll, getOrganization, updateHandles, useDocument2 as useDocument, useOrganizationDocument } from "src/api/repo";
+import { cleanupAll, getOrganization, getHandles, useDocument, useOrganizationDocument } from "src/api/repo";
 import { Contact, getUsername } from "src/models/contact";
 import { Team } from "src/models/team";
 import { Organization } from "src/models/organization";
@@ -24,7 +24,6 @@ export const useAccountStore = defineStore("account", () => {
   const authTeam: Ref<AuthTeam | null> = ref(null);
   const organizationHandle: Ref<StoredHandle<Organization> | null> = ref(null);
   const memberContactHandle: Ref<StoredHandle<Contact> | null> = ref(null);
-  const teamHandles: Ref<StoredHandle<Team>[]> = ref([]);
 
   const userId = computed(() => account.value?.user.userId || "");
   const userName = computed(() => account.value?.user.userName || "");
@@ -38,7 +37,7 @@ export const useAccountStore = defineStore("account", () => {
     memberContactHandle.value?.doc
   );
   const memberName = computed(() => 
-    getUsername(memberContact.value || undefined) || userName
+    getUsername(memberContact.value || undefined) || userName.value
   );
   const allTeams = computed(() =>
     teamHandles.value.flatMap(({ doc, docId: id }) =>
@@ -61,8 +60,11 @@ export const useAccountStore = defineStore("account", () => {
       ? { ...teamHandle.value.doc, id: teamHandle.value.docId }
       : null
   );
+  const isTeamAdmin = computed(() => 
+    team.value?.admins.includes(userId.value) || false
+  );
 
-  updateHandles(() => organization.value?.teams, teamHandles);
+  const teamHandles = getHandles<Team>(() => organization.value?.teams) as unknown as Ref<StoredHandle<Team>[]>;
 
   // if user has no active team (because he left, it was deleted or whatever), assign one
   watch(
@@ -112,6 +114,7 @@ export const useAccountStore = defineStore("account", () => {
     memberContact,
     teams,
     team,
+    isTeamAdmin,
 
     login,
     logout,

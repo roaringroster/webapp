@@ -223,6 +223,13 @@ function logout() {
     }
 }
 
+async function loginDemo(account: LocalAccount, Database: typeof EncryptedDatabase) {
+    db.value = new Database("", new Uint8Array());
+    await db.value.open();
+    await db.value.local.add({id: "account", value: account});
+    currentAccount.value = account;
+}
+
 // === read and update account ===
 
 function getAccountRef() {
@@ -472,6 +479,7 @@ export function useAccount() {
         isLoggedIn, 
         loginAccount: login, 
         logoutAccount: logout, 
+        loginDemo,
         registerAccount, 
         persistAccountOnRegistration, 
         deleteAccount,

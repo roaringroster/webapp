@@ -27,7 +27,8 @@ export type NavigationItem = {
   icon: string;
   route?: string;
   action?: () => void;
-  visible?: boolean
+  active?: boolean;
+  visible?: boolean;
 }
 
 @Component
@@ -36,7 +37,7 @@ export default class NavigationSection extends Vue {
   @Prop({type: String, default: ""}) readonly itemClass!: string;
 
   isActive(item: NavigationItem) {
-    return !!item.route && !!this.$route.matched.find(route => route.name == item.route);
+    return item.active || (!!item.route && !!this.$route.matched.find(route => route.name == item.route));
   }
 
   route(routeName?: string) {

@@ -1,4 +1,4 @@
-import { Ref, WatchSource, ref, watch } from "vue";
+import { Ref, WatchSource, ref, toRaw, watch } from "vue";
 import {next as A, ChangeFn, ChangeOptions, Doc} from "@automerge/automerge";
 import { Repo, isValidAutomergeUrl, DocHandleChangePayload, PeerId, DocumentId, stringifyAutomergeUrl, NetworkAdapter, DocHandle } from "@automerge/automerge-repo";
 import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb";
@@ -7,7 +7,6 @@ import { AuthProvider, ShareId, getShareId } from "@localfirst/auth-provider-aut
 import { AuthenticatedNetworkAdapter } from "@localfirst/auth-provider-automerge-repo/dist/AuthenticatedNetworkAdapter";
 import * as Auth from "@localfirst/auth";
 import { eventPromise } from "@localfirst/shared";
-import Dexie from "dexie";
 import { useChangeHistoryStore } from "src/stores/changeHistoryStore";
 import { i18n } from "src/boot/i18n";
 import { getCaseSensitiveUsername, LocalAccount, PartialLocalAccount, useAccount } from "src/api/local2";
@@ -15,9 +14,11 @@ import { promiseForErrorHandling } from "src/helper/utils";
 
 // import { useAPI } from "src/api";
 import * as AppSettings from "src/database/AppSettings";
+import { HasDocumentId } from "src/models/base";
 import { Member, createMember } from "src/models/user";
 import { createOrganization, Organization } from "src/models/organization";
 import { createTeam, Team } from "src/models/team";
+import Dexie from "dexie";
 // import { createContact } from "src/models/contact";
 // import { createWorkAgreements } from "src/models/workAgreements";
 // import { createAvailabilityList } from "src/models/availability";
@@ -233,6 +234,11 @@ export async function logoutWithAuth() {
   await setAuthRepo();
 }
 
+export async function loginWithDemo(value: AuthRepo) {
+  isConnected.value = true;
+  await setAuthRepo(value);
+}
+
 export function getAuth() {
   return authRepo?.auth;
 }
@@ -333,7 +339,7 @@ export function createDocument<T extends object>(initialValue: T, team: Auth.Tea
   return handle.documentId;
 }
 
-export function addDocument(id: DocumentId, team: Auth.Team, ) {
+export function addDocument(id: DocumentId, team: Auth.Team) {
   getShareForTeam(team)?.documentIds?.add(id);
 }
 
@@ -341,6 +347,13 @@ export function removeDocument(id: DocumentId, team: Auth.Team) {
   getShareForTeam(team)?.documentIds?.delete(id);
   authRepo?.repo.delete(id);
 }
+
+type Handle<T> = {
+  doc: Ref<A.Doc<T> | null>;
+  docId: DocumentId
+  cleanup: () => void;
+  handle: DocHandle<T>;
+};
 
 /**
  * Returns a handle with a reactive document and change function for the 
@@ -350,7 +363,7 @@ export function removeDocument(id: DocumentId, team: Auth.Team) {
  * @param id Automerge URL or Automerge DocumentId
  * @returns 
  */
-export function useDocument2<T>(id: string) {
+export function useDocument<T>(id: string) {
   if (!authRepo) {
     throw new Error("NotLoggedIn");
   }
@@ -382,35 +395,67 @@ export function useDocument2<T>(id: string) {
 }
 
 export function useDocuments<T>(docIdList: string[] = []) {
-  return docIdList.map(docId => useDocument2<T>(docId));
+  return docIdList.map(docId => useDocument<T>(docId));
 }
 
-type HasHandle<T> = {
+export function getDocuments<T>(handles: Handle<T>[] = []) {
+  return handles.flatMap(({ doc, docId: id }) =>
+      !!doc?.value
+        ? [{ ...doc.value, id }]
+        : []
+    );
+}
+
+type HasCleanup = {
   cleanup: () => void;
+};
+
+type HasHandle<T> = HasCleanup & {
   handle: DocHandle<T>;
 };
 
 export async function whenReady(handles: HasHandle<any>[]) {
-  return await Promise.all(handles.map(handle => handle.handle.whenReady()));
+  return await Promise.all(toRaw(handles).map(handle => handle.handle.whenReady()));
 }
 
-export function cleanupAll(handles: HasHandle<any>[]) {
+export function cleanupAll(handles: HasCleanup[]) {
   handles.forEach(({ cleanup }) => cleanup());
 }
 
-export function updateHandles<T>(source: WatchSource, handlesRef: Ref<HasHandle<T>[]>) {
-   watch(
+export function getHandles<T>(source: WatchSource<string[] | undefined>) {
+  const handles: Ref<ReturnType<typeof useDocuments<T>>> = ref([]);
+  watch(
     source,
-    (value: string[] | undefined) => {
-      cleanupAll(handlesRef.value);
-      handlesRef.value = useDocuments<T>(value);
-    }
+    value => {
+      cleanupAll(handles.value);
+      handles.value = useDocuments<T>(value);
+    },
+    { immediate: true }
   );
+  return handles;
+}
+
+export function getDocumentsWhenReady<T>(handlesRef: Ref<Handle<T>[]>) {
+  const documents: Ref<(T & HasDocumentId)[]> = ref([]);
+  watch(
+    () => handlesRef.value.map(({ doc }) => doc),
+    value => {
+      if (value.every(Boolean)) {
+        documents.value = handlesRef.value.flatMap(({ doc, docId: id }) =>
+          !!doc 
+            ? [{ ...(doc as T), id }]
+            : []
+        );
+      }
+    },
+    { immediate: true }
+  );
+  return documents;
 }
 
 
 /** @deprecated */
-export function useDocument<T>(id: string | Promise<string>) {
+export function useDocumentDeprecated<T>(id: string | Promise<string>) {
   const getId = typeof id == "string"
     ? Promise.resolve(id)
     : id;
@@ -464,13 +509,13 @@ export function useChangeHistory<T>(source: WatchSource<A.Doc<T> | null>, title:
 
 export function useOrganizationDocument() {
   const team = getOrganizationOrThrow();
-  const docId = getRootDocumentId(team);
+  const documentId = getRootDocumentId(team);
 
-  if (!docId) {
+  if (!documentId) {
     throw new Error("GenericError");
   }
 
-  const handle = useDocument2<Organization>(docId);
+  const handle = useDocument<Organization>(documentId);
 
   return handle;
 }

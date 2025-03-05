@@ -1,10 +1,12 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron"
+import { app, BrowserWindow, ipcMain } from "electron"
 
 let mainWindow: BrowserWindow | undefined = undefined;
 let initialURL = "";
 
 export function setupDeepLinkHandler(window: BrowserWindow) {
   mainWindow = window;
+  // if app was launched by a deeplink on windows or linux, the url is provided as an argument
+  initialURL ||= process.argv[1];
 
   // in case the app was cold launched by an URL
   if (!!initialURL) {
@@ -33,11 +35,11 @@ function onAddListener(eventName: string, callback: () => void) {
 
 // - event handlers, need to be registered before window is ready
 
-// app was focused or launched by a deeplink
+// app was focused or launched by a deeplink on macOS only
 app.on("open-url", (event, url) => handleOpenURL(url));
 
 // relevant on windows and linux, also triggered by deeplinks
-app.on('second-instance', async (event, commandLine, workingDirectory) => {
+app.on("second-instance", async (event, commandLine, workingDirectory) => {
   // Someone tried to run a second instance, we should focus our window.
   if (mainWindow) {
     if (mainWindow.isMinimized()) {

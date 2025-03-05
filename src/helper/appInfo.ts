@@ -16,7 +16,13 @@ export const appDownloadURL = process.env.INSTALL_URL || "";
 
 export const appUpdateURL = process.env.UPDATE_URL || "";
 
-export const isDemo = false;
+export const appContributingURL = process.env.CONTRIBUTING_URL || "";
+
+export const appFeedbackAddress = process.env.FEEDBACK_ADDRESS || "";
+
+export const appDefaultRoute = process.env.DEFAULT_ROUTE || "";
+
+export const isDemo = process.env.BACKEND == "demo";
 
 export const isDev = !!process.env.DEV;
  

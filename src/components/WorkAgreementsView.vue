@@ -123,7 +123,7 @@
 <script setup lang="ts">
 import { Ref, computed, ref, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
-import { useDocument } from "src/api/repo";
+import { useDocumentDeprecated as useDocument } from "src/api/repo";
 import { debounce, alwaysString, floatOrNull, positive } from "src/helper/input";
 import { didExpire } from "src/helper/expiration";
 import { WorkAgreements } from "src/models/workAgreements";

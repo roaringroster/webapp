@@ -1,8 +1,12 @@
 <template>
   <q-form>
-    <div class="text-center text-grey-9 text-subtitle1 text-weight-medium q-mb-sm">{{ $t("addNewDevice") }}</div>
-        <q-separator inset />
     <div v-if="mode == 'enterCode'">
+      <div 
+        class="text-center text-grey-9 text-subtitle1 text-weight-medium q-mb-sm"
+      >
+        {{ $t("addNewDevice") }}
+      </div>
+      <q-separator inset />
       <q-input
         v-model="invitationCode"
         :label="$t('invitationCode')"
@@ -36,6 +40,16 @@
       />
     </div>
     <div v-else>
+      <div 
+        class="text-center text-grey-9 text-subtitle1 text-weight-medium q-mb-sm"
+        @dblclick="revealServer = !revealServer"
+      >
+        {{ isDeviceInvitation ? $t("addDeviceTitle") : $t("addMemberTitle") }}
+      </div>
+      <q-separator inset />
+      <div class="q-mt-sm text-grey-10 text-caption text-center">
+        {{ isDeviceInvitation ? $t('addDeviceHint') : $t('addMemberHint') }}
+      </div>
       <q-input
         v-model="newUsername"
         :label="$t('username')"
@@ -59,7 +73,7 @@
         autocomplete="off"
       />
       <reveal-button
-        v-if="isDev"
+        v-if="isDev || revealServer"
         :label="$t('ownServerAddress') + '?'"
         class="text-center"
       >
@@ -77,7 +91,7 @@
         icon-class="hidden"
       />
       <q-btn
-        :label="$t(isDeviceInvitation ? 'addDevice' : 'addMember')"
+        :label="isDeviceInvitation ? $t('addDevice') : $t('addMember')"
         :disabled="!canCreateAccount"
         type="submit"
         no-caps
@@ -107,6 +121,7 @@ import { useAccountStore } from "src/stores/accountStore";
 import * as AppSettings from "src/database/AppSettings";
 import { LocalAccount, useAccount } from "src/api/local2";
 import { deleteStorage, getOrganizationOrThrow, joinOrganization, logoutWithAuth } from "src/api/repo";
+import { initializeDemo } from "src/api/demoRepo";
 import { InvitationCodeLength } from "src/helper/utils";
 import { requestPermissions, useDiagnostic } from "src/helper/cordova";
 import { isDev } from "src/helper/appInfo";
@@ -132,13 +147,21 @@ type Mode = "enterCode" | "createAccount";
 const mode = ref("enterCode" as Mode);
 
 const invitationCode = ref(route.params.code?.toString() || "");
+const isDemo = computed(() => invitationCode.value == "demo");
 
 watch(
   () => route.params.code,
   () => invitationCode.value = route.params.code?.toString() || "",
 )
 
-function next() {
+async function next() {
+  if (isDemo.value) {
+    await initializeDemo(locale.value);
+    await accountStore.login();
+    bus.emit("did-login");
+    return emit("done");
+  }
+
   if (isValidInvitationCode.value) {
     mode.value = "createAccount";
   } else {
@@ -146,10 +169,12 @@ function next() {
   }
 }
 
-const isValidInvitationCode = computed(() => invitationCode.value.length == InvitationCodeLength);
+const isValidInvitationCode = computed(() => 
+  invitationCode.value.length == InvitationCodeLength || isDemo.value
+);
 const isDeviceInvitation = computed(() => 
-  isValidInvitationCode.value
-    && (base58.decode(invitationCode.value.at(-1) || "").at(0) || 0) < InvitationCodeLength
+  !isValidInvitationCode.value
+    || (base58.decode(invitationCode.value.at(-1) || "").at(0) || 0) < InvitationCodeLength
 );
 
 const newUsername = ref("");
@@ -159,6 +184,7 @@ const server = ref("");
 const errorMessageText = ref("");
 const errorDebugInfo = ref("");
 const isLoading = ref(false);
+const revealServer = ref(false);
 
 const canCreateAccount = computed(() =>
   isValidInvitationCode.value

@@ -1,6 +1,6 @@
 <template>
   <q-item class="auto-height items-center q-py-none">
-    <div class="text-italic text-grey-7">{{ textLabel || $t("noData") }}</div>
+    <div class="text-italic text-grey-7">{{ textLabel || $t("noData") }}</div>
     <q-btn
       v-if="!hideButton"
       :label="buttonLabel || $t('add')"

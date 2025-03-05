@@ -28,7 +28,8 @@
           v-else
           clickable
           v-ripple
-          @click="item.action"
+          :disabled="item.disabled || undefined"
+          @click="!item.disabled ? item.action() : () => {}"
           :class="item.isDestructive ? 'text-negative' : ''"
         >
           <q-item-section v-if="!hideIcons" side>
@@ -38,7 +39,14 @@
             />
           </q-item-section>
           <q-item-section>
-            {{ item.name }}
+            <q-item-label>{{ item.name }}</q-item-label>
+            <q-item-label 
+              v-if="item.caption" 
+              caption
+              :class="['text-italic', item.isDestructive ? 'text-negative' : '']"
+            >
+              {{ item.caption }}
+            </q-item-label>
           </q-item-section>
         </q-item>
       </div>
@@ -56,10 +64,12 @@ import { QList, QMenu } from "quasar";
 
 export interface ActionItem  {
   name: string;
+  caption?: string;
   icon?: string;
   action: () => void;
-  condition: boolean;
-  isDestructive: boolean;
+  condition?: boolean;
+  isDestructive?: boolean;
+  disabled?: boolean;
   customType?: string;
 }
 

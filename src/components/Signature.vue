@@ -38,13 +38,20 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from "vue-facing-decorator";
+import { useAccountStore } from "src/stores/accountStore";
 import { Contact, getName } from "src/models/contact";
+import { getSignature } from "src/models/organization";
+import { useDocument } from "src/api/repo";
+
+const accountStore = useAccountStore();
 
 @Component
 export default class SignatureView extends Vue {
   @Prop({ type: Object }) readonly contact?: Contact;
   @Prop({ type: String, default: "" }) readonly signature!: string;
   @Prop({ type: String, default: "" }) readonly userName!: string;
+  @Prop({ type: String, default: "" }) readonly userId!: string;
+  @Prop({ type: String, default: "" }) readonly fallback!: string;
   @Prop({ type: String, default: "black"}) readonly color!: string;
   @Prop({ type: String, default: ""}) readonly description!: string;
   @Prop({ type: Date}) readonly date?: Date;
@@ -57,16 +64,33 @@ export default class SignatureView extends Vue {
       return this.contact.firstName.substring(0, 1) + this.contact.lastName.substring(0, 1);
     } else if (this.userName){
       return this.userName.substring(0, 2);
+    } else if (this.userId){
+      return getSignature(accountStore.organization, this.userId);
     } else {
-      return "?"
+      return this.fallback || "";
     }
+  }
+  get contactId() {
+    return accountStore.organization?.members[this.userId]?.contactId;
+  }
+  get contactHandle() {
+    return this.contactId ? useDocument<Contact>(this.contactId) : null;
   }
   get tooltip() {
     return [
-      getName(this.contact || null, this.userName) || this.$t("unknownUser"),
+      getName(this.contact || null, this.userName) 
+        || getName(
+            this.contactHandle?.doc.value || null, 
+            this.userId ? accountStore.authTeam?.members(this.userId).userName : ""
+          )
+        || this.$t("unknownUser"),
       this.date ? this.$d(this.date, "DateTimeShort") : undefined, 
       this.description
     ].filter(Boolean).join(", ");
+  }
+
+  unmounted() {
+    this.contactHandle?.cleanup();
   }
 }
 </script>

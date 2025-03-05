@@ -154,7 +154,7 @@ import { useI18n } from "vue-i18n";
 import { QPopupProxy, useQuasar } from "quasar";
 import { QCalendarScheduler } from "@quasar/quasar-ui-qcalendar";
 import { locale } from "src/boot/i18n";
-import { getOrganization, useDocument2 } from "src/api/repo";
+import { getOrganization, useDocument } from "src/api/repo";
 import { useAccountStore } from "src/stores/accountStore";
 import { toUTC } from "src/helper/date";
 import { Contact, getName } from "src/models/contact";
@@ -177,8 +177,8 @@ const memberHandles = computed(() => {
     .map(([userId, member]) => ({
       userId,
       user: authTeam?.members(userId),
-      contact: useDocument2<Contact>(member.contactId),
-      absences: useDocument2<AbsenceList>(member.absencesId),
+      contact: useDocument<Contact>(member.contactId),
+      absences: useDocument<AbsenceList>(member.absencesId),
     }))
 });
 const members = computed(() => memberHandles.value

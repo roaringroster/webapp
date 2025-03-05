@@ -1,5 +1,6 @@
 import { Platform } from "quasar";
-import { appCustomURLScheme } from "./appInfo";
+import DOMPurify from "dompurify";
+import { appCustomURLScheme, appFeedbackAddress } from "./appInfo";
 
 export async function promiseForErrorHandling<T>(
   method: (
@@ -28,15 +29,13 @@ export async function promiseForErrorHandling<T>(
 }
 
 export function sanitizeHTML(html: string) {
-    const element = document.createElement("div");
-    element.innerText = html;
-    return element.innerHTML;
+  return DOMPurify.sanitize(html);
 }
 
 export function reportError(error: Error, context = "Unknown Error") {
-    const address = "feedback@roaringroster.app"
-    const subject = encodeURI(context)
-    const body = encodeURI("Error message:\n" + error.toString() + "\n\n" + error.stack?.toString() + "\n\n")
+    const address = appFeedbackAddress;
+    const subject = encodeURI(context);
+    const body = encodeURI("Error message:\n" + error.toString() + "\n\n" + error.stack?.toString() + "\n\n");
     return `mailto:${address}?subject=${subject}&body=${body}`;
 }
 

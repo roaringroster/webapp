@@ -375,5 +375,6 @@
   "passwordSecurityWarning": "Your user account and password are securely linked to this device. Your password is only valid for this device and is used to store your data securely and locally encrypted. Without your password, no one can decrypt your data. **If you lose your password, it cannot be recovered and you will no longer be able to log in with this device!** Please remember your password well and keep it safe, for example in a password manager.\n\nAlso remember: if you lose this device, only an admin can invite you back into the organization, unless you have registered another device with your user account. In your user settings, you can create an invitation code for other devices yourself. Your passwords on other devices may differ from this one, as each password is linked to the respective device and not to the user account.",
   "passwordSecurityCheckbox": "I understand these security instructions",
   "hostname": "Hostname",
-  "ownServerAddress": "Own server"
+  "ownServerAddress": "Own server",
+  "moreButton": "More…"
 }

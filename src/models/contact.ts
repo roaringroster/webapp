@@ -73,7 +73,7 @@ export function getUsername(value?: ContactProps | null) {
   return [value?.firstName, value?.lastName].filter(Boolean).join(" ");
 }
 
-export function getName(value: ContactProps | null, fallback = "") {
+export function getName(value?: ContactProps | null, fallback = "") {
   if (value) {
     if (value.isOrganization) {
       return value.organization.trim() || fallback;
@@ -93,6 +93,8 @@ export const emailLabels = ["privateLabel", "workLabel", "schoolLabel", "otherLa
 export const phoneLabels = ["privateLabel", "mobileLabel", "workLabel", "centralOfficeLabel", "hospitalLabel", "schoolLabel", "faxLabel", "otherLabel"];
 export const postalLabels = ["privateLabel", "workLabel", "hospitalLabel", "schoolLabel", "invoiceAddress", "deliveryAddress"];
 export const urlLabels = ["homepageLabel", "privateLabel", "workLabel", "schoolLabel", "otherLabel"];
+export const relationshipTypes = [];
+export const professionTypes = [];
 export const predefinedLabels = Array.from(new Set(
   emailLabels
     .concat(phoneLabels)

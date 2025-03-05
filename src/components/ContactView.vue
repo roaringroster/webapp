@@ -2,68 +2,70 @@
   <div v-if="contact">
     <q-resize-observer @resize="onResize" />
     <div class="readable-line-length">
-      <div v-if="!isEditing || isDisabled" >
-        <div class="row justify-end">
-          <q-btn 
-            v-if="!isDisabled"
-            icon="edit"
-            round
-            outline
-            color="primary"
-            size="10.5px"
-            @click="isEditing = true"
-            :title="$t('editContact')"
-            :class="['shadow-1', $q.screen.gt.xs ? '' : 'q-mr-sm']"
-          />
-        </div>
-
-        <div :class="['text-h4 text-center', !name ? 'text-italic text-weight-light text-grey-7' : '']">
-          {{ name || $t("withoutNames") }}
-        </div>
-        <div 
-          v-if="contact.relationship && !noRelationship" 
-          class="text-body1 text-grey-7 text-center"
-        >
-          {{ localizeLabel(contact.relationship) }}
-        </div>
-        <div 
-          v-if="professionalSubtitle" 
-          class="text-body1 text-grey-7 text-center"
-        >
-          {{ professionalSubtitle }}
-        </div>
-
-        <div class="row justify-center q-my-md non-selectable">
-          <div 
-            v-if="contact.phoneNumbers.length"
-            class="q-mx-sm column items-center"
-          >
-            <q-btn
-              icon="fas fa-phone"
+      <div v-if="!isEditing || disabled" >
+        <div v-if="!noHeader">
+          <div class="row justify-end">
+            <q-btn 
+              v-if="!disabled"
+              icon="edit"
               round
-              unelevated
+              outline
               color="primary"
-              class="q-mb-xs"
-              @click="call(contact.phoneNumbers[0])"
+              size="10.5px"
+              @click="isEditing = true"
+              :title="$t('editContact')"
+              :class="['shadow-1', $q.screen.gt.xs ? '' : 'q-mr-sm']"
             />
-            <div class="text-caption text-primary contact-button-label ellipsis">
-              {{ localizeLabel(contact.phoneNumbers[0].label) }}
-            </div>
+          </div>
+
+          <div :class="['text-h4 text-center', !name ? 'text-italic text-weight-light text-grey-7' : '']">
+            {{ name || $t("withoutNames") }}
           </div>
           <div 
-            v-if="contact.emailAddresses.length"
-            class="q-mx-sm column items-center"
+            v-if="contact.relationship && !noRelationship" 
+            class="text-body1 text-grey-7 text-center"
           >
-            <q-btn
-              icon="fas fa-envelope"
-              round
-              unelevated
-              color="primary"
-              class="q-mb-xs"
-              @click="email(contact.emailAddresses[0])"
-            />
-            <div class="text-caption text-primary contact-button-label ellipsis">
-              {{ localizeLabel(contact.emailAddresses[0].label) }}
+            {{ localizeLabel(contact.relationship) }}
+          </div>
+          <div 
+            v-if="professionalSubtitle" 
+            class="text-body1 text-grey-7 text-center"
+          >
+            {{ professionalSubtitle }}
+          </div>
+
+          <div class="row justify-center q-my-md non-selectable">
+            <div 
+              v-if="contact.phoneNumbers.length"
+              class="q-mx-sm column items-center"
+            >
+              <q-btn
+                icon="fas fa-phone"
+                round
+                unelevated
+                color="primary"
+                class="q-mb-xs"
+                @click="call(contact.phoneNumbers[0])"
+              />
+              <div class="text-caption text-primary contact-button-label ellipsis">
+                {{ localizeLabel(contact.phoneNumbers[0].label) }}
+              </div>
+            </div>
+            <div 
+              v-if="contact.emailAddresses.length"
+              class="q-mx-sm column items-center"
+            >
+              <q-btn
+                icon="fas fa-envelope"
+                round
+                unelevated
+                color="primary"
+                class="q-mb-xs"
+                @click="email(contact.emailAddresses[0])"
+              />
+              <div class="text-caption text-primary contact-button-label ellipsis">
+                {{ localizeLabel(contact.emailAddresses[0].label) }}
+              </div>
             </div>
           </div>
         </div>
@@ -73,7 +75,8 @@
             v-if="!contactDetails.length"
             :text-label="$t('noContactDetails')"
             button-classes="text-weight-regular"
-            :hide-button="isDisabled"
+            :hide-button="disabled"
+            class="justify-center"
             @click="isEditing = true"
           />
           <labeled-item
@@ -104,11 +107,11 @@
             <q-toggle 
               v-if="!noOrganization"
               :model-value="contact.isOrganization" 
-              @update:model-value="saveContact({isOrganization: $event})"
+              @update:model-value="update({isOrganization: $event})"
               :label="$t('contactIsAnOrganization') + ':'"
               left-label
             />
-            <!-- <reveal-button
+            <reveal-button
               v-if="!noDegree && !contact.isOrganization"
               :label="$t('addAcademicTitleButton')"
               :reveal-immediately="contact.degree.length > 0"
@@ -116,37 +119,37 @@
             >
               <q-input
                 :model-value="contact.degree"
-                @update:model-value="updateContact({degree: $event?.toString()})"
-                @change="save"
+                @update:model-value="update({degree: alwaysString($event)})"
+                :debounce="debounce"
                 :label="$t('degree')"
               />
-            </reveal-button> -->
+            </reveal-button>
             <q-input
               v-if="!contact.isOrganization"
               :model-value="contact.firstName"
-              @update:model-value="saveContact({firstName: $event?.toString()})"
+              @update:model-value="update({firstName: alwaysString($event)})"
               :debounce="debounce"
               :label="$t('firstName')"
             />
             <q-input
               v-if="!contact.isOrganization"
               :model-value="contact.lastName"
-              @update:model-value="saveContact({lastName: $event?.toString()})"
+              @update:model-value="update({lastName: alwaysString($event)})"
               :debounce="debounce"
               :label="$t('lastName')"
             />
-            <!-- <selectable-input
+            <selectable-input
               v-if="!noRelationship && !contact.isOrganization"
               :model-value="contact.relationship"
-              :label="$t('relationship')"
+              :label="relationshipLabel"
               :options="relationshipLabels"
               clearable
-              @update:model-value="saveContact({relationship: $event})"
-            /> -->
+              @update:model-value="update({relationship: $event})"
+            />
             <date-time-input
               v-if="!noBirthday && !contact.isOrganization"
               :model-value="contact.birthday"
-              @update:model-value="saveContact({birthday: $event || null})"
+              @update:model-value="update({birthday: $event || null})"
               :label="$t('birthday') + ' (' + $t('dateFormatPlaceholder') + ')'"
               :format="$t('dateFormat')"
             />
@@ -156,12 +159,12 @@
               :label="$t('profession')"
               :options="professionLabels"
               clearable
-              @update:model-value="saveContact({profession: $event})"
+              @update:model-value="update({profession: $event})"
             />
             <q-input
               v-if="!noOrganization"
               :model-value="contact.organization"
-              @update:model-value="saveContact({organization: $event?.toString()})"
+              @update:model-value="update({organization: alwaysString($event)})"
               :debounce="debounce"
               :label="$t('organizationName')"
             />
@@ -171,7 +174,7 @@
               :label="$t('profession')"
               :options="professionLabels"
               clearable
-              @update:model-value="saveContact({profession: $event})"
+              @update:model-value="update({profession: $event})"
             />
           </div>
 
@@ -181,7 +184,7 @@
             :add-button-label="$t('addPhoneNumber')"
             @add="addPhoneNumber"
             @remove="removePhoneNumber($event)"
-            @input:label="saveContact(contact => 
+            @input:label="update(contact => 
               contact.phoneNumbers[$event.index].label = $event.value
             )"
             class="mb-row-dense"
@@ -189,8 +192,8 @@
           >
             <q-input
               :model-value="item.value"
-              @update:model-value="saveContact(contact => 
-                contact.phoneNumbers[index].value = $event?.toString() || ''
+              @update:model-value="update(contact => 
+                contact.phoneNumbers[index].value = alwaysString($event)
               )"
               :debounce="debounce"
               :placeholder="$t('phone')"
@@ -205,7 +208,7 @@
             :add-button-label="$t('addEmailAddress')"
             @add="addEmailAddress"
             @remove="removeEmailAddress($event)"
-            @input:label="saveContact(contact => 
+            @input:label="update(contact => 
               contact.emailAddresses[$event.index].label = $event.value
             )"
             class="mb-row-dense"
@@ -213,8 +216,8 @@
           >
             <q-input
               :model-value="item.value"
-              @update:model-value="saveContact(contact => 
-                contact.emailAddresses[index].value = $event?.toString() || ''
+              @update:model-value="update(contact => 
+                contact.emailAddresses[index].value = alwaysString($event)
               )"
               :debounce="debounce"
               :placeholder="$t('email')"
@@ -230,7 +233,7 @@
             :add-button-label="$t('addUrl')"
             @add="addUrl"
             @remove="removeUrl($event)"
-            @input:label="saveContact(contact => 
+            @input:label="update(contact => 
               contact.urls[$event.index].label = $event.value
             )"
             class="mb-row-dense"
@@ -238,8 +241,8 @@
           >
             <q-input
               :model-value="item.value"
-              @update:model-value="saveContact(contact => 
-                contact.urls[index].value = $event?.toString() || ''
+              @update:model-value="update(contact => 
+                contact.urls[index].value = alwaysString($event)
               )"
               :debounce="debounce"
               :placeholder="$t('url')"
@@ -254,7 +257,7 @@
             :add-button-label="$t('addPostalAddress')"
             @add="addPostalAddress"
             @remove="removePostalAddress($event)"
-            @input:label="saveContact(contact => 
+            @input:label="update(contact => 
               contact.postalAddresses[$event.index].label = $event.value
             )"
             class="mb-row-dense"
@@ -263,8 +266,8 @@
             <div class="column">
               <q-input
                 :model-value="item.value.street1"
-                @update:model-value="saveContact(contact => 
-                  contact.postalAddresses[index].value.street1 = $event?.toString() || ''
+                @update:model-value="update(contact => 
+                  contact.postalAddresses[index].value.street1 = alwaysString($event)
                 )"
                 :debounce="debounce"
                 :placeholder="$t('street')"
@@ -274,8 +277,8 @@
               <div class="row">
                 <q-input
                   :model-value="item.value.postalCode"
-                  @update:model-value="saveContact(contact => 
-                    contact.postalAddresses[index].value.postalCode = $event?.toString() || ''
+                  @update:model-value="update(contact => 
+                    contact.postalAddresses[index].value.postalCode = alwaysString($event)
                   )"
                   :debounce="debounce"
                   :placeholder="$t('postalCode')"
@@ -284,8 +287,8 @@
                 />
                 <q-input
                   :model-value="item.value.city"
-                  @update:model-value="saveContact(contact => 
-                    contact.postalAddresses[index].value.city = $event?.toString() || ''
+                  @update:model-value="update(contact => 
+                    contact.postalAddresses[index].value.city = alwaysString($event)
                   )"
                   :debounce="debounce"
                   :placeholder="$t('city')"
@@ -295,8 +298,8 @@
               </div>
               <q-input
                 :model-value="item.value.country"
-                @update:model-value="saveContact(contact => 
-                  contact.postalAddresses[index].value.country = $event?.toString() || ''
+                @update:model-value="update(contact => 
+                  contact.postalAddresses[index].value.country = alwaysString($event)
                 )"
                 :debounce="debounce"
                 :placeholder="$t('country')"
@@ -307,7 +310,7 @@
 
           <q-input
             :model-value="contact.notes"
-            @update:model-value="saveContact({notes: $event?.toString()})"
+            @update:model-value="update({notes: alwaysString($event)})"
             :debounce="debounce"
             autogrow
             :label="$t('contactNotes')"
@@ -343,23 +346,22 @@
 
 <script lang="ts">
 import { Component, Model, Prop, Watch, Vue } from "vue-facing-decorator";
-import { getObjectId } from "@automerge/automerge";
+import { didExpire } from "src/helper/expiration";
+import { alwaysString, debounce } from "src/helper/input";
 import { LabeledValue } from "src/models/generic";
-import { Contact, ContactKeys, PostalAddress, emailLabels, getName, makeEmailAddress, makePhoneNumber, makePostalAddress, makeUrl, phoneLabels, postalAddressAsSearchString, postalLabels, predefinedLabels, urlLabels } from "src/models/contact";
+import { ContactKeys, ContactProps, PostalAddress, emailLabels, getName, makeEmailAddress, makePhoneNumber, makePostalAddress, makeUrl, phoneLabels, postalAddressAsSearchString, postalLabels, predefinedLabels, relationshipTypes, urlLabels } from "src/models/contact";
 import NoDataItem from "src/components/NoDataItem.vue";
 import LabeledItem, { LabeledItemType } from "src/components/LabeledItem.vue";
 import SelectableInput from "src/components/SelectableInput.vue";
 import LabeledValueEditor from "src/components/LabeledValueEditor.vue";
 import DateTimeInput from "src/components/DateTimeInput.vue";
-import { didExpire } from "src/helper/expiration";
-// import { useAPI } from "src/api";
-import { useChangeHistory, useDocument } from "src/api/repo";
+import RevealButton from "src/components/RevealButton.vue";
 
 // const api = useAPI();
 
 function getLabels(
   defaultLabels: string[],
-  contacts: Contact[], 
+  contacts: ContactProps[], 
   key: "phoneNumbers" | "emailAddresses" | "postalAddresses" | "urls"
 ) {
   return [... new Set(
@@ -377,15 +379,23 @@ function getLabels(
     LabeledItem,
     SelectableInput,
     LabeledValueEditor,
-    DateTimeInput
+    DateTimeInput,
+    RevealButton,
   },
-  emits: ["delete", "save"]
+  emits: ["update", "delete"]
 })
 class ContactView extends Vue {
-  @Model({ type: String }) docUrl!: string;
+  @Model({ type: Object, required: true }) readonly contact!: ContactProps;
+  @Prop({ type: String, default: "" }) readonly contactId!: string;
   @Prop({ type: Array, default: () => [] }) readonly includeFields!: ContactKeys[];
   @Prop({ type: Array, default: () => [] }) readonly optionalFields!: ContactKeys[];
   @Prop({ type: Array, default: () => [] }) readonly excludeFields!: ContactKeys[];
+  @Prop({ type: Array, default: () => [] }) readonly professionTypes!: string[];
+  @Prop({ type: String }) readonly preferredLabel?: string;
+  @Prop({ type: String, default: "" }) readonly relationshipLabel!: string;
+  @Prop({ type: Boolean }) readonly isDisabled!: boolean;
+  @Prop({ type: Boolean }) readonly editOnly!: boolean;
+  @Prop({ type: Boolean }) readonly noHeader!: boolean;
   @Prop({ type: Boolean }) readonly noDegree!: boolean;
   @Prop({ type: Boolean }) readonly noBirthday!: boolean;
   @Prop({ type: Boolean }) readonly noProfession!: boolean;
@@ -393,23 +403,19 @@ class ContactView extends Vue {
   @Prop({ type: Boolean }) readonly noOrganization!: boolean;
   @Prop({ type: Boolean }) readonly noDelete!: boolean;
   @Prop({ type: Boolean }) readonly noUrl!: boolean;
-  @Prop({ type: Boolean }) readonly editOnly!: boolean;
-  @Prop({ type: String }) readonly preferredLabel?: string;
-  @Prop({ type: Array, default: () => [] }) readonly professionLabels!: string[];
 
   isEditing = this.editOnly;
   addedOptionalFields: ContactKeys[] = [];
   width = Infinity;
-  // docHandle: DocHandle<Contact> | null = null;
-  // docHandle = useDocument<Contact>(this.docUrl);
+  alwaysString = alwaysString;
 
-  @Watch("docUrl")
-  onDocUrlChanged() {
+  @Watch("contactId", { immediate: true })
+  onContactChanged() {
     if (this.editOnly) {
       return;
     }
 
-    if (this.$route.query.edit == "1" && !this.isDisabled) {
+    if (this.$route.query.edit == "1" && !this.disabled) {
       void this.$router.replace({
         name: this.$route.name || undefined,
         params: this.$route.params
@@ -420,15 +426,8 @@ class ContactView extends Vue {
     }
   }
 
-  get docHandle() {
-    return useDocument<Contact>(this.docUrl);
-  }
-  get contact() {
-    // console.log(this.docHandle.doc.value)
-    return this.docHandle.doc.value!;
-  }
-  get isDisabled() {
-    return didExpire()
+  get disabled() {
+    return this.isDisabled || didExpire()
   }
   get name() {
     return getName(this.contact);
@@ -512,8 +511,20 @@ class ContactView extends Vue {
   get urlLabels() {
     return getLabels(urlLabels, [this.contact], "urls").map(this.makeOption);
   }
+  get relationshipLabels() {
+    return [... new Set([
+      ...relationshipTypes,
+      ...[this.contact]
+        .flatMap(contact =>
+          contact.relationship ? [contact.relationship] : []
+        )
+    ])].map(this.makeOption);
+  }
+  get professionLabels() {
+    return this.professionTypes.map(this.makeOption);
+  }
   get debounce() {
-    return 2000;
+    return debounce;
   }
 
   onResize() {
@@ -551,31 +562,31 @@ class ContactView extends Vue {
 
   addPhoneNumber() {
     const newValue = makePhoneNumber(this.contact, this.preferredLabel);
-    this.saveContact(contact => contact.phoneNumbers.push(newValue));
+    this.update(contact => contact.phoneNumbers.push(newValue));
   }
   removePhoneNumber(index: number) {
-    this.saveContact(contact => contact.phoneNumbers.splice(index, 1));
+    this.update(contact => contact.phoneNumbers.splice(index, 1));
   }
   addEmailAddress() {
     const newValue = makeEmailAddress(this.contact, this.preferredLabel);
-    this.saveContact(contact => contact.emailAddresses.push(newValue));
+    this.update(contact => contact.emailAddresses.push(newValue));
   }
   removeEmailAddress(index: number) {
-    this.saveContact(contact => contact.emailAddresses.splice(index, 1));
+    this.update(contact => contact.emailAddresses.splice(index, 1));
   }
   addPostalAddress() {
     const newValue = makePostalAddress(this.contact, "", this.preferredLabel);
-    this.saveContact(contact => contact.postalAddresses.push(newValue));
+    this.update(contact => contact.postalAddresses.push(newValue));
   }
   removePostalAddress(index: number) {
-    this.saveContact(contact => contact.postalAddresses.splice(index, 1));
+    this.update(contact => contact.postalAddresses.splice(index, 1));
   }
   addUrl() {
     const newValue = makeUrl(this.contact);
-    this.saveContact(contact => contact.urls.push(newValue));
+    this.update(contact => contact.urls.push(newValue));
   }
   removeUrl(index: number) {
-    this.saveContact(contact => contact.urls.splice(index, 1));
+    this.update(contact => contact.urls.splice(index, 1));
   }
 
   localizeLabel(label: string) {
@@ -597,21 +608,23 @@ class ContactView extends Vue {
     }
   }
 
-  // async updateContact(changes: ChangeFn<Contact> | Partial<Contact>) {
-  //   console.log(1, this.contact);
-  //   this.contact = await api.updateDocument(this.contact, changes);
-  //   console.log(2, this.contact);
-  // }
-  saveContact(changes: ((doc: Contact) => void) | Partial<Contact>) {
-    const changeFn = typeof changes == "function"
-      ? changes
-      : (doc: Contact) => Object.assign(doc, changes)
+  update(changes: ((doc: ContactProps) => void) | Partial<ContactProps>) {
+    let changeFn: (value: ContactProps) => void;
 
-    this.docHandle.changeDoc(changeFn);
-    // await this.updateContact(changes);
-    // this.save();
+    if (typeof changes != "function") {
+        changeFn = value => Object.assign(value, changes);
+    } else {
+        changeFn = changes;
+    }
+
+    this.$emit("update", changeFn);
   }
   deleteContact() {
+    if (!this.contactId) {
+      console.error("no contact id provided")
+      return;
+    }
+
     this.$q.dialog({
       title: this.$t("confirmDeletionTitle") as string,
       message: this.$t("confirmContactDeletionMessage", {
@@ -631,20 +644,8 @@ class ContactView extends Vue {
         noCaps: true
       }
     }).onOk(() => {
-      this.$emit("delete", getObjectId(this.contact));
+      this.$emit("delete", this.contactId);
     });
-  }
-  change(changes: Partial<Contact>) {
-    this.docHandle.changeDoc(doc => Object.assign(doc, changes));
-  }
-
-  mounted() {
-    this.onDocUrlChanged();
-    useChangeHistory(() => this.contact, "contact");
-  }
-
-  unmounted() {
-    this.docHandle.cleanup();
   }
 }
 
