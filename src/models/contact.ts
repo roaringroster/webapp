@@ -139,7 +139,7 @@ export function sortByLastName(a: ContactProps, b: ContactProps) {
   return a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName);
 }
 
-export function age(contact: ContactProps, date = new Date()) {
+export function getAge(contact: ContactProps, date = new Date()) {
   return contact.birthday
     ? Math.floor(
       DateTime.fromJSDate(date)

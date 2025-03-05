@@ -11,7 +11,7 @@ import { Organization } from "src/models/organization";
 
 const { getAccountRef, updateAccount, updateDeviceSettings } = useAccount();
 
-type StoredHandle<T> = {
+export type StoredHandle<T> = {
   doc: Doc<T> | null;
   docId: DocumentId;
   changeDoc: (changeFn: ChangeFn<T>, options?: ChangeOptions<T>) => void;

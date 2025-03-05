@@ -25,7 +25,10 @@
         />
       </div>
       <div class="col-7 q-pl-xs">
-        <slot v-bind:item="item" v-bind:index="index" />
+        <slot 
+          v-bind:item="item" 
+          v-bind:index="index"
+        />
       </div>
     </div>
     <div
