@@ -76,9 +76,11 @@
           transition-show="scale"
           transition-hide="scale"
           self="center middle"
+          @before-hide="onBeforeHideTimeProxy"
         >
           <q-time
-            v-model="dateString"
+            :model-value="dateString"
+            @update:model-value="temporaryDateString = $event"
             :mask="format"
             :color="color"
           >
@@ -116,9 +118,11 @@
           transition-show="scale"
           transition-hide="scale"
           self="center middle"
+          @before-hide="onBeforeHideTimeProxy"
         >
           <q-time
-            v-model="dateString"
+            :model-value="dateString"
+            @update:model-value="temporaryDateString = $event"
             :mask="format"
             :color="color"
           >
@@ -160,7 +164,7 @@ interface DateSelectionOption {
   emits: ["update:model-value"]
 })
 export default class DateTimeInput extends Vue {
-  @Model({ type: Date }) readonly value: Date | undefined;
+  @Model({ type: Date }) readonly value: Date | null | undefined;
   @Prop({ type: String, default: "YYYY-MM-DD HH:mm"}) readonly format!: string;
   @Prop({ type: Date }) readonly min: Date | undefined;
   @Prop({ type: String }) readonly label: string | undefined;
@@ -179,9 +183,10 @@ export default class DateTimeInput extends Vue {
 
   dateKey = Math.random();
   showOptions = false;
+  temporaryDateString: string | null = null;
 
   get dateString(): string {
-    return date.formatDate(this.value || undefined, this.format);
+    return date.formatDate(this.value || undefined, this.format) || "";
   }
   set dateString(value: string) {
     const result = date.extractDate(value, this.format);
@@ -211,7 +216,7 @@ export default class DateTimeInput extends Vue {
       }
     } else {
       if (value == this.dateMaskAsValue && !this.required) {
-        this.$emit("update:model-value", undefined)
+        this.$emit("update:model-value", null)
       } else {
         // do nothing because the input is having an inconsistent string value which is currently edited
       }
@@ -255,7 +260,7 @@ export default class DateTimeInput extends Vue {
   }
 
   clear(event: Event) {
-    this.$emit("update:model-value", undefined);
+    this.$emit("update:model-value", null);
     this.dateInput.$emit("blur", event);
     this.showOptions = false;
   }
@@ -310,8 +315,19 @@ export default class DateTimeInput extends Vue {
     this.onBlurInput(() => setTimeout(() => this.timeProxy.show()));
   }
 
+  onBeforeHideTimeProxy() {
+    if (!!this.temporaryDateString && this.temporaryDateString != this.dateString) {
+      this.dateString = this.temporaryDateString;
+      this.temporaryDateString = null;
+    }
+  }
+
   onDidChangeLocale() {
     this.dateKey = Math.random();
+  }
+
+  focus() {
+    this.dateInput?.focus();
   }
 
   created() {

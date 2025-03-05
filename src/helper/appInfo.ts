@@ -8,7 +8,7 @@ export const appVersion = process.env.APP_VERSION || "0";
 
 export const appBuild = process.env.APP_BUILD || "0";
 
-export const appPlatform = determinePlatform();
+export const appPlatform = determinePlatform;
 
 export const appCustomURLScheme = process.env.URL_SCHEME || "";
 
