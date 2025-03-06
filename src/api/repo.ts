@@ -60,7 +60,7 @@ export async function registerOrganization(account: LocalAccount, name: string, 
   members[account.user?.userId] = member;
 
   const admins = [account.user?.userId];
-  const team = createTeam({name: t("newTeam") + " 1", members: Object.keys(members), admins});
+  const team = createTeam({name: t("newTeam") + " 1", members: Object.keys(members), admins}, authTeam);
   const teamId = createDocument(team, authTeam);
 
   const teams = [teamId];

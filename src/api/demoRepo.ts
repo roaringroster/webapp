@@ -41,7 +41,7 @@ export async function initializeDemo(locale: string) {
   members[userId] = member;
 
   const admins = [userId];
-  const team = createTeam({name: t("newTeam") + " 1", members: Object.keys(members), admins});
+  const team = createTeam({name: t("newTeam") + " 1", members: Object.keys(members), admins}, authTeam);
   const teamId = createDocument(team, authTeam);
 
   const teams = [teamId];

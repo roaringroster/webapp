@@ -8,7 +8,7 @@
     <div class="fit column no-wrap q-pt-sm scroll q-gutter-y-lg">
       <q-expansion-item
         v-model="isUserExpanded"
-        :label="accountStore.userName"
+        :label="username"
         switch-toggle-side
         :header-class="headerClass(isUserExpanded, userItems)"
       >
@@ -88,53 +88,34 @@
 </style>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from "vue";
+import { computed, ComputedRef, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRouter, useRoute } from "vue-router";
+import { useRoute } from "vue-router";
 import { useQuasar } from "quasar";
 import { bus } from "src/boot/eventBus";
 import { checkForUpdates } from "src/boot/updater";
 import { logout } from "src/boot/openURL";
-// import { useAPI } from "src/api";
-import { useRedirectStore } from "src/stores/redirectStore";
 import { expirationDate, didExpire } from "src/helper/expiration";
 import { appContributingURL, appFeedbackAddress } from "src/helper/appInfo";
-// import { getUsername, Contact } from "src/models/contact";
+import { getUsername } from "src/models/contact";
 import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 import NavigationSection, { NavigationItem } from "src/components/NavigationSection.vue";
 import ExpansionSelect from "src/components/ExpansionSelect.vue";
 import { useAccountStore } from "src/stores/accountStore";
-// import { onMounted } from "vue";
 
 const { screen } = useQuasar();
 const { t, d } = useI18n();
-const router = useRouter();
 const route = useRoute();
-const redirectStore = useRedirectStore();
-// const api = useAPI();
 const accountStore = useAccountStore();
 
 const appname = process.env.APP_NAME || "";
 const appversion = process.env.APP_VERSION || "0";
-const isDev = process.env.DEV;
 
 const isVisible = ref(screen.gt.sm);
-// const contact: Ref<Contact | null> = ref(null);
-
-// async function updateUsername() {
-//   username.value = (await getAccountNotThrowing())?.user.userName || "";
-// }
-
-// onMounted(updateUsername);
-// bus.on("did-login", updateUsername);
-
-// (async () => {
-//   contact.value = (await api.getCurrentUser())?.contact ?? null;
-// })()
-
-// const username = computed(() => {
-  // return getUsername(contact.value || undefined) || api.username;
-// })
+const username = computed(() => 
+  getUsername(accountStore.memberContact) 
+    || accountStore.userName
+);
 const appVersion = computed(() => t("currentVersion") + ": " + appversion);
 const expirationWarning = computed(() => 
     expirationDate 
@@ -155,7 +136,7 @@ const organizationItems = computed(() => [{
   route: "organizationSettings",
 }]);
 
-const teamItems = computed(() => [{
+const teamItems: ComputedRef<NavigationItem[]> = computed(() => [{
   label: t("roster"),
   icon: "fas fa-clipboard-user",
   route: "roster",
@@ -167,33 +148,30 @@ const teamItems = computed(() => [{
   label: t("contacts"),
   icon: "fas fa-address-book",
   route: "contacts",
-}].concat(
-  isDev
-    ? [{
-        label: t("agreements"),
-        icon: "fas fa-file-contract",
-        route: "agreements",
-      // },{
-      //   label: t("teamMembers"),
-      //   icon: "fas fa-users",
-      //   route: "teamMembers",
-      }]
-    : []
-).concat({
+  params: { memberId: route.params?.memberId?.toString() }
+},{
+  label: t("agreements"),
+  icon: "fas fa-file-contract",
+  route: "agreements",
+  params: { memberId: route.params?.memberId?.toString() }
+},{
   label: t("teamSettings"),
   icon: "fas fa-users-gear",
   route: "teamSettings",
-})
-);
+}]);
 
 const userItems = computed(() => [{
   label: t("overview"),
   icon: "fas fa-star",
   route: "overview",
 },{
-  label: t("userData"),
-  icon: "fas fa-circle-user",
-  route: "userData",
+  label: t("userContact"),
+  icon: "fas fa-address-book",
+  route: "userContact",
+},{
+  label: t("userAgreements"),
+  icon: "fas fa-file-contract",
+  route: "userAgreements",
 },{
   label: t("userAvailability"),
   icon: "fas fa-calendar-check",
@@ -249,7 +227,6 @@ const isTeamExpanded = ref(true);
 const isOrganizationExpanded = ref(hasActiveItem(organizationItems.value));
 const isAppExpanded = ref(hasActiveItem(appItems.value));
 
-// "Caffè Cooperativo"
 const organizations = computed(() => [accountStore.organization?.name].filter(Boolean) as string[]);
 const organization = ref(0);
 

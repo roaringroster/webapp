@@ -157,12 +157,14 @@ import { locale } from "src/boot/i18n";
 import { getOrganization, useDocument } from "src/api/repo";
 import { useAccountStore } from "src/stores/accountStore";
 import { toUTC } from "src/helper/date";
+import { deepMerge } from "src/models/base";
 import { Contact, getName } from "src/models/contact";
 import { Absence, AbsenceList } from "src/models/absence";
 import { colorForAbsenceReason } from "src/models/organization";
 import AbsenceSheet from "src/components/AbsenceSheet.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import { v4 } from "uuid";
+import { getHistory } from "@automerge/automerge";
 
 const $q = useQuasar();
 const { t } = useI18n();
@@ -264,7 +266,7 @@ function editAbsence(absence: Absence, userId: string) {
     if (index >= 0) {
       // 1. absence was maybe edited, but refers still to the same user
       if (newAbsence && userId == newUserId) {
-        member?.absences.changeDoc(doc => doc.absences[index] = newAbsence);
+        member?.absences.changeDoc(doc => deepMerge(doc.absences[index], newAbsence));
       // 2. absence was either deleted or moved to a different user
       } else {
         member?.absences.changeDoc(doc => doc.absences.splice(index, 1));

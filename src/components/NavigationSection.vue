@@ -7,7 +7,7 @@
     active-class="text-primary active-hover-background"
     :active="isActive(item)"
     :class="itemClass"
-    @click="item.action ? item.action() : route(item.route)"
+    @click="item.action ? item.action() : route(item.route, item.params)"
   >
     <q-item-section side>
       <q-icon
@@ -26,6 +26,7 @@ export type NavigationItem = {
   label: string;
   icon: string;
   route?: string;
+  params?: Record<string, string>;
   action?: () => void;
   active?: boolean;
   visible?: boolean;
@@ -40,9 +41,9 @@ export default class NavigationSection extends Vue {
     return item.active || (!!item.route && !!this.$route.matched.find(route => route.name == item.route));
   }
 
-  route(routeName?: string) {
+  route(routeName?: string, params?: Record<string, string>) {
     if (!!routeName && this.$route.name != routeName) {
-      this.$router.push({ name: routeName })
+      this.$router.push({ name: routeName, params })
         .catch(console.error)
     }
   }

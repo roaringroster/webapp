@@ -376,5 +376,9 @@
   "passwordSecurityCheckbox": "Ich habe die Sicherheitshinweise verstanden",
   "hostname": "Hostname",
   "ownServerAddress": "Eigener Server",
-  "moreButton": "Mehr…"
+  "moreButton": "Mehr…",
+  "userContact": "Meine Kontaktdaten",
+  "userAgreements": "Meine Vereinbarungen",
+  "degree": "Titel",
+  "addAcademicTitleButton": "Titel hinzufügen"
 }

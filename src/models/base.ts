@@ -75,6 +75,8 @@ export function deepMerge<T extends Object>(
             deepMerge(result[key] || [], value as any, [...path, key]);
             // delete missing
             (result[key] as any[]).splice(value.length);
+          } else if (value.constructor.name == "Date") {
+            result[key] = new Date(value) as T[keyof T];
           } else {
             deepMerge(result[key] || {}, value, [...path, key]);
             // delete missing

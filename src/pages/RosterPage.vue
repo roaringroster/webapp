@@ -98,7 +98,7 @@
         round
         no-caps
         dense
-        @click="selectedRow = null; schedule.notify = !schedule.notify"
+        @click="toggleScheduleNotify()"
       >
         <q-tooltip
           :offset="$q.platform.is.mobile ? [0,10] : [0,4]"
@@ -122,7 +122,7 @@
         no-caps
         dense
         class="q-px-sm"
-        @click="selectedRow = null; schedule.status = 'approved'"
+        @click="setScheduleStatus('approved')"
       />
       <q-btn
         v-else-if="schedule.status == 'approved'"
@@ -133,7 +133,7 @@
         no-caps
         dense
         class="q-px-sm"
-        @click="selectedRow = null; schedule.status = 'draft'"
+        @click="setScheduleStatus('draft')"
       />
     </div>
 
@@ -508,25 +508,28 @@
 </style>
 
 <script setup lang="ts">
-import { Ref, computed, ref, toRaw } from "vue";
+import { ComputedRef, Ref, computed, onUnmounted, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { QPopupProxy, date, useQuasar } from "quasar";
 import { QCalendarScheduler } from "@quasar/quasar-ui-qcalendar";
 import { DocumentId } from "@automerge/automerge-repo";
 import { v4 } from "uuid";
 import { locale } from "src/boot/i18n";
+import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganizationOrThrow, useDocument } from "src/api/repo";
 import { selectBehavior } from "src/helper/utils";
 import { getWeek, toUTC } from "src/helper/date";
 import { showWarning } from "src/helper/warning";
-import { useDemoStore } from "src/stores/demoStore";
-import { Roster, Shift, WeekSchedule, createRoster, createWorkSchedule } from "src/models/roster";
+import { useAccountStore } from "src/stores/accountStore";
+import { deepMerge, HasDocumentId } from "src/models/base";
+import { Roster, Shift, WeekSchedule, createWorkSchedule } from "src/models/roster";
 import { Availability, AvailabilityList, createAvailabilityList } from "src/models/availability";
 import ShiftSheet from "src/components/ShiftSheet.vue";
 import SelectDialog from "src/components/SelectDialog.vue";
+import { Contact, ContactProps, getUsername } from "src/models/contact";
 
 const $q = useQuasar();
 const { t, d } = useI18n();
-const store = useDemoStore();
+const accountStore = useAccountStore();
 
 // – Navigation
 
@@ -557,25 +560,30 @@ const statusColor = {
 
 // - Roster
 
-if (!store.$state.docs.roster) {
-  store.$state.docs.roster = createRoster();
-}
+const rosterHandle = computed(() =>
+  accountStore.team?.rosterId
+    ? useDocument<Roster>(accountStore.team.rosterId)
+    : null
+);
+onUnmounted(() => rosterHandle.value?.cleanup());
+const roster = computed(() => rosterHandle.value?.doc.value);
 
-const roster = computed(() => store.$state.docs.roster as Roster);
-
-const existingSchedule = computed((): WeekSchedule | null => 
-  roster.value.weeks.find(week => 
-    date.isSameDate(week.weekStart, currentWeekStart.value, "date")
-  ) || null
-)
+const existingSchedule = computed(() => findScheduleForCurrentWeek(roster.value));
 const schedule = computed((): WeekSchedule => 
   existingSchedule.value || createWorkSchedule(currentWeekStart.value)
 );
 const isEditable = computed(() => ["draft", "collaboration"].includes(schedule.value.status));
 const otherWeeks = computed(() => 
-  roster.value.weeks.filter(week => week.weekStart.getTime() != currentWeekStart.value.getTime()
-    && week.shifts.length > 0
-));
+  roster.value?.weeks.filter(week => 
+    week.weekStart.getTime() != currentWeekStart.value.getTime() && week.shifts.length > 0
+  ) || []
+);
+
+function findScheduleForCurrentWeek(roster?: Roster | null) {
+  return roster?.weeks.find(week => 
+    date.isSameDate(week.weekStart, currentWeekStart.value, "date")
+  ) || null;
+}
 
 const positions = ["Tische", "Bar", "Küche"];
 
@@ -585,38 +593,29 @@ type TeamMember = AvailabilityList & {
   positions: string[];
 };
 
-const teamMembers: Ref<TeamMember[]> = ref([
+// ToDo: replace with real availabilities
+const fakeAvailabilities = [
   {
-    label: "Alice Adams", 
     positions: [positions[0]], 
-    value: v4(),
     ...available(["08,18", "08,16", "08,18", "", "08,18", "08,16", ""])
   },
-  { 
-    label: "Bob Brown", 
-    positions: [positions[0], positions[1]], 
-    value: v4(),
+  {
+    positions: [positions[0], positions[1]],
     ...available(["12,23", "", "12,23", "12,23", "", "12,23", "12,23"])
   },
-  { 
-    label: "Charlie Clark", 
-    positions: [positions[2]], 
-    value: v4(),
+  {
+    positions: [positions[2]],
     ...available(["", "06,12", "10,22", "10,22", "", "10,22", "10,22", "", "16,22"])
   },
-  { 
-    label: "Dave Diaz", 
-    positions: [positions[1], positions[2]], 
-    value: v4(),
+  {
+    positions: [positions[1], positions[2]],
     ...available(["06,16", "06,16", "06,16", "", "12,24", "12,24", ""])
   },
   { 
-    label: "Eve Evans", 
-    positions: [positions[0], positions[2]], 
-    value: v4(),
+    positions: [positions[0], positions[2]],
     ...available(["", "11,24", "11,24", "13,02", "", "11,24", "11,24"])
   },
-]);
+];
 
 function available(days: string[]) {
   return createAvailabilityList({availabilities: days.flatMap((hours, index) => {
@@ -632,6 +631,38 @@ function available(days: string[]) {
   })})
 }
 
+
+const organizationMembers = computed(() => accountStore.organization?.members || {});
+const contactHandles = getHandles<Contact>(
+  () => Object.values(organizationMembers.value).map(({ contactId }) => contactId)
+);
+onUnmounted(() => cleanupAll(contactHandles.value));
+const contacts = getDocumentsWhenReady(contactHandles);
+const contactById = computed(() => contacts.value.reduce(
+  (result, contact) => {
+    result[contact.id] = contact;
+    return result;
+  },
+  {} as Record<DocumentId, (ContactProps & HasDocumentId)>
+));
+const contactByUserId = computed(() => Object.entries(organizationMembers.value).reduce(
+  (result, [id, { contactId }]) => {
+    result[id] = contactById.value[contactId] || null
+    return result;
+  },
+  {} as Record<string, (ContactProps & HasDocumentId) | null>
+));
+const teamMembers: ComputedRef<TeamMember[]> = computed(() => {
+  const authTeam = getOrganizationOrThrow();
+  return accountStore.team?.members.map((userId, index) => ({
+    value: userId,
+    label: getUsername(contactByUserId.value[userId]) 
+      || authTeam.members(userId).userName,
+    ...fakeAvailabilities[index % fakeAvailabilities.length]
+  })) || [];
+});
+
+
 function addShift() {
   selectedRow.value = null;
 
@@ -640,11 +671,16 @@ function addShift() {
     componentProps: { positions }
   })
   .onOk((shift: Shift) => {
-    if (!existingSchedule.value) {
-      roster.value.weeks.unshift(schedule.value);
-    }
+    rosterHandle.value?.changeDoc(roster => {
+      let schedule = findScheduleForCurrentWeek(roster);
 
-    schedule.value.shifts.push(shift);
+      if (!schedule) {
+        schedule = createWorkSchedule(currentWeekStart.value);
+        roster.weeks.unshift(schedule);
+      }
+
+      schedule.shifts.push(shift);
+    });
   });
 }
 
@@ -659,11 +695,17 @@ function editShift(shift: Shift) {
     const index = schedule.value.shifts.indexOf(shift);
 
     if (index >= 0) {
-      if (newValue) {
-        schedule.value.shifts[index] = newValue;
-      } else {
-        schedule.value.shifts.splice(index, 1)
-      }
+      rosterHandle.value?.changeDoc(roster => {
+        const schedule = findScheduleForCurrentWeek(roster);
+
+        if (schedule) {
+          if (newValue) {
+            deepMerge(schedule.shifts[index], newValue);
+          } else {
+            schedule.shifts.splice(index, 1)
+          }
+        }
+      });
     }
   });
 }
@@ -749,13 +791,20 @@ function setAssignment(scope: QCalendarScope, index: number, value: DocumentId |
   const weekday = scope.timestamp?.weekday;
 
   if (shiftIndex != undefined && weekday != undefined) {
-    const assignments = schedule.value.shifts[shiftIndex].assignments[weekday];
+    rosterHandle.value?.changeDoc(roster => {
+      const schedule = findScheduleForCurrentWeek(roster);
 
-    if (value) {
-      assignments.splice(index, 1, value);
-    } else {
-      assignments.splice(index, 1);
-    }
+      if (schedule) {
+        const assignments = schedule.shifts[shiftIndex].assignments[weekday];
+        console.log(assignments, index);
+
+        if (value) {
+          assignments.splice(index, 1, value);
+        } else {
+          assignments.splice(index, 1);
+        }
+      }
+    });
   }
 }
 
@@ -978,14 +1027,40 @@ function copyRosterDialog() {
       );
     }
 
-    const weekIndex = roster.value.weeks.findIndex(week => 
-      week.weekStart.getTime() == weekStart
-    );
+    rosterHandle.value?.changeDoc(roster => {
+      const weekIndex = roster.weeks.findIndex(week => 
+        week.weekStart.getTime() == weekStart
+      );
 
-    if (weekIndex < 0) {
-      roster.value.weeks.unshift(newWeek);
-    } else {
-      roster.value.weeks.splice(weekIndex, 1, newWeek);
+      if (weekIndex < 0) {
+        roster.weeks.unshift(newWeek);
+      } else {
+        roster.weeks.splice(weekIndex, 1, newWeek);
+      }
+    });
+  });
+}
+
+function setScheduleStatus(value: WeekSchedule["status"]) {
+  selectedRow.value = null;
+
+  rosterHandle.value?.changeDoc(roster => {
+    const schedule = findScheduleForCurrentWeek(roster);
+
+    if (schedule) {
+      schedule.status = value;
+    }
+  });
+}
+
+function toggleScheduleNotify() {
+  selectedRow.value = null;
+
+  rosterHandle.value?.changeDoc(roster => {
+    const schedule = findScheduleForCurrentWeek(roster);
+
+    if (schedule) {
+      schedule.notify = !schedule.notify;
     }
   });
 }

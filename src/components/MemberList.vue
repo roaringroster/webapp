@@ -43,7 +43,7 @@
           >
             <signature
               :signature="signatures?.[member.userId]"
-              :userName="!signatures ? member.userName : undefined"
+              :userName="!signatures ? getMemberName(member) : undefined"
               fallback="?"
               class="self-center bg-grey-7"
               color="white"
@@ -52,7 +52,7 @@
           </q-item-section>
           <q-item-section>
             <q-item-label>
-              {{ member.userName }}
+              {{ getMemberName(member) }}
               <span 
                 v-if="isCurrentUser(member)"
                 class="text-italic"
@@ -128,7 +128,8 @@
                     />
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label caption class="line-height-11">{{ $t("oneAdminRequiredMessage", {name: member.userName}) }}
+                    <q-item-label caption class="line-height-11">
+                      {{ $t("oneAdminRequiredMessage", {name: getMemberName(member)}) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -225,19 +226,21 @@
 import { computed, onUnmounted, PropType, ref, Ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { QExpansionItem, QInput, useQuasar } from "quasar";
+import { DocumentId } from "@automerge/automerge-repo";
 import { Member as AuthMember, Device, InvitationState, UnixTimestamp, Base58, ADMIN } from "@localfirst/auth";
 import { base58 } from "@localfirst/crypto";
 import { useAccountStore } from "src/stores/accountStore";
 import { InvitationSeeds, useAccount } from "src/api/local2";
-import { getOrganization, removeDocument, useDocument } from "src/api/repo";
+import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganization, removeDocument, useDocument } from "src/api/repo";
 import { didExpire } from "src/helper/expiration";
 import { InvitationCodeLength } from "src/helper/utils";
+import { HasDocumentId } from "src/models/base";
+import { Contact, ContactProps, getUsername } from "src/models/contact";
 import Signature from "src/components/Signature.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import ActionMenu from "src/components/ActionMenu.vue";
 import InvitationSheet from "src/components/InvitationSheet.vue";
 import InvitationItem from "src/components/InvitationItem.vue";
-import { Contact, getUsername } from "src/models/contact";
 
 const $q = useQuasar();
 const { t } = useI18n();
@@ -258,6 +261,7 @@ const props = defineProps({
   }
 })
 
+const memberItems: Ref<QExpansionItem[]> = ref([]);
 const authTeam = getOrganization();
 const isAdmin: Ref<boolean> = ref(false);
 const members: Ref<AuthMember[]> = ref([]);
@@ -278,7 +282,8 @@ watch(
     } else {
       memberItems.value.at(0)?.hide();
     }
-  }
+  },
+  { immediate: true }
 );
 
 function onTeamUpdated() {
@@ -298,7 +303,30 @@ function onTeamUpdated() {
   // ToDo: cleanup invitationSeeds where invitation.uses == invitation.maxUses
 }
 
-onTeamUpdated();
+const organizationMembers = computed(() => accountStore.organization?.members || {});
+const contactHandles = getHandles<Contact>(
+  () => Object.values(organizationMembers.value).map(({ contactId }) => contactId)
+);
+onUnmounted(() => cleanupAll(contactHandles.value));
+const contacts = getDocumentsWhenReady(contactHandles);
+const contactById = computed(() => contacts.value.reduce(
+  (result, contact) => {
+    result[contact.id] = contact;
+    return result;
+  },
+  {} as Record<DocumentId, (ContactProps & HasDocumentId)>
+));
+const contactByUserId = computed(() => Object.entries(organizationMembers.value).reduce(
+  (result, [id, { contactId }]) => {
+    result[id] = contactById.value[contactId] || null
+    return result;
+  },
+  {} as Record<string, (ContactProps & HasDocumentId) | null>
+));
+
+function getMemberName(authMember: AuthMember) {
+  return getUsername(contactByUserId.value[authMember.userId]) || authMember.userName;
+}
 
 
 const invitationSeeds: Ref<InvitationSeeds> = ref({});
@@ -349,9 +377,6 @@ function titleCaption() {
 }
 
 // - member actions
-
-
-const memberItems: Ref<QExpansionItem[]> = ref([]);
 
 function hasAdminRole(member: {userId: string}) {
   return authTeam?.memberIsAdmin(member.userId) || false;
@@ -431,12 +456,8 @@ async function removeMember(authMember: AuthMember) {
   const member = accountStore.organization?.members[id];
 
   if (member) {
-    const memberContactHandle = useDocument<Contact>(member.contactId);
-    memberContactHandle.handle.whenReady();
-
-    const name = getUsername(memberContactHandle.doc.value) || authMember.userName;
     accountStore.organizationHandle?.changeDoc(doc => {
-      doc.formerUserNames[id] = name;
+      doc.formerUserNames[id] = getMemberName(authMember);
       delete doc.members[id];
     });
     removeDocument(member.contactId, authTeam);
@@ -461,8 +482,6 @@ async function removeMember(authMember: AuthMember) {
         })
       }
     });
-
-    memberContactHandle.cleanup();
   }
 }
 

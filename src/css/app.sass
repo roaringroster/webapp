@@ -223,6 +223,17 @@ body.q-ios-padding .q-notifications__list--top
     left: 0
     background-color: #000000
     opacity: .08
+.q-item.active-hover-background .q-focus-helper
+  background-color: currentColor
+  opacity: .06
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  pointer-events: none
+  border-radius: inherit
+  transition: background-color 0.3s cubic-bezier(0.25, 0.8, 0.5, 1), opacity 0.4s cubic-bezier(0.25, 0.8, 0.5, 1)
 .break-word
   word-wrap: break-word
 .hyphen
@@ -261,4 +272,5 @@ body.q-ios-padding .q-notifications__list--top
 .indent
   margin-left: 16px
   text-indent: -16px
-  
+.mb-row-dense
+  margin-bottom: 40px

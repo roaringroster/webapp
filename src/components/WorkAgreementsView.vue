@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="doc" 
+    v-if="modelValue" 
     ref="el"
   >
     <q-resize-observer @resize="onResize" />
@@ -33,26 +33,26 @@
       </div>
       <div v-else>
         <q-input
-          :model-value="doc.employeeId"
+          :model-value="modelValue.employeeId"
           @update:model-value="save({employeeId: alwaysString($event)})"
           :debounce="debounce"
           :label="$t('employeeId')"
         />
         <q-input
-          :model-value="doc.jobTitle"
+          :model-value="modelValue.jobTitle"
           @update:model-value="save({jobTitle: alwaysString($event)})"
           :debounce="debounce"
           :label="$t('jobTitle')"
         />
         <q-input
-          :model-value="doc.jobDescription"
+          :model-value="modelValue.jobDescription"
           @update:model-value="save({jobDescription: alwaysString($event)})"
           :debounce="debounce"
           :label="$t('jobDescription')"
           autogrow
         />
         <multiple-selectable-input
-          :model-value="doc.positions"
+          :model-value="modelValue.positions"
           @update:model-value="save({positions: $event})"
           :label="$t('jobPositions')"
           :options="[]"
@@ -60,7 +60,7 @@
         />
         <div class="row q-gutter-x-md">
           <date-time-input
-            :model-value="doc.employmentStart"
+            :model-value="modelValue.employmentStart"
             @update:model-value="save({employmentStart: $event || null})"
             :label="$t('employmentStart')"
             :format="$t('dateFormat')"
@@ -68,7 +68,7 @@
             style="min-width: 200px"
           />
           <date-time-input
-            :model-value="doc.employmentEnd"
+            :model-value="modelValue.employmentEnd"
             @update:model-value="save({employmentEnd: $event || null})"
             :label="$t('employmentEnd')"
             :format="$t('dateFormat')"
@@ -78,7 +78,7 @@
         </div>
         <div class="row q-gutter-x-md">
           <q-input
-            :model-value="formatNumber(doc.weeklyHours)"
+            :model-value="formatNumber(modelValue.weeklyHours)"
             @update:model-value="save({weeklyHours: positive(floatOrNull($event))})"
             :debounce="debounce"
             :label="$t('weeklyHours')"
@@ -88,7 +88,7 @@
             class="col"
           />
           <q-input
-            :model-value="formatNumber(doc.yearlyVacationDays)"
+            :model-value="formatNumber(modelValue.yearlyVacationDays)"
             @update:model-value="save({yearlyVacationDays: positive(floatOrNull($event))})"
             :debounce="debounce"
             :label="$t('yearlyVacationDays')"
@@ -100,7 +100,7 @@
         </div>
         <div class="row">
           <q-input
-            :model-value="formatNumber(doc.grossSalary, 'CurrencyNoGrouping')"
+            :model-value="formatNumber(modelValue.grossSalary, 'CurrencyNoGrouping')"
             @update:model-value="save({grossSalary: positive(floatOrNull($event))})"
             :debounce="debounce"
             :label="$t('grossSalary')"
@@ -109,7 +109,7 @@
           />
         </div>
         <q-input
-          :model-value="doc.salaryNotes"
+          :model-value="modelValue.salaryNotes"
           @update:model-value="save({salaryNotes: alwaysString($event)})"
           :debounce="debounce"
           :label="$t('salaryNotes')"
@@ -121,9 +121,8 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, computed, ref, onUnmounted } from "vue";
+import { PropType, Ref, computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useDocumentDeprecated as useDocument } from "src/api/repo";
 import { debounce, alwaysString, floatOrNull, positive } from "src/helper/input";
 import { didExpire } from "src/helper/expiration";
 import { WorkAgreements } from "src/models/workAgreements";
@@ -137,20 +136,25 @@ const { n } = useI18n();
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    type: Object as PropType<WorkAgreements | null>,
     required: true,
   },
 });
 
-const docHandle = useDocument<WorkAgreements>(props.modelValue);
-const doc = docHandle.doc;
+const emit = defineEmits<{
+  (event: "update", payload: (value: WorkAgreements) => void): void
+}>();
 
 async function save(changes: ((doc: WorkAgreements) => void) | Partial<WorkAgreements>) {
-  const changeFn = typeof changes == "function"
-    ? changes
-    : (doc: WorkAgreements) => Object.assign(doc, changes);
+    let changeFn: (value: WorkAgreements) => void;
 
-  docHandle.changeDoc(changeFn);
+    if (typeof changes != "function") {
+        changeFn = value => Object.assign(value, changes);
+    } else {
+        changeFn = changes;
+    }
+
+    emit("update", changeFn);
 }
 
 const isEditing = ref(false);
@@ -164,25 +168,21 @@ function onResize() {
 }
 
 const items = computed(() => [
-  ...stringToItem("employeeId", () => doc.value?.employeeId),
-  ...stringToItem("jobTitle", () => doc.value?.jobTitle),
-  ...stringToItem("jobDescription", () => doc.value?.jobDescription),
-  ...stringArrayToItem("jobPositions", () => doc.value?.positions),
-  ...dateToItem("employmentStart", () => doc.value?.employmentStart, "DateMed"),
-  ...dateToItem("employmentEnd", () => doc.value?.employmentEnd, "DateMed"),
-  ...numberToItem("weeklyHours", () => doc.value?.weeklyHours),
-  ...numberToItem("yearlyVacationDays", () => doc.value?.yearlyVacationDays),
-  ...numberToItem("grossSalary", () => doc.value?.grossSalary, "Currency"),
-  ...stringToItem("salaryNotes", () => doc.value?.salaryNotes),
+  ...stringToItem("employeeId", () => props.modelValue?.employeeId),
+  ...stringToItem("jobTitle", () => props.modelValue?.jobTitle),
+  ...stringToItem("jobDescription", () => props.modelValue?.jobDescription),
+  ...stringArrayToItem("jobPositions", () => props.modelValue?.positions),
+  ...dateToItem("employmentStart", () => props.modelValue?.employmentStart, "DateMed"),
+  ...dateToItem("employmentEnd", () => props.modelValue?.employmentEnd, "DateMed"),
+  ...numberToItem("weeklyHours", () => props.modelValue?.weeklyHours),
+  ...numberToItem("yearlyVacationDays", () => props.modelValue?.yearlyVacationDays),
+  ...numberToItem("grossSalary", () => props.modelValue?.grossSalary, "Currency"),
+  ...stringToItem("salaryNotes", () => props.modelValue?.salaryNotes),
 ]);
 
 const formatNumber = (value: number | null, numberFormat = "") =>
   value != null
     ? n(value, numberFormat)
-    : null
-
-onUnmounted(() => {
-  docHandle.cleanup();
-})
+    : null;
 
 </script>
