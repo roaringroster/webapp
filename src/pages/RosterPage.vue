@@ -476,6 +476,10 @@
     padding-top: .5rem
     font-size: 1rem
     font-weight: bold
+.member-select
+  .q-field__native
+    overflow: hidden
+    flex-direction: column
 .member-select-item
   .q-item__label + .q-item__label
     margin-top: 2px
@@ -513,7 +517,6 @@ import { useI18n } from "vue-i18n";
 import { QPopupProxy, date, useQuasar } from "quasar";
 import { QCalendarScheduler } from "@quasar/quasar-ui-qcalendar";
 import { DocumentId } from "@automerge/automerge-repo";
-import { v4 } from "uuid";
 import { locale } from "src/boot/i18n";
 import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganizationOrThrow, useDocument } from "src/api/repo";
 import { selectBehavior } from "src/helper/utils";
@@ -796,10 +799,9 @@ function setAssignment(scope: QCalendarScope, index: number, value: DocumentId |
 
       if (schedule) {
         const assignments = schedule.shifts[shiftIndex].assignments[weekday];
-        console.log(assignments, index);
 
         if (value) {
-          assignments.splice(index, 1, value);
+          assignments[index] = value;
         } else {
           assignments.splice(index, 1);
         }
