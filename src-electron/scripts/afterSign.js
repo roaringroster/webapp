@@ -18,7 +18,7 @@ exports.default = async function afterSign(context) {
 async function notarizing(context) {
     const { electronPlatformName, appOutDir } = context;
     
-    if (electronPlatformName !== "darwin") {
+    if (electronPlatformName !== "darwin" || process.env.SKIP_NOTARIZING || process.env.FAST_BUILD) {
         return;
     }
 

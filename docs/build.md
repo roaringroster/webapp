@@ -44,8 +44,14 @@ npm run build app publish=beta version=patch
 
 ## Testing
 
-To build an electron production build with enabled DevTools and process.env.DEBUGGING evaluating to true, but not in dev mode:
+To build an electron production build fast with enabled DevTools and process.env.DEBUGGING evaluating to true and without code signing, notarization and multiple architectures, but not in dev mode:
 
 ```bash
-QENV=production quasar build --debug -m electron
+QENV=production FAST_BUILD=true CSC_IDENTITY_AUTO_DISCOVERY=false quasar build --debug -m electron
+```
+
+To build an electron production build fast (without code signing, notarization and multiple architectures), but not for debugging:
+
+```bash
+FAST_BUILD=true CSC_IDENTITY_AUTO_DISCOVERY=false quasar build -m electron
 ```

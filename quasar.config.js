@@ -435,10 +435,14 @@ module.exports = configure(function (ctx) {
           schemes: [env.URL_SCHEME]
         }],
         mac: {
-          target: [{
-            target: "zip",
-            arch: [/*"arm64", "x64",*/ "universal"]
-          }],
+          target: !process.env.FAST_BUILD
+            ? [{
+                target: "zip",
+                arch: [/*"arm64", "x64",*/ "universal"]
+              }]
+            : [{
+                target: "dir"
+              }],
           category: "public.app-category.productivity",
           icon: "src-electron/icons/icon.icns",
           hardenedRuntime: true,
