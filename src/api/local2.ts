@@ -169,6 +169,24 @@ async function deleteAccount(username: string) {
     await Vault.delete(username.toLowerCase());
 }
 
+// delete incomplete and unneeded account databases on startup 
+// that remained due to previous deletion error
+async function cleanupAccountArtifacts() {
+    const repoDBPrefix = "account.";
+    const accountDBNames = await allUsernames();
+    (await Dexie.getDatabaseNames())
+        .filter(name => name.startsWith(repoDBPrefix))
+        .map(name => name.substring(repoDBPrefix.length))
+        .forEach(async name => {
+            if (!accountDBNames.includes(name)) {
+                console.log("cleanup", name)
+                await Dexie.delete(repoDBPrefix + name);
+            }
+        });
+}
+
+cleanupAccountArtifacts();
+
 async function persistIfNeeded() {
     // see https://dexie.org/docs/StorageManager
     // also https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Browser_storage_limits_and_eviction_criteria
