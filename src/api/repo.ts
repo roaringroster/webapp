@@ -164,6 +164,7 @@ async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?
   auth.on("connected", payload => console.log("RR:connected", payload))
   auth.on("ready", () => console.log("RR:ready"))
   auth.on("joined", payload => console.log("RR:joined", payload))
+  auth.on("peer-joined", payload => console.log("RR:peer-joined", payload))
 
   auth.on("joined", () => isConnected.value = true);
   auth.on("connected", () => {
@@ -188,6 +189,35 @@ async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?
     //   }
     // }, 500);
   });
+
+  // if we have no server connection after a few seconds, the server might have lost
+  // the shareId of our organization Auth team, so we check and send it if needed.
+  // We should only do that when using BrowserWebSocketClientAdapter.
+  auth.on("peer-joined", () => clearTimeout(peerJoinedTimeout));
+  const peerJoinedTimeout = setTimeout(async () => {
+    if (activeOrganization && auth.hasTeam(activeOrganization)) {
+      const authTeam = auth.getTeam(activeOrganization);
+      const serverKeysLocal = authTeam.servers(server)?.keys;
+      const response = await fetch(`https://${server}/keys`);
+      const serverKeysRemote = await response.json() as Auth.Keyset;
+
+      // we already know the server and it's public keys, but it might be necessary
+      // to register our organization Auth team again
+      if (!!serverKeysRemote?.encryption 
+        && serverKeysRemote.encryption == serverKeysLocal.encryption
+        && serverKeysRemote.signature == serverKeysLocal.signature
+      ) {
+        await fetch(`https://${server}/teams`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            serializedGraph: authTeam.save(),
+            teamKeyring: authTeam.teamKeyring(),
+          }),
+        });
+      }
+    }
+  }, 5000);
 
   await Promise.all([
     eventPromise(auth, "ready"), // auth provider has loaded any persisted state
