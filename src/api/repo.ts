@@ -13,7 +13,6 @@ import { getCaseSensitiveUsername, LocalAccount, PartialLocalAccount, useAccount
 import { promiseForErrorHandling } from "src/helper/utils";
 
 // import { useAPI } from "src/api";
-import * as AppSettings from "src/database/AppSettings";
 import { HasDocumentId } from "src/models/base";
 import { Member, createMember } from "src/models/user";
 import { createOrganization, Organization } from "src/models/organization";
@@ -25,12 +24,6 @@ import Dexie from "dexie";
 // import { createAbsenceList } from "src/models/absence";
 
 const { t } = i18n;
-
-const staticRepo = new Repo({
-  network: [],
-  // network: [new BrowserWebSocketClientAdapter("wss://localhost:3030")],
-  storage: new IndexedDBStorageAdapter("rr_demo"),
-});
 
 const dbPrefix = "account.";
 
@@ -454,43 +447,6 @@ export function getDocumentsWhenReady<T>(handlesRef: Ref<Handle<T>[]>) {
 }
 
 
-/** @deprecated */
-export function useDocumentDeprecated<T>(id: string | Promise<string>) {
-  const getId = typeof id == "string"
-    ? Promise.resolve(id)
-    : id;
-
-  const doc: Ref<A.Doc<T> | null> = ref(null);
-
-  const changeDoc = (
-    changeFn: ChangeFn<T>,
-    options: ChangeOptions<T> = changeOptions()
-  ) => handle?.change(changeFn, options);
-
-  const onChange = (h: DocHandleChangePayload<T>) => doc.value = h.doc;
-
-  const cleanup = () => handle?.off("change", onChange)
-
-  let handle: DocHandle<T> | undefined;
-
-  getId
-    .then(id => {
-      if (isValidAutomergeUrl(id)) {
-        handle = staticRepo.find<T>(id);
-
-        handle.doc()
-          .then(value => doc.value = value)
-          .catch(console.error)
-
-        handle.on("change", onChange);
-      }
-    })
-    .catch(console.error)
-
-  return { doc, changeDoc, cleanup }
-}
-
-
 export function useChangeHistory<T>(source: WatchSource<A.Doc<T> | null>, title: string) {
   const changeHistoryStore = useChangeHistoryStore();
 
@@ -531,24 +487,4 @@ export function changeOptions(
 ) {
   const message = JSON.stringify({ by: userId });
   return { time, message };
-}
-
-/** only for debug purposes (can be deleted) */
-export async function findOrCreate<T>(id: string, initialValue: T) {
-  const docUrl = await AppSettings.get<string | undefined>(id as "lastUpdated");
-
-  let handle: DocHandle<T>;
-
-  if (isValidAutomergeUrl(docUrl)) {
-    handle = staticRepo.find(docUrl)
-  } else {
-    handle = staticRepo.create();
-    handle.change(
-      (doc: A.Doc<T>) => Object.assign(doc, initialValue), 
-      changeOptions()
-    );
-    await AppSettings.set(id as "lastUpdated", handle.url)
-  }
-
-  return handle.url;
 }
