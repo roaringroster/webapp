@@ -10,15 +10,34 @@
 		"editor.bracketPairColorization.enabled": true,
 		"editor.guides.bracketPairs": true,
 		"editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
 		"editor.codeActionsOnSave": [
 			"source.fixAll.eslint"
 		],
+    "prettier.tabWidth": 2,
+    "prettier.printWidth": 80,
+    "vetur.validation.template": false,
+    "vetur.format.enable": false,
+    "vetur.format.defaultFormatter.html": "prettyhtml",
+    "vetur.format.defaultFormatter.js": "prettier-eslint",
+    "vetur.format.defaultFormatterOptions": {
+      "js-beautify-html": {
+        "wrap_attributes": "force-expand-multiline"
+      },
+      "prettyhtml": {
+        "printWidth": 100,
+        "singleQuote": false,
+        "wrapAttributes": false,
+        "sortAttributes": false
+      }
+    },
 		"typescript.tsdk": "node_modules/typescript/lib",
+    "vetur.experimental.templateInterpolationService": true,
 		"eslint.validate": [
-		"javascript",
-		"javascriptreact",
-		"typescript",
-		"vue"
+			"javascript",
+			"javascriptreact",
+			"typescript",
+			"vue"
 		],
 		"i18n-ally.localesPaths": [
 			"src/i18n"
