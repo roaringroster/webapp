@@ -58,8 +58,10 @@ const accountStore = useAccountStore();
 const isCollapsed = ref(false);
 
 const organizationMembers = computed(() => accountStore.organization?.members || {});
-const contactHandles = getHandles<Contact>(
-  () => Object.values(organizationMembers.value).map(({ contactId }) => contactId)
+const contactHandles = getHandles<Contact>(() => 
+  accountStore.team?.members
+    .map(userId => organizationMembers.value[userId]?.contactId)
+    .filter(Boolean)
 );
 onUnmounted(() => cleanupAll(contactHandles.value));
 const contacts = getDocumentsWhenReady(contactHandles);

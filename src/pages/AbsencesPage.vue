@@ -163,8 +163,6 @@ import { Absence, AbsenceList } from "src/models/absence";
 import { colorForAbsenceReason } from "src/models/organization";
 import AbsenceSheet from "src/components/AbsenceSheet.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
-import { v4 } from "uuid";
-import { getHistory } from "@automerge/automerge";
 
 const $q = useQuasar();
 const { t } = useI18n();
@@ -174,43 +172,24 @@ const accountStore = useAccountStore();
 
 const authTeam = getOrganization();
 const memberHandles = computed(() => {
-  // console.log(teamHandle.doc.value?.members, team?.members());
-  return Object.entries(accountStore.organization?.members || {})
-    .map(([userId, member]) => ({
-      userId,
-      user: authTeam?.members(userId),
-      contact: useDocument<Contact>(member.contactId),
-      absences: useDocument<AbsenceList>(member.absencesId),
-    }))
+  return accountStore.team?.members
+    .flatMap(userId => {
+      const member = accountStore.organization?.members[userId];
+      return member 
+        ? [{
+            userId,
+            user: authTeam?.members(userId),
+            contact: useDocument<Contact>(member.contactId),
+            absences: useDocument<AbsenceList>(member.absencesId),
+          }]
+        : []
+    }) || []
 });
 const members = computed(() => memberHandles.value
   .map(member => ({
     label: getName(member.contact.doc.value, member.user?.userName || member.userId),
     value: member.userId,
   }))
-  // ToDo: remove dummy data
-  .concat([
-    {
-      label: "Alice Adams", 
-      value: v4(),
-    },
-    { 
-      label: "Bob Brown", 
-      value: v4(),
-    },
-    { 
-      label: "Charlie Clark", 
-      value: v4(),
-    },
-    { 
-      label: "Dave Diaz", 
-      value: v4(),
-    },
-    { 
-      label: "Eve Evans", 
-      value: v4(),
-    },
-  ])
   .sort((a, b) => {
     // the current user's account first, then alphabetical
     if (a.value == accountStore.userId) {
