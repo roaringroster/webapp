@@ -1,15 +1,19 @@
 import { dialog, ipcMain, shell } from "electron"
-import { autoUpdater } from "electron-updater"
+import electronUpdater from "electron-updater"
 import { setMenuItemEnabled } from "./menu"
 import { $i18n } from "./i18n"
-import { reportError } from "../../src/helper/utils"
-import { fileSize } from "../../src/boot/i18n"
+import { reportError } from "../../src/helper/appInfo"
+import { formatFileSize } from "../../src/helper/formatter"
 
 /* Based on main documentation at https://www.electron.build/auto-update and several examples:
    - https://github.com/electron-userland/electron-builder/blob/docs-deprecated/encapsulated%20manual%20update%20via%20menu.js
    - https://gist.github.com/iffy/0ff845e8e3f59dbe7eaf2bf24443f104
    - https://github.com/iffy/electron-updater-example
 */
+
+// Using destructuring to access autoUpdater due to the CommonJS module of 'electron-updater'.
+// It is a workaround for ESM compatibility issues, see https://github.com/electron-userland/electron-builder/issues/7976.
+const { autoUpdater } = electronUpdater;
 
 let wasInitiatedByUser = true;
 
@@ -45,8 +49,8 @@ autoUpdater.on("update-available", (info) => {
         message: $i18n.t("updateAvailable", {
             availableVersion: info.version,
             installedVersion: process.env.APP_VERSION,
-            downloadSize: info.files[0].size
-                ? $i18n.t("fileSizeUpdate", { fileSize: fileSize(info.files[0].size) })
+            downloadSize: info.files[0]?.size
+                ? $i18n.t("fileSizeUpdate", { fileSize: formatFileSize(info.files[0].size, $i18n.locale) })
                 : undefined
         }),
         buttons: [$i18n.t("Yes"), $i18n.t("remindLaterButton")],
@@ -62,7 +66,7 @@ autoUpdater.on("update-available", (info) => {
     wasInitiatedByUser = true;
 })
 
-autoUpdater.on("update-not-available", (info) => {
+autoUpdater.on("update-not-available", () => {
     if (wasInitiatedByUser) {
         void dialog.showMessageBox({
             title: $i18n.t("updateUnavailableTitle"),
@@ -77,7 +81,7 @@ autoUpdater.on("update-not-available", (info) => {
     wasInitiatedByUser = true;
 })
 
-autoUpdater.on("update-downloaded", (event) => {
+autoUpdater.on("update-downloaded", () => {
     void dialog.showMessageBox({
         title: $i18n.t("updateDownloadedTitle"),
         message: $i18n.t("updateDownloaded"),
@@ -93,7 +97,7 @@ autoUpdater.on("update-downloaded", (event) => {
 
 autoUpdater.on("checking-for-update", () => undefined)
 
-autoUpdater.on("download-progress", (progressInfo) => undefined)
+autoUpdater.on("download-progress", () => undefined)
 
 export async function checkForUpdates() {
     setMenuItemEnabled("checkForUpdates", false);

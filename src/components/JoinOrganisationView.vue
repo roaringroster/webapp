@@ -235,7 +235,7 @@ async function joinOrganisation() {
     } catch(error) {
       errorMessageText.value = errorMessage(error);
       errorDebugInfo.value = `${error}`;
-      await logoutWithAuth();
+      logoutWithAuth();
       logoutAccount();
 
       if (errorToString(error) != "UsernameExists") {
@@ -247,6 +247,7 @@ async function joinOrganisation() {
           // with a catch method like above, deleteStorage won't delete;
           // sometimes it doesn't delete anyway, it is not reliable
           await deleteStorage(username);
+          // eslint-disable-next-line no-empty
         } catch { }
       }
     }

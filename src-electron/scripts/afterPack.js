@@ -1,15 +1,14 @@
-const { writeFile } = require("fs");
+import { writeFile } from "fs";
 
-exports.default = async function afterPack(context) {
+const _default = async function afterPack(context) {
   const { electronPlatformName, appOutDir } = context;
-  
+
   if (electronPlatformName !== 'darwin') {
     return;
   }
 
   const {
-    productFilename,
-    info: {
+    productFilename, info: {
       _metadata: { electronLanguagesInfoPlistStrings },
     },
   } = context.packager.appInfo;
@@ -37,11 +36,13 @@ exports.default = async function afterPack(context) {
       });
     })
   );
-  
+
   console.log(
-      "  \x1b[34m•\x1b[0m",
-      "finished        generating localized InfoPlist.strings files"
+    "  \x1b[34m•\x1b[0m",
+    "finished        generating localized InfoPlist.strings files"
   );
 
   return;
-}
+};
+
+export { _default as default };

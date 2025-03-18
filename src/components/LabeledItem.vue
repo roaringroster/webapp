@@ -148,7 +148,7 @@ export function stringToItem(
   label: string, 
   getValue: () => string | null | undefined
 ): LabeledItemType[] {
-  if (!!getValue()) {
+  if (getValue()) {
     return [{ label: t(label), value: getValue() || "" }]
   } else {
     return [];

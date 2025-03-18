@@ -24,7 +24,7 @@ import WidgetContainer from "src/components/WidgetContainer.vue";
 const { addToDate } = date;
 const { d } = useI18n();
 
-const props = defineProps({
+defineProps({
   shifts: {
     type: Array as PropType<Shift[]>,
     default: () => []

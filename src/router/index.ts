@@ -1,4 +1,4 @@
-import { route } from "quasar/wrappers";
+import { defineRouter } from "#q-app/wrappers";
 import {
   createMemoryHistory,
   createRouter,
@@ -25,7 +25,7 @@ const { isLoggedIn, updateAccount, allUsernames } = useAccount();
 
 let router: Router | null = null;
 
-export default route(function (/* { store, ssrContext } */) {
+export default defineRouter(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER
     ? createMemoryHistory
     : (process.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory);
@@ -66,14 +66,14 @@ export default route(function (/* { store, ssrContext } */) {
         if (to.matched.find(({ name }) => name == "auth")) {
           next({ name: appDefaultRoute });
         } else {
-          updateAccount({currentPath: to.path});
+          await updateAccount({currentPath: to.path});
           next();
         }
       } else {
         if (to.name == "auth") {
           const hasAccounts = (await allUsernames()).length > 0;
           next({ name: hasAccounts ? "login" : "addMemberDevice" });
-        } else if (!!to.matched.find(({ name }) => name == "auth")) {
+        } else if (to.matched.find(({ name }) => name == "auth")) {
           if (to.name == "login" && (await allUsernames()).length == 0) {
             next({ name: "addMemberDevice" })
           } else {

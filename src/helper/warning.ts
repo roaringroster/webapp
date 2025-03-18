@@ -6,7 +6,7 @@ export function showWarning(message: string, title?: string) {
     const { t } = i18n;
 
     return Dialog.create({
-        title: title ?? t("warningTitle") as string,
+        title: title ?? t("warningTitle"),
         message: sanitizeHTML(message).replace(/\n/g, "<br>"),
         html: true,
         class: "warning-dialog",

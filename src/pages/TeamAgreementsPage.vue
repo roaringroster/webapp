@@ -28,7 +28,7 @@ onUnmounted(() => agreementsHandle.value?.cleanup());
 watch(
   () => route.params.memberId,
   memberId => {
-    if (!!memberId) {
+    if (memberId) {
       const member = accountStore.organization?.members[memberId?.toString()];
 
       if (member) {

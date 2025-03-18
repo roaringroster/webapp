@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { exitOnError, changeCordovaVersion } = require("./utils/utils");
+import { exitOnError, changeCordovaVersion } from "./utils/utils.js";
 
 exitOnError(() => {
   changeCordovaVersion(process.env.npm_package_version);

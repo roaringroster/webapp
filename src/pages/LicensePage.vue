@@ -44,7 +44,7 @@ async function loadMarkdown() {
   licenseSummary.value = (await import(`../markdown/${languageCode}/agpl-summary.md`)).default;
 }
 
-loadMarkdown();
+void loadMarkdown();
 bus?.on("did-change-locale", loadMarkdown);
 
 onUnmounted(() => bus?.off("did-change-locale", loadMarkdown));

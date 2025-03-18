@@ -1,9 +1,11 @@
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import { createI18n } from "vue-i18n";
 import { Quasar } from "quasar";
 import { DateTime } from "luxon";
 import { WritableComputedRef } from "vue";
 import messages from "../i18n";
+import { matchLocale } from "src/helper/locale";
+import { formatFileSize } from "src/helper/formatter";
 
 export type MessageLanguages = keyof typeof messages;
 // Type-define 'en-US' as the master schema for the resource
@@ -44,28 +46,6 @@ export async function loadLangPack(locale: string) {
     }
 };
 
-export function matchLocale(
-  locale: string,
-  availableLocales: string[],
-  fallbackLocale: string
-) {
-  let resultingLocale = locale
-
-  if (!availableLocales.includes(resultingLocale)) {
-    const shortLocale = locale.split("-")[0]
-    resultingLocale = shortLocale
-
-    if (!availableLocales.includes(resultingLocale)) {
-      resultingLocale =
-        availableLocales.find(locale => {
-          return shortLocale === locale.split("-")[0]
-        }) || fallbackLocale
-    }
-  }
-
-  return resultingLocale
-}
-
 export function errorToString(error: any) {
   return (error as Error)?.message || `${error}`;
 };
@@ -88,13 +68,7 @@ export function localizeIfPredefined(keyOrText: string, predefinedKeys: string[]
 }
 
 export function fileSize(value: number) {
-  const units = ["Byte", "Kilobyte", "Megabyte", "Gigabyte", "Terabyte", "Petabyte"];
-  const magnitude = value == 0
-    ? 0
-    : Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
-  const unit = units[magnitude];
-  value = value / Math.pow(1024, magnitude);
-  return i18n.global.n(value, unit);
+  return formatFileSize(value, locale.value);
 };
 
 const defaultDateTimeFormats: Record<string, Intl.DateTimeFormatOptions> = {
@@ -152,36 +126,6 @@ const defaultNumberFormats: Record<string, Intl.NumberFormatOptions> = {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     useGrouping: false
-  },
-  "Byte": {
-    style: "unit",
-    unit: "byte",
-    maximumFractionDigits: 1,
-  },
-  "Kilobyte": {
-    style: "unit",
-    unit: "kilobyte",
-    maximumFractionDigits: 1,
-  },
-  "Megabyte": {
-    style: "unit",
-    unit: "megabyte",
-    maximumFractionDigits: 1,
-  },
-  "Gigabyte": {
-    style: "unit",
-    unit: "gigabyte",
-    maximumFractionDigits: 1,
-  },
-  "Terabyte": {
-    style: "unit",
-    unit: "terabyte",
-    maximumFractionDigits: 1,
-  },
-  "Petabyte": {
-    style: "unit",
-    unit: "petabyte",
-    maximumFractionDigits: 1,
   }
 }
 
@@ -231,7 +175,7 @@ const i18nGlobal = i18n.global;
 
 const tv = (value: string) => i18nGlobal.te(value) ? i18nGlobal.t(value) : value;
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   // Set i18n instance on app
   app.use(i18n);
 });

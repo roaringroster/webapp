@@ -215,7 +215,7 @@ const invitationCodeTitle = computed(() => {
     t("newDevice")
   );
 
-  if (!!invitationCode.value) {
+  if (invitationCode.value) {
     return t("invitationTitleWithCode", {target, code});
   } else {
     return t("invitationTitleWithoutCode", {target});

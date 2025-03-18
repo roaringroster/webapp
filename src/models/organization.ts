@@ -66,6 +66,7 @@ export function colorForAbsenceReason(title: string) {
   }
 }
 
+// eslint-disable-next-line
 export function getSignature(organization: Organization | null | undefined, userId: string) {
   return "";
 }

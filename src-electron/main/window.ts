@@ -1,11 +1,14 @@
 import { BrowserWindow } from "electron"
 import path from "path"
+import { fileURLToPath } from "node:url"
 import { isMac } from "./helper"
 import { setMenuItemEnabled } from "./menu"
 
-export function createWindow() {
+const currentDir = fileURLToPath(new URL('.', import.meta.url))
+
+export async function createWindow() {
     const window = new BrowserWindow({
-        icon: path.resolve(__dirname, "icons/icon.png"), // tray icon
+        icon: path.resolve(currentDir, "icons/icon.png"), // tray icon
         width: 1024,
         height: 768,
         minWidth: 320,
@@ -14,7 +17,7 @@ export function createWindow() {
         webPreferences: {
             contextIsolation: true,
             // More info: /quasar-cli/developing-electron-apps/electron-preload-script
-            preload: path.resolve(__dirname, process.env.QUASAR_ELECTRON_PRELOAD || ""),
+            preload: path.resolve(currentDir, path.join(process.env.QUASAR_ELECTRON_PRELOAD_FOLDER || "", "electron-preload" + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION)),
         },
         titleBarStyle: isMac ? "hidden" : "default",
         // titleBarOverlay: {
@@ -23,7 +26,11 @@ export function createWindow() {
         // },
     })
 
-    void window.loadURL(process.env.APP_URL || "")
+    if (process.env.DEV) {
+        await window.loadURL(process.env.APP_URL)
+    } else {
+        await window.loadFile("index.html")
+    }
     setMenuItemEnabled("print", true)
 
     if (process.env.DEBUGGING) {

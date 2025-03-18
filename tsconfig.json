@@ -1,21 +1,6 @@
 {
-  "extends": "@quasar/app-webpack/tsconfig-preset",
+  "extends": "./.quasar/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": ".",
-    "experimentalDecorators": true,
-    "lib": [
-      "ES2020",
-      "ES2021.Intl",
-      "dom"
-    ],
-    "types": [
-      "quasar",
-      "node",
-      "filesystem"
-    ]
-  },
-  "include": [
-    "src",
-    "src-electron"
-  ]
+    "experimentalDecorators": true
+  }
 }

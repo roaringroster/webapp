@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, session, shell } from "electron"
 import { $i18n } from "./i18n"
-import { validCustomSchemes } from "../../src/helper/utils";
+import { validCustomSchemes } from "../../src/helper/appInfo";
 
 /** 
  * disable all session permissions requests from remote content (which should never be loaded anyway) 
@@ -74,7 +74,9 @@ app.on("web-contents-created", (event, contents) => {
 
 function isAppUrlOrigin(url: string) {
     const parsedUrl = new URL(url);
-    const appUrl = new URL(process.env.APP_URL || "");
+    const appUrl = process.env.DEV
+        ? new URL(process.env.APP_URL || "")
+        : new URL("index.html", import.meta.url);
     return parsedUrl.protocol == appUrl.protocol  /* "file:" in production */
         && parsedUrl.origin == appUrl.origin /* null in production */
         && parsedUrl.pathname == appUrl.pathname;  /* path to index.html in production */

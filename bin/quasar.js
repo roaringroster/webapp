@@ -1,22 +1,8 @@
 #!/usr/bin/env node
 
-const { parseArgs } = require("util");
-const { readFileSync, writeFileSync } = require("fs");
-const { 
-  exitOnError, 
-  runCommand, 
-  readEnv, 
-  generateIcons, 
-  changeCordovaAppId, 
-  changeCordovaCustomUrlScheme, 
-  writeTestflightUpdateInfoFile, 
-  revertLater, 
-  revertFinally,
-  quasarCommands,
-  changeProductName,
-  getProductName,
-  changeCordovaAppIcons
-} = require("./utils/utils");
+import { parseArgs } from "util";
+import { readFileSync, writeFileSync } from "fs";
+import { exitOnError, runCommand, readEnv, generateIcons, changeCordovaAppId, changeCordovaCustomUrlScheme, writeTestflightUpdateInfoFile, revertLater, revertFinally, quasarCommands, changeProductName, getProductName, changeCordovaAppIcons } from "./utils/utils.js";
 
 const revertActionList = [];
 
@@ -141,7 +127,7 @@ exitOnError(() => {
     console.log(`Using app id ${env.APP_ID} and custom url scheme ${env.URL_SCHEME} for cordova`);
     changeCordovaAppId(env.APP_ID);
 
-    if (!!productionAppId) {
+    if (productionAppId) {
       revertLater(
         "cordova app id in src-cordova/config.xml", 
         () => changeCordovaAppId(productionAppId), 
@@ -149,10 +135,10 @@ exitOnError(() => {
       );
     }
 
-    if (!!env.URL_SCHEME) {
+    if (env.URL_SCHEME) {
       const previousScheme = changeCordovaCustomUrlScheme(env.URL_SCHEME);
 
-      if (!!previousScheme) {
+      if (previousScheme) {
         revertLater(
           "cordova custom url scheme", 
           () => changeCordovaCustomUrlScheme(previousScheme), 
@@ -176,7 +162,7 @@ exitOnError(() => {
     console.log(`Using product name "${productName}" for electron`);
     const previousProductName = changeProductName(productName);
 
-    if (!!previousProductName) {
+    if (previousProductName) {
       revertLater(
         "productName in package.json", 
         () => changeProductName(previousProductName), 

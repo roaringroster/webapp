@@ -141,7 +141,7 @@ const reasonOptions = computed(() =>
 const absence: Ref<Absence> = ref(
   structuredClone(props.modelValue)
     || createAbsence({
-      reason: reasonOptions.value.at(0)?.value,
+      reason: reasonOptions.value.at(0)?.value || "",
     })
 );
 const absenteeId = ref(props.userId || props.teamMembers.at(0)?.value || "");
@@ -204,12 +204,12 @@ function hasPendingChanges() {
 }
 
 function onDone() {
-  (dialogRef.value as EditingSheet | undefined)?.confirm();
+  (dialogRef.value as unknown as EditingSheet)?.confirm();
   emit("ok", {absence: absence.value, userId: absenteeId.value});
 }
 
 function onDelete() {
-  (dialogRef.value as EditingSheet | undefined)?.confirm();
+  (dialogRef.value as unknown as EditingSheet)?.confirm();
   emit("ok", {absence: undefined, userId: absenteeId.value});
 }
 

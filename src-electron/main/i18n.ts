@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from "electron"
-import { matchLocale } from "../../src/boot/i18n"
+import { matchLocale } from "../../src/helper/locale"
 import messages from "../../src/i18n/plain"
 import { setupAppMenu } from "./menu"
 

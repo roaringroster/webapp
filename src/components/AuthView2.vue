@@ -67,11 +67,11 @@ function didUpdateAccountList(value: string[]) {
   hasAccounts.value = value.length > 0;
 }
 
-(async () => didUpdateAccountList(await allUsernames()))();
+void (async () => didUpdateAccountList(await allUsernames()))();
 
 async function routeAfterLogin() {
-  const location = await redirectStore.locationAfterLogin();
-  void router.push(location);
+  const location = redirectStore.locationAfterLogin();
+  await router.push(location);
 }
 
 </script>

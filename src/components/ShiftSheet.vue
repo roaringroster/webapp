@@ -183,12 +183,12 @@ function hasPendingChanges() {
 }
 
 function onDone() {
-  (dialogRef.value as EditingSheet | undefined)?.confirm();
+  (dialogRef.value as unknown as EditingSheet)?.confirm();
   emit("ok", shift.value);
 }
 
 function onDelete() {
-  (dialogRef.value as EditingSheet | undefined)?.confirm();
+  (dialogRef.value as unknown as EditingSheet)?.confirm();
   emit("ok", undefined);
 }
 

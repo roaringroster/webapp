@@ -1,5 +1,5 @@
 import { Platform } from "quasar";
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import * as AppSettings from "src/database/AppSettings";
 import { UpdateAvailableInfo, bus } from "./eventBus";
 import { i18n, locale } from "src/boot/i18n";
@@ -7,7 +7,7 @@ import { notifyError } from "src/helper/notify";
 
 const updateCheckInterval = 24 * 60 * 60 * 1000;
 
-export default boot(() => {
+export default defineBoot(() => {
     if (!Platform.is.electron && !Platform.is.cordova) {
         return;
     }
@@ -146,7 +146,7 @@ export async function downloadAndInstall(urls: string[]) {
     const ApkUpdater = window.ApkUpdater;
     const url = urls[0];
 
-    if (!ApkUpdater) {
+    if (!ApkUpdater || !url) {
         return;
     }
 

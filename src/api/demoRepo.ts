@@ -34,7 +34,7 @@ export async function initializeDemo(locale: string) {
   const shareId = getShareId(authTeam);
   const websocketServer = account.settings.defaultWebsocketServer;
   const organization = { shareId, websocketServer };
-  await loginWithDemo({ auth, repo, network });
+  loginWithDemo({ auth, repo, network });
 
   const member = createMember(authTeam);
   const members: Record<string, Member> = {};
@@ -76,11 +76,25 @@ class MemoryStorageAdapter implements StorageAdapterInterface {
   }
 
   loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    throw new Error("Method not implemented.");
+    const prefix = keyPrefix.join(".");
+    return Promise.resolve(
+      Object.keys(this.data)
+        .filter(key => key.startsWith(prefix))
+        .map(key => ({
+          key: key.split("."),
+          data: this.data[key],
+        }))
+    );
   }
 
   removeRange(keyPrefix: StorageKey): Promise<void> {
-    throw new Error("Method not implemented.");
+    const prefix = keyPrefix.join(".");
+    Object.keys(this.data)
+      .filter(key => key.startsWith(prefix))
+      .forEach(key => {
+        delete this.data[key];
+      })
+    return Promise.resolve();
   }
 }
 

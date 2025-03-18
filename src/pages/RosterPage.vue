@@ -480,6 +480,9 @@
   .q-field__native
     overflow: hidden
     flex-direction: column
+    max-height: 48px
+    .ellipsis
+      text-wrap-mode: wrap
 .member-select-item
   .q-item__label + .q-item__label
     margin-top: 2px
@@ -989,7 +992,7 @@ function mergeDate(timestamp: QCalendarTimestamp, time: Date) {
 // - Actions
 
 function copyPreviousSchedule() {
-  if (!!existingSchedule.value) {
+  if (existingSchedule.value) {
     showWarning(
       t("overwriteScheduleWarningMessage", [getWeek(currentWeekStart.value, 0)]), 
       t("overwriteScheduleWarningTitle")

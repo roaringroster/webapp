@@ -95,7 +95,7 @@ export default class ActionMenu extends Vue {
         parent = parent.$parent;
       }
 
-      if (!!parent) {
+      if (parent) {
         // waiting for new list items to be rendered with their dimensions 
         // before updating the position
         setTimeout(() => (parent as QMenu)?.updatePosition?.());

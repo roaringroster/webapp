@@ -11,7 +11,7 @@ export const useRedirectStore = defineStore("redirect", {
   getters: { },
 
   actions: {
-    async locationAfterLogin(): Promise<RouteLocationRaw> {
+    locationAfterLogin(): RouteLocationRaw {
       const path = this.redirectPath;
       this.redirectPath = "";
 

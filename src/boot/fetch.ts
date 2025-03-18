@@ -1,5 +1,5 @@
 import { Platform } from "quasar";
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 
 /* Overriding Fetch API on Cordova iOS to ensure the expected Response-MIME-Type is set
 for Automerge WASM. It needs to be "application/wasm" instead of "application/octet-stream".
@@ -13,9 +13,9 @@ if (Platform.is.cordova && Platform.is.ios) {
             modifiedResponse.headers.append("Content-Type", "application/wasm");
             return Promise.resolve(modifiedResponse);
         } else {
-            return originalFetch(resource as RequestInfo | URL, options);
+            return originalFetch(resource, options);
         }
     }
 }
 
-export default boot(() => undefined)
+export default defineBoot(() => undefined);

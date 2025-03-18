@@ -1,5 +1,3 @@
-import { Platform } from "quasar";
-
 export const appName = process.env.APP_NAME || "";
  
 export const appId = process.env.APP_ID || "";
@@ -7,8 +5,6 @@ export const appId = process.env.APP_ID || "";
 export const appVersion = process.env.APP_VERSION || "0";
 
 export const appBuild = process.env.APP_BUILD || "0";
-
-export const appPlatform = determinePlatform;
 
 export const appCustomURLScheme = process.env.URL_SCHEME || "";
 
@@ -25,17 +21,18 @@ export const appDefaultRoute = process.env.DEFAULT_ROUTE || "";
 export const isDemo = process.env.BACKEND == "demo";
 
 export const isDev = !!process.env.DEV;
- 
-function determinePlatform() {
-  if (Platform.is.cordova) {
-    if (Platform.is.ios) {
-      return "ios";
-    } else if (Platform.is.android) {
-      return "android";
-    }
-  } else if (Platform.is.electron) {
-    return Platform.is.platform; // e.g. "mac", "win", "linux"
-  }
 
-  return "";
+export function reportError(error: Error, context = "Unknown Error") {
+    const address = appFeedbackAddress;
+    const subject = encodeURI(context);
+    const body = encodeURI("Error message:\n" + error.toString() + "\n\n" + error.stack?.toString() + "\n\n");
+    return `mailto:${address}?subject=${subject}&body=${body}`;
+}
+
+export function validCustomSchemes() {
+    const schemeComponents = appCustomURLScheme?.split(".") || [];
+    return [
+        schemeComponents.slice(0, 2).join("."),
+        schemeComponents.join(".")
+    ];
 }

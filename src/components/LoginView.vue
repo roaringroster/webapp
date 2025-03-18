@@ -106,7 +106,7 @@ async function login() {
     emit("done");
 
   } catch(error) {
-    await logoutWithAuth();
+    logoutWithAuth();
     logoutAccount();
     const message = errorToString(error);
     
@@ -174,7 +174,7 @@ async function updateAccountList() {
   emit("update:accountlist", accountList.value);
 
   if (accountList.value.length == 0) {
-    router.replace({ name: "auth" });
+    await router.replace({ name: "auth" });
   } else if (accountList.value.length == 1) {
     username.value = accountList.value[0];
   } else {

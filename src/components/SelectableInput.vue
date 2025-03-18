@@ -111,5 +111,10 @@ export default class SelectableInput extends Vue {
       );
     })
   }
+  mounted() {
+    // if filteredOptions is not initialized with the list of options, 
+    // map-options and emit-value will not work initially
+    this.filteredOptions = this.options;
+  }
 }
 </script>

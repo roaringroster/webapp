@@ -117,7 +117,8 @@ import { computed, onMounted, onUnmounted, Ref, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDialogPluginComponent, Platform } from "quasar";
 import { QrcodeStream, setZXingModuleOverrides } from "vue-qrcode-reader";
-import { InvitationCodeLength, validCustomSchemes } from "src/helper/utils";
+import { InvitationCodeLength } from "src/helper/utils";
+import { validCustomSchemes } from "src/helper/appInfo";
 import { getPermissionStatus, requestPermissions, switchToSettings, useDiagnostic, PermissionStatus } from "src/helper/cordova";
 import EditingSheet from "src/components/EditingSheet.vue";
 
@@ -190,7 +191,7 @@ const updateMediaDevicesInterval = setInterval(updateMediaDevices, 1000);
 onUnmounted(() => clearInterval(updateMediaDevicesInterval));
 
 async function updateMediaDevices() {
-  if (!!navigator?.mediaDevices?.enumerateDevices) {
+  if (navigator?.mediaDevices?.enumerateDevices) {
     devices.value = (await navigator.mediaDevices.enumerateDevices())
       .filter(({ kind }) => kind == "videoinput") || [];
   }
@@ -298,7 +299,7 @@ if (Platform.is.android) {
     const status = await getPermissionStatus(CameraPermission);
 
     if (status != "GRANTED") {
-      onError(new DOMException("", "NotAllowedError"));
+      await onError(new DOMException("", "NotAllowedError"));
     }
   })
 }

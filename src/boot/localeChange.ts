@@ -1,16 +1,16 @@
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import { getDefaultLocale, loadLangPack, locale } from "./i18n";
 import { bus } from "./eventBus";
 import { useAccountStore } from "src/stores/accountStore";
 
 
-export default boot(() => {
+export default defineBoot(() => {
   const accountStore = useAccountStore();
 
   // propagate locale changes
   bus.on("did-change-locale", async (value: string) => {
     locale.value = value;
-    loadLangPack(value);
+    await loadLangPack(value);
     window.electronAPI?.didChangeLocale(value);
 
     accountStore.updateDeviceSettings(settings => 

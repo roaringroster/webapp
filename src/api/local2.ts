@@ -58,7 +58,7 @@ function assertCanWriteData() {
     }
 }
 
-async function assertValidLoginParams(username: string, password: string) {
+function assertValidLoginParams(username: string, password: string) {
     if (!username) {
         throw new Error("UsernameMissing")
     }
@@ -101,7 +101,7 @@ async function hashPassword(password: string, salt?: string | Uint8Array) {
 
 async function encryptLocalKey(username: string, password: string, key: Uint8Array) {
     const hashResult = await hashPassword(password);
-    const salt = hashResult.encoded.split("$")[4];
+    const salt = hashResult.encoded.split("$")[4] || "";
     const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
     const message = nacl.secretbox(key, nonce, hashResult.hash);
 
@@ -161,7 +161,7 @@ async function deleteAccount(username: string) {
 
     if (isLoggedIn.value && currentAccount.value) {
         if (username == currentAccount.value.user.userName) {
-            await logout();
+            logout();
         }
     }
 
@@ -179,13 +179,12 @@ async function cleanupAccountArtifacts() {
         .map(name => name.substring(repoDBPrefix.length))
         .forEach(async name => {
             if (!accountDBNames.includes(name)) {
-                console.log("cleanup", name)
                 await Dexie.delete(repoDBPrefix + name);
             }
         });
 }
 
-cleanupAccountArtifacts();
+void cleanupAccountArtifacts();
 
 async function persistIfNeeded() {
     // see https://dexie.org/docs/StorageManager
@@ -219,13 +218,13 @@ async function login(username: string, password: string) {
     await persistIfNeeded();
 
     if (!account) {
-        await logout();
+        logout();
         throw new Error("UserDoesNotExist");
     }
 
     currentAccount.value = account;
     // await updateDeviceTypeIfNeeded(account);
-    deleteExpiredInvitations();
+    await deleteExpiredInvitations();
 
     bus.emit("did-login");
 
@@ -257,8 +256,8 @@ function getAccountRef() {
 async function getAccount() {
     assertLoggedIn();
 
-    const item = await db.value?.local.get("account").catch(async () => {
-        await logout();
+    const item = await db.value?.local.get("account").catch(() => {
+        logout();
         throw new Error("EncryptionCorrupted")
     });
     return item?.value as LocalAccount;
@@ -302,7 +301,7 @@ async function updateDeviceSettings(settings: ((value: DeviceSettings) => void))
 
 // === change username and password ===
 
-async function changeUsername(username: string, password: string) {
+function changeUsername(username: string, password: string) {
     assertValidLoginParams(username, password);
     assertLoggedIn();
 
@@ -323,8 +322,8 @@ async function changePassword(oldPassword: string, newPassword: string) {
     // ensure that user is really logged in by decrypting a value from the database
     const db = new EncryptedDatabase(dbName, key);
     await db.open();
-    await db.local.get("account").catch(async () => {
-        await logout();
+    await db.local.get("account").catch(() => {
+        logout();
         throw new Error("WrongPassword")
     });
 

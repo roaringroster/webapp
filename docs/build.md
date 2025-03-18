@@ -55,3 +55,13 @@ To build an electron production build fast (without code signing, notarization a
 ```bash
 FAST_BUILD=true CSC_IDENTITY_AUTO_DISCOVERY=false quasar build -m electron
 ```
+
+## System Requirements
+
+Windows 10
+macOS 11 (Big Sur)
+iOS 14.8
+Android 10
+
+MacOS 10.15 (Catalina) would still be possible when downgrading to electron version 32.
+Minimum electron version is 28 because of ESM support. That's why macOS 10.13 and 10.14 are no longer possible that were supported by electron version 26.

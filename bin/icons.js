@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { readEnv, generateIcons, exitOnError } = require("./utils/utils");
+import { readEnv, generateIcons, exitOnError } from "./utils/utils.js";
 
 exitOnError(() => {
   const env = readEnv();

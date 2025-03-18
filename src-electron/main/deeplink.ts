@@ -6,10 +6,10 @@ let initialURL = "";
 export function setupDeepLinkHandler(window: BrowserWindow) {
   mainWindow = window;
   // if app was launched by a deeplink on windows or linux, the url is provided as an argument
-  initialURL ||= process.argv[1];
+  initialURL ||= process.argv[1] || "";
 
   // in case the app was cold launched by an URL
-  if (!!initialURL) {
+  if (initialURL) {
     onAddListener("handle-open-url", () => handleOpenURL(initialURL))
   }
 }
@@ -39,7 +39,7 @@ function onAddListener(eventName: string, callback: () => void) {
 app.on("open-url", (event, url) => handleOpenURL(url));
 
 // relevant on windows and linux, also triggered by deeplinks
-app.on("second-instance", async (event, commandLine, workingDirectory) => {
+app.on("second-instance", (event, commandLine) => {
   // Someone tried to run a second instance, we should focus our window.
   if (mainWindow) {
     if (mainWindow.isMinimized()) {

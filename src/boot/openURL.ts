@@ -1,12 +1,12 @@
 import { Platform, Dialog, DialogChainObject } from "quasar";
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import { RouteLocationRaw } from "vue-router";
 import { whenRouterExists } from "src/router";
 import { i18n } from "src/boot/i18n";
 import { useAccount } from "src/api/local2";
 import { logoutWithAuth } from "src/api/repo";
 import { useRedirectStore } from "src/stores/redirectStore";
-import { validCustomSchemes } from "src/helper/utils";
+import { validCustomSchemes } from "src/helper/appInfo";
 import { useAccountStore } from "src/stores/accountStore";
 
 const { isLoggedIn, logoutAccount } = useAccount();
@@ -30,7 +30,7 @@ async function handleOpenURL(url: string) {
     setTimeout(async () => {
         const [scheme, path] = url.split(":/");
 
-        if (!customSchemes.includes(scheme)) {
+        if (!scheme || !path || !customSchemes.includes(scheme)) {
             console.error("unsupported custom scheme:", scheme)
             return;
         }
@@ -71,18 +71,18 @@ async function handleOpenURL(url: string) {
             openDialog = dialog;
 
         } else {
-            router.push(path);
+            await router.push(path);
         }
 
     }, 0)
 };
 
-export default boot(() => undefined);
+export default defineBoot(() => undefined);
 
 export async function logout(to: RouteLocationRaw = {name: "auth"}) {
     // first logout
     logoutAccount();
-    await logoutWithAuth().catch(console.error); // could throw, e.g. when offline
+    logoutWithAuth();
     // then navigate to login page so that the state change in api.isLoggedIn is detected
     const router = await whenRouterExists();
     void await router.replace(to);

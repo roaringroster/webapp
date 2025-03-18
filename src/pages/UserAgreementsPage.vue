@@ -30,6 +30,4 @@ function updateAgreements(changeFn: (document: WorkAgreements) => void) {
   agreementsHandle.value?.changeDoc(document => changeFn(document));
 }
 
-accountStore.member?.workAgreementsId
-
 </script>

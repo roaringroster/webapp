@@ -1,6 +1,5 @@
 import { Platform } from "quasar";
 import DOMPurify from "dompurify";
-import { appCustomURLScheme, appFeedbackAddress } from "./appInfo";
 
 export async function promiseForErrorHandling<T>(
   method: (
@@ -8,35 +7,27 @@ export async function promiseForErrorHandling<T>(
     cleanupIfRejectedOrUnhandledThrow: (cleanupHandler: () => void) => void
   ) => Promise<T>
 ) {
-  return new Promise<T>(async (resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     let cleanupHandler: (() => void) | undefined;
     const setCleanupHandler = (handler: () => void) => cleanupHandler = handler;
 
-    try {
-      const result = await method(
-        (reason?: any) => {
-          cleanupHandler?.();
-          reject(reason);
-        }, 
-        setCleanupHandler
-      );
-      resolve(result);
-    } catch (error) {
+    method(
+      (reason: Error) => {
+        cleanupHandler?.();
+        reject(reason);
+      }, 
+      setCleanupHandler
+    )
+    .then(resolve)
+    .catch((error: Error) => {
       cleanupHandler?.();
       reject(error);
-    }
+    });
   });
 }
 
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
-}
-
-export function reportError(error: Error, context = "Unknown Error") {
-    const address = appFeedbackAddress;
-    const subject = encodeURI(context);
-    const body = encodeURI("Error message:\n" + error.toString() + "\n\n" + error.stack?.toString() + "\n\n");
-    return `mailto:${address}?subject=${subject}&body=${body}`;
 }
 
 /**
@@ -101,14 +92,6 @@ export function onLongPress(
     target.removeEventListener("pointermove", clear)
     target.removeEventListener("pointerleave", clear)
   }
-}
-
-export function validCustomSchemes() {
-    const schemeComponents = appCustomURLScheme?.split(".") || [];
-    return [
-        schemeComponents.slice(0, 2).join("."),
-        schemeComponents.join(".")
-    ];
 }
 
 export const InvitationCodeLength = 29;

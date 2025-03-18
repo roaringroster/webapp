@@ -15,7 +15,7 @@
  * There are also Sqlite plugin versions with encryption using SQLCipher.
  */
 
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import { Platform } from "quasar";
 // @ts-ignore
 import regeneratorRuntime from "regenerator-runtime";
@@ -233,4 +233,4 @@ if (Platform.is.cordova) {
     }, false);
 }
 
-export default boot(() => undefined);
+export default defineBoot(() => undefined);

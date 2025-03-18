@@ -1,3 +1,7 @@
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
+import { join, resolve } from "path";
+import { execSync } from "child_process";
+import { config } from "dotenv";
 
 /**
  * Changes the contents of a file based on a regular expression
@@ -12,7 +16,6 @@
  * @returns the old value
  */
 function replaceFileContent(path, pattern, replaceValue) {
-  const { readFileSync, writeFileSync } = require("fs");
   const originalContent = readFileSync(path, "utf8");
   const originalValue = originalContent.match(pattern)?.[2];
   const changedContent = originalContent.replace(pattern, `$1${replaceValue}$3`);
@@ -33,12 +36,12 @@ function changeCordovaAppId(appId) {
     throw new Error("missing app id");
   }
 
-  const previousId = replaceFileContent("src-cordova/config.xml", /(<widget .*id=\")([A-Za-z.]*)(\")/, appId);
+  const previousId = replaceFileContent("src-cordova/config.xml", /(<widget .*id=")([A-Za-z.]*)(")/, appId);
 
   if (appId != previousId) {
     const sourceDir = "src-cordova/platforms/android/app/src/main/java/" + previousId.replace(/\./g, "/");
     const targetDir = "src-cordova/platforms/android/app/src/main/java/" + appId.replace(/\./g, "/");
-    const previousIdRegExp = previousId.replace(/\./g, "\\\.");
+    const previousIdRegExp = previousId.replace(/\./g, "\\.");
     runCommand(`mkdir -p ${targetDir}; mv ${sourceDir}/MainActivity.java ${targetDir}/MainActivity.java`);
     replaceFileContent(targetDir + "/MainActivity.java", new RegExp("( )(" + previousIdRegExp + ")(;)", "g"), appId);
     replaceFileContent("src-cordova/platforms/android/android.json", new RegExp("(\")(" + previousIdRegExp + ")(\")", "g"), appId);
@@ -58,7 +61,7 @@ function changeCordovaVersion(version) {
     throw new Error("missing app version string");
   }
 
-  return replaceFileContent("src-cordova/config.xml", /(<widget .*version=\")([0-9,.]*)(\")/, version);
+  return replaceFileContent("src-cordova/config.xml", /(<widget .*version=")([0-9,.]*)(")/, version);
 }
 
 /**
@@ -72,11 +75,10 @@ function changeCordovaCustomUrlScheme(scheme) {
     throw new Error("missing custom url scheme");
   }
 
-  const previousScheme = replaceFileContent("src-cordova/package.json", /(\"URL_SCHEME\": \")(.*)(\")/, scheme);
+  const previousScheme = replaceFileContent("src-cordova/package.json", /("URL_SCHEME": ")(.*)(")/, scheme);
 
   if (scheme != previousScheme) {
-    const previousSchemeRegExp = previousScheme.replace(/\./g, "\\\.");
-    const { readFileSync } = require("fs");
+    const previousSchemeRegExp = previousScheme.replace(/\./g, "\\.");
     const cordovaConfig = readFileSync("src-cordova/config.xml", "utf8");
     const appName = /(<name>)(.*)(<\/name>)/.exec(cordovaConfig)[2];
     replaceFileContent("src-cordova/platforms/android/app/src/main/AndroidManifest.xml", new RegExp("(<data android:scheme=\")(" + previousSchemeRegExp + ")(\")", "g"), scheme);
@@ -97,7 +99,7 @@ function changeCordovaAppIcons(isDevelopment) {
   const newValue = isDevelopment
     ? "dev"
     : "app";
-  replaceFileContent("src-cordova/config.xml", new RegExp(`(res\/android\/)(${oldValue})(_icon)`, "g"), newValue);
+  replaceFileContent("src-cordova/config.xml", new RegExp(`(res/android/)(${oldValue})(_icon)`, "g"), newValue);
 }
 
 /**
@@ -114,7 +116,7 @@ function changeProductName(productName) {
     throw new Error("missing product name");
   }
 
-  return replaceFileContent("package.json", /(\"productName\": \")(.*)(\")/, productName);
+  return replaceFileContent("package.json", /("productName": ")(.*)(")/, productName);
 }
 
 /**
@@ -122,9 +124,8 @@ function changeProductName(productName) {
  * @returns the productName
  */
 function getProductName() {
-  const { readFileSync } = require("fs");
   const packageJSON = readFileSync("package.json", "utf8");
-  return /(\"productName\": \")(.*)(\")/.exec(packageJSON)[2];
+  return /("productName": ")(.*)(")/.exec(packageJSON)[2];
 }
 
 /**
@@ -137,8 +138,8 @@ function getProductName() {
  */
 function readEnv(defaultEnvironment = "production") {
   const environment = process.env.QENV || defaultEnvironment;
-  const env = require("dotenv").config({
-      path: require("path").resolve(
+  const env = config({
+      path: resolve(
           process.cwd(),
           (environment?.replace(/^production$/, "") || "") + ".env"
       )
@@ -168,7 +169,7 @@ function runCommand(command) {
   if (process.env.DRYRUN == "true") {
     return console.log(command);
   } else {
-    return require("child_process").execSync(command, { stdio: "inherit" });
+    return execSync(command, { stdio: "inherit" });
   }
 }
 
@@ -196,13 +197,14 @@ function exitOnError(method, onError) {
  * you need to pass false to force a re-generation of icons
  */
 function generateIcons(environment, useCache = true) {
-  const { readFileSync, writeFileSync } = require("fs");
   const filePath = "icongenie/lastrun.txt";
   let lastEnvironment = "";
 
   try {
     lastEnvironment = readFileSync(filePath);
-  } catch { }
+  } catch (error) {
+    console.error(error);
+  }
 
   if (!useCache || environment != lastEnvironment) {
     runCommand(`icongenie generate -p icongenie/${environment}`);
@@ -226,7 +228,7 @@ function quasarCommands(mode, product, environment, extraVariables) {
   let command = `QENV=${environment} quasar ${cmd}`;
 
   if (["ios", "android"].includes(product)) {
-    command = `${extraVariables[product] ?? ""} ${command} -m ${product}`;
+    command = `${extraVariables[product] ?? ""} ${command} -m cordova -T ${product}`;
 
     if (mode == "dev") {
       command = "USE_HTTP=true " + command;
@@ -283,8 +285,7 @@ function quasarCommands(mode, product, environment, extraVariables) {
  * @param {string} invitationUrl invitation url to join the testflight programm for this app, e.g. https://testflight.apple.com/join/<TOKEN>
  */
 function writeTestflightUpdateInfoFile(testflightUrl, invitationUrl) {
-  const { readFileSync, writeFileSync, mkdirSync } = require("fs");
-  const directory = require("path").join(process.cwd(), "dist/testflight/");
+  const directory = join(process.cwd(), "dist/testflight/");
   const version = JSON.parse(readFileSync("./package.json")).version || 0;
   const releaseDate = (new Date()).toISOString();
   const json = {
@@ -327,7 +328,7 @@ function revertFinally(revertActionList) {
     });
 }
 
-module.exports = {
+export {
   replaceFileContent, 
   changeCordovaAppId, 
   changeCordovaVersion, 

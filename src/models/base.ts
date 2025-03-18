@@ -44,7 +44,7 @@ export type HasDocumentId = {
  * @param list either Automerge.List or Array type
  * @param filter identifies the items that should be deleted
  */
-export function deleteItems<T>(list: T[] = [], filter: (item: T, index: number) => Boolean) {
+export function deleteItems<T>(list: T[] = [], filter: (item: T, index: number) => boolean) {
   const indexesToDelete = [...list].flatMap((item, index) => 
     filter(item, index) ? [index] : []
   );
@@ -59,7 +59,7 @@ export function automergeClone<T>(object: T): T {
   return structuredClone(unproxify(object));
 }
 
-export function deepMerge<T extends Object>(
+export function deepMerge<T extends object>(
   target: T, 
   changes: T,
   path: Array<string | number | symbol> = []

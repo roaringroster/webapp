@@ -290,12 +290,12 @@ function isListOrMap(value: any) {
 
 // - Sheet
 
-async function onDone () {
+function onDone () {
   if (hasModifications()) {
     // ToDo: apply changes in this.modifications;
   }
 
-  (dialogRef.value as EditingSheet | undefined)?.confirm();
+  (dialogRef.value as unknown as EditingSheet)?.confirm();
   emit("ok");
 };
 

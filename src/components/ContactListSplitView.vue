@@ -1,5 +1,5 @@
 <template>
-  <split-view
+  <SplitView
     class="min-height member-split-view tabview-padding"
     ref="splitView"
     :scrollOffsetTop="-60"
@@ -26,7 +26,7 @@
     <template v-slot:after>
       <slot v-if="route.params.memberId" />
     </template>
-  </split-view>
+  </SplitView>
 </template>
 
 <style lang="sass">
@@ -39,11 +39,11 @@
 </style>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from "vue";
+import { computed, onUnmounted, ref, useTemplateRef } from "vue";
 import { RouteRecordName, useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { DocumentId } from "@automerge/automerge-repo";
-import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganization, getOrganizationOrThrow } from "src/api/repo";
+import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganization } from "src/api/repo";
 import { useAccountStore } from "src/stores/accountStore";
 import { HasDocumentId } from "src/models/base";
 import { Contact, ContactProps, getUsername } from "src/models/contact";
@@ -99,7 +99,7 @@ const memberItems = computed(() => members.value.map(({memberId, username}) => (
   active: memberId === route.params.memberId
 } as NavigationItem)));
 
-const splitView = ref(null as SplitView | null);
+const splitView = useTemplateRef("splitView");
 
 function showRoute(
   name: RouteRecordName, 

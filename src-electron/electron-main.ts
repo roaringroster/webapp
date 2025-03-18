@@ -14,6 +14,7 @@ try {
   if (platform === "win32" && nativeTheme.shouldUseDarkColors === true) {
     unlinkSync(path.join(app.getPath("userData"), "DevTools Extensions"))
   }
+// eslint-disable-next-line no-empty
 } catch { }
 
 const urlScheme = process.env.URL_SCHEME;
@@ -25,7 +26,7 @@ if (urlScheme) {
       app.setAsDefaultProtocolClient(
         urlScheme, 
         process.execPath, 
-        [path.resolve(process.argv[1])]
+        [path.resolve(process.argv[1] || "")]
       );
     }
   } else {
@@ -38,6 +39,7 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mainWindowPromise = app.whenReady()
   .then(handlePermissionRequests)
   .then(setupI18n)
@@ -54,8 +56,8 @@ app.on("window-all-closed", () => {
   }
 })
 
-app.on("activate", () => {
+app.on("activate", async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
+    await createWindow()
   }
 })

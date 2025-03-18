@@ -46,7 +46,7 @@ export async function registerOrganization(account: LocalAccount, name: string, 
   const authTeam = await auth.createTeam(name);
   const shareId = getShareId(authTeam);
   const organization = { shareId, websocketServer };
-  await setAuthRepo({ auth, repo, network });
+  setAuthRepo({ auth, repo, network });
 
   const member = createMember(authTeam);
   const members: Record<string, Member> = {};
@@ -75,7 +75,7 @@ export async function joinOrganization(account: PartialLocalAccount, invitationC
     let teamId: DocumentId | undefined = undefined;
 
     const { auth, repo, network } = await initializeAuthRepo(account, websocketServer);
-    await setAuthRepo({ auth, repo, network });
+    setAuthRepo({ auth, repo, network });
 
     auth.on("localError", event => {
       console.error("joinTeamLocalError", event);
@@ -191,7 +191,7 @@ async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?
   });
 
   // if we have no server connection after a few seconds, the server might have lost
-  // the shareId of our organization Auth team, so we check and send it if needed.
+  // the shareId and team graph of our organization Auth team, so we send it if needed.
   // We should only do that when using BrowserWebSocketClientAdapter.
   auth.on("peer-joined", () => clearTimeout(peerJoinedTimeout));
   const peerJoinedTimeout = setTimeout(async () => {
@@ -228,7 +228,8 @@ async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?
 }
 
 export async function reconnect(account?: PartialLocalAccount) {
-  // console.log("RECONNECT")
+  console.log("RECONNECT", account);
+  await Promise.resolve();
   // if (!account && !!currentAccount.value) {
   //   account = currentAccount.value;
   // }
@@ -238,7 +239,7 @@ export async function reconnect(account?: PartialLocalAccount) {
   // }
 }
 
-async function setAuthRepo(value?: AuthRepo) {
+function setAuthRepo(value?: AuthRepo) {
   if (authRepo != undefined) {
     // console.log("removeAllListeners");
     authRepo.auth.removeAllListeners();
@@ -250,16 +251,16 @@ async function setAuthRepo(value?: AuthRepo) {
 }
 
 export async function loginWithAuth(account: PartialLocalAccount) {
-  await setAuthRepo(await initializeAuthRepo(account));
+  setAuthRepo(await initializeAuthRepo(account));
 }
 
-export async function logoutWithAuth() {
-  await setAuthRepo();
+export function logoutWithAuth() {
+  setAuthRepo();
 }
 
-export async function loginWithDemo(value: AuthRepo) {
+export function loginWithDemo(value: AuthRepo) {
   isConnected.value = true;
-  await setAuthRepo(value);
+  setAuthRepo(value);
 }
 
 export function getAuth() {
@@ -300,8 +301,8 @@ export async function deleteStorage(username: string) {
   return new Promise<void>((resolve, reject) => {
     const request = indexedDB.deleteDatabase(dbPrefix + username);
     request.onsuccess = () => resolve();
-    request.onerror = (event) => reject(event);
-    request.onblocked = (event) => reject(event);
+    request.onerror = () => reject(new Error());
+    request.onblocked = () => reject(new Error());
   })
 }
 
@@ -410,7 +411,7 @@ export function useDocument<T>(id: string) {
 
   const handle = authRepo?.repo.find<T>(documentId);
   handle?.doc()
-    .then(value => doc.value = value)
+    .then(value => doc.value = value || null)
     .catch(console.error)
   handle?.on("change", onChange);
 
@@ -423,7 +424,7 @@ export function useDocuments<T>(docIdList: string[] = []) {
 
 export function getDocuments<T>(handles: Handle<T>[] = []) {
   return handles.flatMap(({ doc, docId: id }) =>
-      !!doc?.value
+      doc?.value
         ? [{ ...doc.value, id }]
         : []
     );
@@ -465,7 +466,7 @@ export function getDocumentsWhenReady<T>(handlesRef: Ref<Handle<T>[]>) {
     value => {
       if (value.every(Boolean)) {
         documents.value = handlesRef.value.flatMap(({ doc, docId: id }) =>
-          !!doc 
+          doc 
             ? [{ ...(doc as T), id }]
             : []
         );

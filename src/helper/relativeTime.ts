@@ -48,7 +48,7 @@ const createDurationFormatter = (locale: string, unitDisplay: Intl.ListFormatSty
       minutes ? fmtMinutes(minutes) : null,
       seconds ? fmtSeconds(seconds) : null,
       milliseconds ? fmtMilliseconds(milliseconds) : null
-    ].filter(v => v !== null) as string[]);
+    ].filter(v => v !== null));
   }
 };
 

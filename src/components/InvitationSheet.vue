@@ -115,7 +115,7 @@ const maxUsesDisplayValue = computed({
 })
 
 function onDone() {
-  (dialogRef.value as EditingSheet | undefined)?.confirm();
+  (dialogRef.value as unknown as EditingSheet)?.confirm();
   const nowOrNever = expirationSelect.value
     ? Date.now()
     : 0;

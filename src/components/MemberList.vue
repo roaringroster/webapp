@@ -159,11 +159,11 @@
           <q-item-section>
             <q-item-label>
               <q-input
-                v-if="editNameForDevicId == device.deviceId"
+                v-if="editNameForDeviceId == device.deviceId"
                 ref="deviceNameInputs"
                 :model-value="device.deviceName"
                 @change="onChangeDeviceName"
-                @blur="editNameForDevicId = null"
+                @blur="editNameForDeviceId = null"
                 dense
               />
               <span v-else>
@@ -231,7 +231,7 @@ import { Member as AuthMember, Device, InvitationState, UnixTimestamp, Base58, A
 import { base58 } from "@localfirst/crypto";
 import { useAccountStore } from "src/stores/accountStore";
 import { InvitationSeeds, useAccount } from "src/api/local2";
-import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganization, removeDocument, useDocument } from "src/api/repo";
+import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganization, removeDocument } from "src/api/repo";
 import { didExpire } from "src/helper/expiration";
 import { InvitationCodeLength } from "src/helper/utils";
 import { HasDocumentId } from "src/models/base";
@@ -330,7 +330,7 @@ function getMemberName(authMember: AuthMember) {
 
 
 const invitationSeeds: Ref<InvitationSeeds> = ref({});
-getInvitations().then(value => invitationSeeds.value = value);
+void getInvitations().then(value => invitationSeeds.value = value);
 
 function invitationsForUserId(userId?: string) {
   return invitations.value.filter(item => item.userId == userId)
@@ -342,9 +342,9 @@ function inviteMemberSheet() {
   })
   .onOk(async ({expiration, maxUses}: {expiration: UnixTimestamp, maxUses: number}) => {
     if (authTeam && isAdmin.value) {
-      let { seed, id } = authTeam.inviteMember({expiration, maxUses});
-      seed = seed + seedExtension(true);
-      invitationSeeds.value = await addInvitation(id, {expiration, seed});
+      const { seed, id } = authTeam.inviteMember({expiration, maxUses});
+      const extendedSeed = seed + seedExtension(true);
+      invitationSeeds.value = await addInvitation(id, { expiration, seed: extendedSeed });
     }
   });
 }
@@ -403,8 +403,8 @@ function memberActionItems(member: AuthMember, index: number) {
     {
       name: t("addDevice"),
       icon: "fas fa-plus",
-      action: () => {
-        inviteDevice();
+      action: async () => {
+        await inviteDevice();
         memberItems.value.at(index)?.show();
       },
       condition: isCurrentUser(member),
@@ -429,9 +429,9 @@ async function inviteDevice() {
   }
   
   const expiration = Date.now() + 30 * 60_000 as UnixTimestamp;
-  let { seed, id } = authTeam.inviteDevice({ expiration });
-  seed = seed + seedExtension(false);
-  invitationSeeds.value = await addInvitation(id, {expiration, seed});
+  const { seed, id } = authTeam.inviteDevice({ expiration });
+  const extendedSeed = seed + seedExtension(false);
+  invitationSeeds.value = await addInvitation(id, { expiration, seed: extendedSeed });
 }
 
 function toggleAdminRole(member: AuthMember) {
@@ -446,7 +446,7 @@ function toggleAdminRole(member: AuthMember) {
   }
 }
 
-async function removeMember(authMember: AuthMember) {
+function removeMember(authMember: AuthMember) {
   if (!authTeam || isOnlyAdmin(authMember)) {
     return;
   }
@@ -493,10 +493,10 @@ function deviceActionItems(device: Device) {
       name: t("editItem", [t("name")]),
       icon: "fas fa-pen-to-square",
       action: () => {
-        editNameForDevicId.value = device.deviceId;
+        editNameForDeviceId.value = device.deviceId;
         setTimeout(() => deviceNameInputs.value?.at(0)?.focus?.())
       },
-      condition: false && isCurrentUser({userId: device.userId}),
+      condition: false, //isCurrentUser({userId: device.userId}),
     },{
       name: t("remove"),
       icon: "fas fa-trash",
@@ -508,7 +508,7 @@ function deviceActionItems(device: Device) {
 }
 
 const deviceNameInputs: Ref<QInput[]> = ref([]);
-const editNameForDevicId: Ref<string | null> = ref(null);
+const editNameForDeviceId: Ref<string | null> = ref(null);
 
 function onChangeDeviceName() {
   

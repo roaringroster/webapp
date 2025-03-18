@@ -49,7 +49,7 @@ const { dialogRef } = useDialogPluginComponent();
 const confirmed = ref(false);
 
 function onDone() {
-  (dialogRef.value as EditingSheet | undefined)?.confirm();
+  (dialogRef.value as unknown as EditingSheet)?.confirm();
   emit("ok");
 }
 

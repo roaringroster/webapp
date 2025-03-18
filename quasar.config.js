@@ -9,31 +9,22 @@
 // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js
 
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
-
-const { configure } = require("quasar/wrappers");
-const { readFileSync } = require("fs");
-const path = require("path");
-const { LicenseWebpackPlugin } = require("license-webpack-plugin");
+import { defineConfig } from "#q-app/wrappers";
+import { readFileSync } from "fs";
+import path from "path";
+import { LicenseWebpackPlugin } from "license-webpack-plugin";
+import { config } from "dotenv";
 
 const packageJson = JSON.parse(readFileSync("./package.json"));
-const env = require("dotenv").config({
-    path: require("path").resolve(
-      process.cwd(),
-      (process.env.QENV?.replace(/^production$/, "") || "") + ".env"
-    )
-  }).parsed || {};
+const envFilenName = (process.env.QENV?.replace(/^production$/, "") || "") + ".env";
+const env = config({ path: path.resolve(process.cwd(), envFilenName) }).parsed || {};
 env.UPDATE_URL = process.env.UPDATE_URL || env.UPDATE_URL;
 env.APP_ID = process.env.APP_ID || env.APP_ID;
-env.QENV = process.env.QENV;
-env.IS_TESTFLIGHT = process.env.IS_TESTFLIGHT;
+env.QENV = process.env.QENV || "production";
+env.IS_TESTFLIGHT = process.env.IS_TESTFLIGHT || "false";
 
-module.exports = configure(function (ctx) {
+export default defineConfig(function (ctx) {
   return {
-    // https://v2.quasar.dev/quasar-cli-webpack/supporting-ts
-    supportTS: true,
-
     // https://v2.quasar.dev/quasar-cli-webpack/prefetch-feature
     // preFetch: true,
 
@@ -71,22 +62,33 @@ module.exports = configure(function (ctx) {
       "fontawesome-v6",
     ],
 
+    eslint: {
+      // fix: true,
+      // include: [],
+      // exclude: [],
+      // cache: false,
+      // rawEsbuildEslintOptions: {},
+      // rawWebpackEslintPluginOptions: {},
+      warnings: true,
+      errors: true
+    },
+
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-build
     build: {
       vueRouterMode: "hash", // available values: 'hash', 'history'
-      devtool: "source-map", // builds slowest, but most accurate, which is good for debugging, see https://webpack.js.org/configuration/devtool/
+      webpackDevtool: "source-map", // builds slowest, but most accurate, which is good for debugging, see https://webpack.js.org/configuration/devtool/
 
-      // transpile: false,
+      // webpackTranspile: false,
       // publicPath: '/',
 
       // Add dependencies for transpiling with Babel (Array of string/regex)
       // (from node_modules, which are by default not transpiled).
       // Applies only if "transpile" is set to true.
-      // transpileDependencies: [],
+      // webpackTranspileDependencies: [],
 
       // rtl: true, // https://quasar.dev/options/rtl-support
       // preloadChunks: true,
-      // showProgress: false,
+      // webpackShowProgress: false,
       // gzip: true,
       // analyze: true,
 
@@ -97,26 +99,39 @@ module.exports = configure(function (ctx) {
       // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
       // chainWebpack (/* chain */) {}
 
-      env: {
-        BACKEND: "",
-        CSP_URLS: "",
-        USE_FALLBACK_LICENSE: "",
-        VAULTKEY: "",
-        SYNC_SERVER: "",
-        URL_SCHEME: "",
-        BETA_EXPIRATION: "",
-        APP_ID: "",
-        UPDATE_URL: "",
-        INSTALL_URL: "",
-        APPLE_APP_ID: "",
-        CONTRIBUTING_URL: "https://www.roaringroster.app/en/contributing/",
-        FEEDBACK_ADDRESS: "feedback@roaringroster.app",
-        DEFAULT_ROUTE: "overview",
-        APPSETTINGS_DBKEY: "117,92,224,103,245,209,145,178,128,123,202,194,188,164,94,181,168,87,48,227,202,184,246,191,156,141,232,100,188,212,15,224",
-        ...env,
-        APP_VERSION: packageJson.version || 0,
-        APP_BUILD: (new Date()).toISOString().replace(/\D/g, ""),
-        APP_NAME: packageJson.productName || "",
+      envFilter: () => {
+        console.log("Using .env file:", envFilenName, "(not the .env file mentioned in the following line, which is ignored)");
+        return {
+          BACKEND: "",
+          CSP_URLS: "",
+          USE_FALLBACK_LICENSE: "",
+          VAULTKEY: "",
+          SYNC_SERVER: "",
+          URL_SCHEME: "",
+          BETA_EXPIRATION: "",
+          APP_ID: "",
+          UPDATE_URL: "",
+          INSTALL_URL: "",
+          APPLE_APP_ID: "",
+          CONTRIBUTING_URL: "https://www.roaringroster.app/en/contributing/",
+          FEEDBACK_ADDRESS: "feedback@roaringroster.app",
+          DEFAULT_ROUTE: "overview",
+          APPSETTINGS_DBKEY: "117,92,224,103,245,209,145,178,128,123,202,194,188,164,94,181,168,87,48,227,202,184,246,191,156,141,232,100,188,212,15,224",
+          ...env,
+          APP_VERSION: packageJson.version || 0,
+          APP_BUILD: (new Date()).toISOString().replace(/\D/g, ""),
+          APP_NAME: packageJson.productName || "",
+        };
+      },
+
+      typescript: {
+        strict: true, // (recommended) enables strict settings for TypeScript
+        vueShim: true, // required when using ESLint with type-checked rules, will generate a shim file for `*.vue` files
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        extendTsConfig (tsConfig) {
+          // You can use this hook to extend tsConfig dynamically
+          // For basic use cases, you can still update the usual tsconfig.json file to override some settings
+        },
       },
 
       extendWebpack(config) {
@@ -407,7 +422,8 @@ module.exports = configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/developing-electron-apps/configuring-electron
     electron: {
-      supportTS: true,
+       // Electron preload scripts (if any) from /src-electron, WITHOUT file extension
+      preloadScripts: [ "electron-preload" ],
       bundler: "builder", // 'packager' or 'builder'
 
       packager: {
@@ -485,16 +501,10 @@ module.exports = configure(function (ctx) {
         electronUpdaterCompatibility: ">= 2.16"
       },
 
-      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
-      chainWebpackMain (/* chain */) {
-        // do something with the Electron main process Webpack cfg
-        // extendWebpackMain also available besides this chainWebpackMain
-      },
-
-      // "chain" is a webpack-chain object https://github.com/neutrinojs/webpack-chain
-      chainWebpackPreload (/* chain */) {
-        // do something with the Electron main process Webpack cfg
-        // extendWebpackPreload also available besides this chainWebpackPreload
+      extendPackageJson: json => {
+        json.dependencies = {
+          "electron-updater": "^6.6.2",
+        };
       }
     }
   }

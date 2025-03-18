@@ -41,7 +41,7 @@ export const useAccountStore = defineStore("account", () => {
   );
   const allTeams = computed(() =>
     teamHandles.value.flatMap(({ doc, docId: id }) =>
-      !!doc 
+      doc 
         ? [{ ...doc, id }]
         : []
     )
@@ -69,9 +69,9 @@ export const useAccountStore = defineStore("account", () => {
   // if user has no active team (because he left, it was deleted or whatever), assign one
   watch(
     [team, teams],
-    ([team, teams]) => {
+    async ([team, teams]) => {
       if (!team && teams.length > 0 && teamHandles.value.length == teams.length) {
-        updateAccount(account => account.activeTeam = teams.at(0)?.id);
+        await updateAccount(account => account.activeTeam = teams.at(0)?.id);
       }
     }
   );
@@ -88,7 +88,7 @@ export const useAccountStore = defineStore("account", () => {
     }
   }
 
-  async function logout() {
+  function logout() {
     authTeam.value = null;
     organizationHandle.value?.cleanup();
     organizationHandle.value = null;

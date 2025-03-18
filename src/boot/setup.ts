@@ -1,4 +1,4 @@
-import { boot } from "quasar/wrappers";
+import { defineBoot } from "#q-app/wrappers";
 import { Platform, colors, getCssVar, setCssVar } from "quasar";
 
 // Workaround to claim the whole screen space to prevent a 20px gap at the bottom,
@@ -15,7 +15,7 @@ if (Platform.is.cordova && Platform.is.ios) {
   });
 }
 
-export default boot(async ({ store }) => {
+export default defineBoot(() => {
   const { lighten } = colors;
   
   document.body.classList.add("platform-" + Platform.is.platform);

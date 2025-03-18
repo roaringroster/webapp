@@ -481,12 +481,12 @@ class ContactView extends Vue {
       }
     })).concat(this.contact.birthday ? [
       {
-        label: this.$t("birthday") as string,
+        label: this.$t("birthday"),
         value: this.$d(this.contact.birthday, "DateFull")
       }
     ] : []).concat(this.contact.notes ? [
       {
-        label: this.$t("contactNotes") as string,
+        label: this.$t("contactNotes"),
         value: this.contact.notes
       }
     ] : []);
@@ -591,11 +591,11 @@ class ContactView extends Vue {
 
   localizeLabel(label: string) {
     return predefinedLabels.includes(label) ? 
-      this.$t(label) as string : 
+      this.$t(label) : 
       label;
   }
   localizeAddress(address: PostalAddress) {
-    return (this.$t("postalAddressFormat", address) as string)
+    return (this.$t("postalAddressFormat", address))
       .replace(/(\\n)+/g, "\n");
   }
   contactGroupClassIfNeeded(index: number, list: any[]) {
@@ -626,10 +626,10 @@ class ContactView extends Vue {
     }
 
     this.$q.dialog({
-      title: this.$t("confirmDeletionTitle") as string,
+      title: this.$t("confirmDeletionTitle"),
       message: this.$t("confirmContactDeletionMessage", {
         name: this.name || this.$t("withoutNames")
-      }) as string,
+      }),
       persistent: true,
       ok: {
         label: this.$t("delete"),

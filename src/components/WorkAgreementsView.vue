@@ -145,7 +145,7 @@ const emit = defineEmits<{
   (event: "update", payload: (value: WorkAgreements) => void): void
 }>();
 
-async function save(changes: ((doc: WorkAgreements) => void) | Partial<WorkAgreements>) {
+function save(changes: ((doc: WorkAgreements) => void) | Partial<WorkAgreements>) {
     let changeFn: (value: WorkAgreements) => void;
 
     if (typeof changes != "function") {

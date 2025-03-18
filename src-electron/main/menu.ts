@@ -3,6 +3,7 @@ import { $i18n, changeLocale } from "./i18n"
 // import { createWindow } from "./window"
 import { isMac } from "./helper"
 import { checkForUpdates } from "./updater"
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { appFeedbackAddress, appContributingURL } from "../../src/helper/appInfo";
 
 export function setupAppMenu() {
@@ -242,7 +243,6 @@ export function setupAppMenu() {
         }
     ]
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const menu = Menu.buildFromTemplate(template as any)
     Menu.setApplicationMenu(menu)
 }
@@ -255,12 +255,12 @@ export function setMenuItemEnabled(id: string, enabled: boolean) {
     }
 }
 
-async function print(menuItem: MenuItem, browserWindow?: BrowserWindow) {
+function print(menuItem: MenuItem, browserWindow?: BrowserWindow) {
     // bug in electron 26.x for Windows causes error 
     // "webContents.print(): invalid print settings specified" 
     // if no options with pageSize are provided,
     // see https://github.com/electron/electron/issues/38598
-    await browserWindow?.webContents.print({
+    browserWindow?.webContents.print({
         pageSize: "A4"
     })
 }

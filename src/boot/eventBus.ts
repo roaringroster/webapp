@@ -1,5 +1,5 @@
-import { EventBus } from "quasar"
-import { boot } from "quasar/wrappers"
+import { EventBus } from "quasar";
+import { defineBoot } from "#q-app/wrappers";
 // import { Contact } from "src/models/contact";
 // import { User, UserSettings } from "src/models/user";
 
@@ -32,7 +32,7 @@ const bus = new EventBus<{
   "close-drawer": () => void;
 }>();
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   // for Options API
   app.config.globalProperties.$bus = bus
 

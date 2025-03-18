@@ -201,8 +201,8 @@ class EditingSheet extends Vue {
       this.isVisible = value;
     } else {
       showWarning(
-        this.$t("unsavedChangesMessage") as string,
-        this.$t("unsavedChangesTitle") as string
+        this.$t("unsavedChangesMessage"),
+        this.$t("unsavedChangesTitle")
       ).onOk(() => this.isVisible = value);
     }
   }
@@ -213,7 +213,7 @@ class EditingSheet extends Vue {
 
   onBeforeShow() {
     const scrollTop = document.body.parentElement?.scrollTop || 0;
-    const element = document.querySelector("#q-app") as HTMLElement | null;
+    const element: HTMLElement | null = document.querySelector("#q-app");
     document.body.classList.add("presenting-sheet");
     document.body.classList.add("presenting-sheet-transition");
 
@@ -224,7 +224,7 @@ class EditingSheet extends Vue {
 
   onBeforeHide() {
     document.body.classList.remove("presenting-sheet");
-    const element = document.querySelector("#q-app") as HTMLElement | null;
+    const element: HTMLElement | null = document.querySelector("#q-app");
 
     if (element) {
       element.style.translate = "";
