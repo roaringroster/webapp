@@ -77,7 +77,13 @@ export default class SelectableInput extends Vue {
   }
 
   onFocus() {
-    window.getSelection()?.collapseToEnd()
+    const selection = window.getSelection();
+
+    // If we don't have a selection, collapseToEnd will throw an InvalidStateError.
+    // We don't have a selection when the select receives focus from a tap on the triangle icon.
+    if (selection && selection.rangeCount > 0) {
+      selection.collapseToEnd();
+    }
   }
   onBlur() {
     if (this.lastTabKeyDownTimestamp + 100 < Date.now()) {
