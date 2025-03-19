@@ -1,4 +1,5 @@
 import { join } from "path";
+import { fileURLToPath } from "node:url";
 import { readFileSync, writeFileSync } from "fs";
 import { exitOnError, runCommand } from "./utils/utils.js";
 
@@ -8,7 +9,8 @@ export default function() {
     }
 
     exitOnError(() => {
-        const directory = join(__dirname, "../src-cordova/platforms/android/app/build/outputs/apk/release/")
+        const __dirname = fileURLToPath(new URL(".", import.meta.url));
+        const directory = join(__dirname, "../src-cordova/platforms/android/app/build/outputs/apk/release/");
         
         runCommand(`../node_modules/apk-update/apk-update.js ${directory}app-release.apk ${directory}`);
 

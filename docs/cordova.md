@@ -52,5 +52,5 @@ When the project is using ESM and package.json contains `"type": "module"`, cord
 
 There might be an error `TypeError [ERR_INVALID_ARG_TYPE]: The "code" argument must be of type number. Received type string ('ERR_REQUIRE_ESM')`, which is caused by global `lib/node_modules/cordova/bin/cordova` in global node directory because `err.code` is a string and not a number, so we fix the line to `process.exitCode = parseInt(err.code) || 1;`.
 
-After that, we see the real error, which is in global `lib/node_modules/cordova/node_modules/cordova-lib/src/hooks/HooksRunner.js` where we need to change `const scriptFn = require(script.fullPath);` to `const scriptFn = import(script.fullPath);`.
+After that, we see the real error, which is in global `lib/node_modules/cordova/node_modules/cordova-lib/src/hooks/HooksRunner.js` where we need to change `const scriptFn = require(script.fullPath);` to `const { default: scriptFn } = await import(script.fullPath);` and declare `runScriptViaModuleLoader` as async function.
 
