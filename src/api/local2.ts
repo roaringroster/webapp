@@ -338,13 +338,13 @@ export type LocalAccount = {
     device: DeviceWithSecrets;
     settings: DeviceSettings;
     organizations: Organization[];
-    activeOrganization?: ShareId;
-    activeTeam?: DocumentId;
+    activeOrganization: ShareId | undefined;
+    activeTeam: DocumentId | undefined;
     currentPath: string;
 }
 
 export type PartialLocalAccount = Omit<LocalAccount, "user"> & {
-    user?: UserWithSecrets;
+    user: UserWithSecrets | undefined;
 }
 
 type Organization = {
@@ -412,8 +412,10 @@ function createLocalAccount(username: string, locale = "", isDeviceOnly = false)
     const settings: DeviceSettings = { locale, defaultWebsocketServer };
     const organizations: Organization[] = [];
     const currentPath = "";
+    const activeOrganization = undefined;
+    const activeTeam = undefined;
 
-    return {user, device, settings, organizations, currentPath};
+    return {user, device, settings, organizations, currentPath, activeOrganization, activeTeam};
 }
 
 // === read and update invitations ===

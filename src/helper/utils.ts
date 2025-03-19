@@ -26,6 +26,17 @@ export async function promiseForErrorHandling<T>(
   });
 }
 
+export const incrementalName = (name: string, existingNames: string[] = []) => {
+    let incrementedName = name;
+    let index = 1;
+
+    while (existingNames.includes(incrementedName)) {
+        incrementedName = name + " " + index++;
+    }
+
+    return incrementedName;
+}
+
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }

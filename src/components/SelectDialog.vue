@@ -69,7 +69,7 @@ export default class SelectDialog extends Vue {
   @Prop({type: Array, default: () => []}) readonly selectOptions!: {label: string, value: string}[];
   @Ref() readonly dialog!: QDialog;
 
-  selection = this.selectOptions[0]?.value || "";
+  selection = "";
 
   get behavior() {
     return selectBehavior();
@@ -80,6 +80,11 @@ export default class SelectDialog extends Vue {
   }
   hide () {
     this.dialog.hide();
+  }
+
+  mounted() {
+    this.selection = this.selectOptions[0]?.value || "";
+
   }
 }
 </script>
