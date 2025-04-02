@@ -104,7 +104,7 @@
         v-if="!required && dateString"
         name="cancel"
         @click.stop.prevent="clear"
-        class="cursor-pointer"
+        class="cursor-pointer text-grey-6"
       />
       <q-icon
         v-if="showTimePicker && showDatePicker"
@@ -277,26 +277,26 @@ export default class DateTimeInput extends Vue {
    * Supports only `HH:mm` time format and is not applied to others (e.g. AM/PM time format: `hh:mm AA`).
    */
   autocompleteTimeIfNeeded() {
-      if (this.value == undefined && this.format == "HH:mm") {
-        let numbers = this.dateInput?.nativeEl.value.replace(/\D/g, "");
+    if (this.value == undefined && this.format == "HH:mm") {
+      let numbers = this.dateInput?.nativeEl.value.replace(/\D/g, "");
 
-        if (numbers.length == 1) {
-          numbers = "0" + numbers + "00"
-        } else if (numbers.length == 2) {
-          numbers = numbers + "00"
-        } else if (numbers.length == 3) {
-          numbers = "0" + numbers
-        } else {
-          return;
-        }
-
-        const hours = numbers.substring(0, 2)
-        const minutes = numbers.substring(2, 4)
-
-        if (parseInt(hours) < 24 && parseInt(minutes) < 60) {
-          this.dateString = hours + ":" + minutes;
-        }
+      if (numbers.length == 1) {
+        numbers = "0" + numbers + "00"
+      } else if (numbers.length == 2) {
+        numbers = numbers + "00"
+      } else if (numbers.length == 3) {
+        numbers = "0" + numbers
+      } else {
+        return;
       }
+
+      const hours = numbers.substring(0, 2)
+      const minutes = numbers.substring(2, 4)
+
+      if (parseInt(hours) < 24 && parseInt(minutes) < 60) {
+        this.dateString = hours + ":" + minutes;
+      }
+    }
   }
 
   selectOption(option: {value: () => string}) {

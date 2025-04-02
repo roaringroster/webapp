@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref, Ref, watch } from "vue";
+import { computed, ref, Ref, toRaw, watch } from "vue";
 import { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge";
 import { DocHandle, DocumentId } from "@automerge/automerge-repo";
 import { Team as AuthTeam } from "@localfirst/auth";
@@ -24,6 +24,7 @@ export const useAccountStore = defineStore("account", () => {
   const authTeam: Ref<AuthTeam | null> = ref(null);
   const organizationHandle: Ref<StoredHandle<Organization> | null> = ref(null);
   const memberContactHandle: Ref<StoredHandle<Contact> | null> = ref(null);
+  const isOrganizationAdmin = ref(false);
 
   const userId = computed(() => account.value?.user.userId || "");
   const userName = computed(() => account.value?.user.userName || "");
@@ -76,8 +77,17 @@ export const useAccountStore = defineStore("account", () => {
     }
   );
 
+  function onTeamUpdated() {
+    isOrganizationAdmin.value = !!userId.value
+      && !!authTeam.value 
+      && authTeam.value.has(userId.value) 
+      && authTeam.value.memberIsAdmin(userId.value);
+  }
+
   async function login() {
     authTeam.value = getOrganization();
+    toRaw(authTeam.value)?.on("updated", onTeamUpdated);
+    onTeamUpdated();
     const orgHandle = useOrganizationDocument() as unknown as StoredHandle<Organization>;
     await orgHandle.handle.whenReady();
     organizationHandle.value = orgHandle;
@@ -89,6 +99,7 @@ export const useAccountStore = defineStore("account", () => {
   }
 
   function logout() {
+    toRaw(authTeam.value)?.off("updated", onTeamUpdated);
     authTeam.value = null;
     organizationHandle.value?.cleanup();
     organizationHandle.value = null;
@@ -115,6 +126,7 @@ export const useAccountStore = defineStore("account", () => {
     teams,
     team,
     isTeamAdmin,
+    isOrganizationAdmin,
 
     login,
     logout,

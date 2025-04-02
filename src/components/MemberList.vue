@@ -7,7 +7,7 @@
       </div>
       <div class="q-ml-sm q-pr-xs">
         <q-btn
-          v-if="!isDisabled && members.length && (!!memberId || isAdmin)"
+          v-if="!isDisabled && members.length && (!!memberId || accountStore.isOrganizationAdmin)"
           icon="fa fa-add"
           :title="!memberId ? $t('inviteMembers') : $t('addItem', [$t('device')])"
           round
@@ -96,7 +96,7 @@
                     <q-checkbox 
                       :model-value="hasAdminRole(member)" 
                       @update:model-value="toggleAdminRole(member)"
-                      :disable="!isAdmin"
+                      :disable="!accountStore.isOrganizationAdmin"
                       color="primary"
                       keep-color
                     />
@@ -198,7 +198,7 @@
           :key="invitation.id"
           :invitation="invitation"
           :seed="invitationSeeds[invitation.id]?.seed"
-          :is-revocable="isAdmin"
+          :is-revocable="accountStore.isOrganizationAdmin"
           class="q-pl-lg"
           @revoke="revokeInvitation(invitation.id)"
         />
@@ -209,7 +209,7 @@
         :key="invitation.id"
         :invitation="invitation"
         :seed="invitationSeeds[invitation.id]?.seed"
-        :is-revocable="isAdmin"
+        :is-revocable="accountStore.isOrganizationAdmin"
         class="q-ml-lg"
         @revoke="revokeInvitation(invitation.id)"
       />
@@ -263,7 +263,6 @@ const props = defineProps({
 
 const memberItems: Ref<QExpansionItem[]> = ref([]);
 const authTeam = getOrganization();
-const isAdmin: Ref<boolean> = ref(false);
 const members: Ref<AuthMember[]> = ref([]);
 const adminCount = computed(() => 
   members.value.filter(({userId}) => authTeam?.memberIsAdmin(userId)).length
@@ -287,9 +286,6 @@ watch(
 );
 
 function onTeamUpdated() {
-  const userId = accountStore.userId;
-  isAdmin.value = !!userId && !!authTeam && authTeam.has(userId) 
-    && authTeam.memberIsAdmin(userId);
   members.value = (authTeam?.members() || [])
     .filter(member => !props.memberId || member.userId == props.memberId);
   invitations.value = Object.values(authTeam?.state.invitations || {})
@@ -341,7 +337,7 @@ function inviteMemberSheet() {
     component: InvitationSheet
   })
   .onOk(async ({expiration, maxUses}: {expiration: UnixTimestamp, maxUses: number}) => {
-    if (authTeam && isAdmin.value) {
+    if (authTeam && accountStore.isOrganizationAdmin) {
       const { seed, id } = authTeam.inviteMember({expiration, maxUses});
       const extendedSeed = seed + seedExtension(true);
       invitationSeeds.value = await addInvitation(id, { expiration, seed: extendedSeed });
@@ -398,7 +394,7 @@ function memberActionItems(member: AuthMember, index: number) {
   return [
     {
       customType: "admin-toggle",
-      condition: isAdmin.value && !isOnlyAdmin(member)
+      condition: accountStore.isOrganizationAdmin && !isOnlyAdmin(member)
     },
     {
       name: t("addDevice"),
@@ -414,11 +410,11 @@ function memberActionItems(member: AuthMember, index: number) {
       icon: "fas fa-user-minus",
       isDestructive: true,
       action: () => removeMember(member),
-      condition: isAdmin.value && !isOnlyAdmin(member),
+      condition: accountStore.isOrganizationAdmin && !isOnlyAdmin(member),
     },
     {
       customType: "admin-hint",
-      condition: isAdmin.value && isOnlyAdmin(member)
+      condition: accountStore.isOrganizationAdmin && isOnlyAdmin(member)
     },
   ];
 }
@@ -502,7 +498,7 @@ function deviceActionItems(device: Device) {
       icon: "fas fa-trash",
       isDestructive: true,
       action: () => removeDevice(device.deviceId),
-      condition: isAdmin.value || isCurrentUser({userId: device.userId}),
+      condition: accountStore.isOrganizationAdmin || isCurrentUser({userId: device.userId}),
     },
   ];
 }

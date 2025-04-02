@@ -18,6 +18,7 @@
         :icon="item.icon"
         :to="routesPerTab[index]"
         :class="'text-' + (item.color || 'primary')"
+        :style="$q.screen.lt.sm ? `width: ${Math.floor(100 / Math.min(tabs.length, tabCount))}%` : ''"
       >
         <q-badge
           v-if="item.badge"
@@ -94,6 +95,10 @@
   .q-tabs__content--align-left .q-tab
     flex: 1 1 auto
   .q-tab
+    .q-tab__label
+      width: 100%
+      overflow: hidden
+      text-overflow: ellipsis
     @media screen and (max-width: $breakpoint-xs-max)
       padding: 0
   .more-tab.disabled

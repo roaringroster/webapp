@@ -61,11 +61,11 @@ export function automergeClone<T>(object: T): T {
 
 export function deepMerge<T extends object>(
   target: T, 
-  changes: T,
+  changes: Partial<T>,
   path: Array<string | number | symbol> = []
 ) {
   return Object.entries(toRaw(changes || {}))
-    .reduce((result, [k, value]) => {
+    .reduce((result, [k, value]: [any, any]) => {
       const key = k as keyof T;
 
       if (!equals(result[key], value)) {

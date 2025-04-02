@@ -84,7 +84,6 @@ export default class SelectDialog extends Vue {
 
   mounted() {
     this.selection = this.selectOptions[0]?.value || "";
-
   }
 }
 </script>
