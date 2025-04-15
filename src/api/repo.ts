@@ -41,13 +41,21 @@ export const isConnected = ref(false);
 // const autoReconnectAttempts = 0;
 
 export async function registerOrganization(account: LocalAccount, name: string, server: string) {
-  const websocketServer = server || account.settings.defaultWebsocketServer;
-  const { auth, repo, network } = await initializeAuthRepo(account, websocketServer);
-  const authTeam = await auth.createTeam(name);
-  const shareId = getShareId(authTeam);
+  const { user, device, settings } = account;
+  const websocketServer = server || settings.defaultWebsocketServer;
+  const keys = await getServerKeys(websocketServer);
+  const authOrganization = await Auth.createTeam(name, { device, user });
+  const shareId = getShareId(authOrganization);
   const organization = { shareId, websocketServer };
+  authOrganization.addServer({ host: "localhost", keys });
+  await postOrganization(websocketServer, authOrganization);
+  const url = `${websocketServer}/${shareId}`;
+
+  const { auth, repo, network } = await initializeAuthRepo(account, url);
   setAuthRepo({ auth, repo, network });
 
+  await auth.addTeam(authOrganization);
+  const authTeam = auth.getTeam(shareId);
   const member = createMember(authTeam);
   const members: Record<string, Member> = {};
   members[account.user?.userId] = member;
@@ -68,13 +76,14 @@ export async function joinOrganization(account: PartialLocalAccount, invitationC
   return promiseForErrorHandling(async reject => {
     const shareId = invitationCode.slice(0, 12) as ShareId;
     const websocketServer = server || account.settings.defaultWebsocketServer;
+    const url = `${websocketServer}/${shareId}`;
     const organization = { shareId, websocketServer };
     const invitationSeed = invitationCode.slice(12, 28) as Auth.Base58;
     // if there is no user yet during device admission to team, the username is in userId of device
     const userName = account.user?.userName || account.device.userId;
     let teamId: DocumentId | undefined = undefined;
 
-    const { auth, repo, network } = await initializeAuthRepo(account, websocketServer);
+    const { auth, repo, network } = await initializeAuthRepo(account, url);
     setAuthRepo({ auth, repo, network });
 
     auth.on("localError", event => {
@@ -130,16 +139,15 @@ export async function joinOrganization(account: PartialLocalAccount, invitationC
   });
 }
 
-async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?: string) {
-  const { user, device, settings, organizations, activeOrganization } = account;
-  const organization = organizations.find(({ shareId }) => shareId == activeOrganization);
-  const server = websocketServer || organization?.websocketServer || settings.defaultWebsocketServer;
+async function initializeAuthRepo(account: PartialLocalAccount, server: string) {
+  const { user, device, activeOrganization } = account;
   // if there is no user yet during device admission to team, the username is in userId of device
   const username = user?.userName || device.userId;
   const dbName = dbPrefix + (await getCaseSensitiveUsername(username, dbPrefix) || username);
 
   const storage = new IndexedDBStorageAdapter(dbName);
   const auth = new AuthProvider({ user, device, storage, server });
+  
   const httpProtocol = window.location.protocol;
   const wsProtocol = httpProtocol == "http:"
     ? "ws:"
@@ -198,8 +206,7 @@ async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?
     if (activeOrganization && auth.hasTeam(activeOrganization)) {
       const authTeam = auth.getTeam(activeOrganization);
       const serverKeysLocal = authTeam.servers(server)?.keys;
-      const response = await fetch(`https://${server}/keys`);
-      const serverKeysRemote = await response.json() as Auth.Keyset;
+      const serverKeysRemote = await getServerKeys(server);
 
       // we already know the server and it's public keys, but it might be necessary
       // to register our organization Auth team again
@@ -207,14 +214,7 @@ async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?
         && serverKeysRemote.encryption == serverKeysLocal.encryption
         && serverKeysRemote.signature == serverKeysLocal.signature
       ) {
-        await fetch(`https://${server}/teams`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            serializedGraph: authTeam.save(),
-            teamKeyring: authTeam.teamKeyring(),
-          }),
-        });
+        await postOrganization(server, authTeam);
       }
     }
   }, 5000);
@@ -225,6 +225,22 @@ async function initializeAuthRepo(account: PartialLocalAccount, websocketServer?
   ])
 
   return { auth, repo, network }
+}
+
+async function getServerKeys(server: string) {
+  const response = await fetch(`https://${server}/keys`);
+  return await response.json() as Auth.Keyset;
+}
+
+async function postOrganization(server: string, organization: Auth.Team) {
+  return await fetch(`https://${server}/organizations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      serializedGraph: organization.save(),
+      teamKeyring: organization.teamKeyring(),
+    }),
+  });
 }
 
 export async function reconnect(account?: PartialLocalAccount) {
@@ -251,7 +267,20 @@ function setAuthRepo(value?: AuthRepo) {
 }
 
 export async function loginWithAuth(account: PartialLocalAccount) {
-  setAuthRepo(await initializeAuthRepo(account));
+  const { organizations, activeOrganization } = account;
+  const organization = organizations.find(({ shareId }) => shareId == activeOrganization);
+  const { websocketServer } = organization || {};
+
+  if (!activeOrganization || !organization) {
+    throw new Error("OrganizationMissing");
+  }
+
+  if (!websocketServer) {
+    throw new Error("ServerMissing");
+  }
+  
+  const url = `${websocketServer}/${activeOrganization}`;
+  setAuthRepo(await initializeAuthRepo(account, url));
 }
 
 export function logoutWithAuth() {
