@@ -204,9 +204,10 @@ async function initializeAuthRepo(account: PartialLocalAccount, server: string) 
   auth.on("peer-joined", () => clearTimeout(peerJoinedTimeout));
   const peerJoinedTimeout = setTimeout(async () => {
     if (activeOrganization && auth.hasTeam(activeOrganization)) {
+      const serverBaseUrl = new URL("http://" + server).host;
       const authTeam = auth.getTeam(activeOrganization);
-      const serverKeysLocal = authTeam.servers(server)?.keys;
-      const serverKeysRemote = await getServerKeys(server);
+      const serverKeysLocal = authTeam.servers(serverBaseUrl)?.keys;
+      const serverKeysRemote = await getServerKeys(serverBaseUrl);
 
       // we already know the server and it's public keys, but it might be necessary
       // to register our organization Auth team again
@@ -214,7 +215,7 @@ async function initializeAuthRepo(account: PartialLocalAccount, server: string) 
         && serverKeysRemote.encryption == serverKeysLocal.encryption
         && serverKeysRemote.signature == serverKeysLocal.signature
       ) {
-        await postOrganization(server, authTeam);
+        await postOrganization(serverBaseUrl, authTeam);
       }
     }
   }, 5000);
@@ -371,10 +372,10 @@ export function getOrganizationOrThrow() {
   return team;
 }
 
-function getShareForTeam(team: Auth.Team) {
-  const shareId = getShareId(team);
-  return authRepo?.auth.getShare(shareId);
-}
+// function getShareForTeam(team: Auth.Team) {
+//   const shareId = getShareId(team);
+//   return authRepo?.auth.getShare(shareId);
+// }
 
 
 export function createDocument<T extends object>(initialValue: T, team: Auth.Team) {
@@ -392,12 +393,14 @@ export function createDocument<T extends object>(initialValue: T, team: Auth.Tea
   return handle.documentId;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function addDocument(id: DocumentId, team: Auth.Team) {
-  getShareForTeam(team)?.documentIds?.add(id);
+  // getShareForTeam(team)?.documentIds?.add(id);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function removeDocument(id: DocumentId, team: Auth.Team) {
-  getShareForTeam(team)?.documentIds?.delete(id);
+  // getShareForTeam(team)?.documentIds?.delete(id);
   authRepo?.repo.delete(id);
 }
 

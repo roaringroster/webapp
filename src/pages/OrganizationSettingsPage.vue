@@ -48,8 +48,8 @@ const items = computed(() => [
   ...stringToItem(t("organizationIdentifier"), () => 
     isDev && accountStore.authTeam ? accountStore.authTeam.id : ""
   ),
-  ...stringArrayToItem("All document IDs", () => allDocuments.value),
-  ...numberToItem("All documents count", () => isDev ? allDocuments.value.length : null),
+  ...numberToItem("Number of documents", () => isDev ? allDocuments.value.length : null),
+  ...stringArrayToItem("IDs of all documents", () => allDocuments.value),
 ]);
 const compactLayout = ref(false);
 const el = useTemplateRef("el");
@@ -72,7 +72,7 @@ const allDocuments = computed(() => isDev
         member.availabilityId,
         member.absencesId,
       ]),
-    ]
+    ].sort((a, b) => a.localeCompare(b))
   : []
 );
 
