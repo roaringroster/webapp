@@ -132,7 +132,7 @@ import LabeledItem, { dateToItem, numberToItem, stringArrayToItem, stringToItem 
 import DateTimeInput from "src/components/DateTimeInput.vue";
 import MultipleSelectableInput from "src/components/MultipleSelectableInput.vue";
 
-const { n } = useI18n();
+const { t, n } = useI18n();
 
 const props = defineProps({
   modelValue: {
@@ -168,16 +168,16 @@ function onResize() {
 }
 
 const items = computed(() => [
-  ...stringToItem("employeeId", () => props.modelValue?.employeeId),
-  ...stringToItem("jobTitle", () => props.modelValue?.jobTitle),
-  ...stringToItem("jobDescription", () => props.modelValue?.jobDescription),
-  ...stringArrayToItem("jobPositions", () => props.modelValue?.positions),
-  ...dateToItem("employmentStart", () => props.modelValue?.employmentStart, "DateMed"),
-  ...dateToItem("employmentEnd", () => props.modelValue?.employmentEnd, "DateMed"),
-  ...numberToItem("weeklyHours", () => props.modelValue?.weeklyHours),
-  ...numberToItem("yearlyVacationDays", () => props.modelValue?.yearlyVacationDays),
-  ...numberToItem("grossSalary", () => props.modelValue?.grossSalary, "Currency"),
-  ...stringToItem("salaryNotes", () => props.modelValue?.salaryNotes),
+  ...stringToItem(t("employeeId"), () => props.modelValue?.employeeId),
+  ...stringToItem(t("jobTitle"), () => props.modelValue?.jobTitle),
+  ...stringToItem(t("jobDescription"), () => props.modelValue?.jobDescription),
+  ...stringArrayToItem(t("jobPositions"), () => props.modelValue?.positions),
+  ...dateToItem(t("employmentStart"), () => props.modelValue?.employmentStart, "DateMed"),
+  ...dateToItem(t("employmentEnd"), () => props.modelValue?.employmentEnd, "DateMed"),
+  ...numberToItem(t("weeklyHours"), () => props.modelValue?.weeklyHours),
+  ...numberToItem(t("yearlyVacationDays"), () => props.modelValue?.yearlyVacationDays),
+  ...numberToItem(t("grossSalary"), () => props.modelValue?.grossSalary, "Currency"),
+  ...stringToItem(t("salaryNotes"), () => props.modelValue?.salaryNotes),
 ]);
 
 const formatNumber = (value: number | null, numberFormat = "") =>

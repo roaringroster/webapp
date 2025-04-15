@@ -408,5 +408,7 @@
   "membersHaveOnlyThisTeamMessage": "In diesem Team gibt es noch Mitglieder, die in keinem weiteren Team Mitglied sind. Das Team kann nicht gelöscht werden, bis diese in anderen Teams aufgenommen wurden.",
   "singleTeamMessage": "Dies ist das einzige Team der Organisation.",
   "confirmTeamDeletionMessage": "Das Team {name} wird unwiederbringlich gelöscht.",
-  "teamDeletionNotPossibleTitle": "Team kann noch nicht gelöscht werden"
+  "teamDeletionNotPossibleTitle": "Team kann noch nicht gelöscht werden",
+  "organizationShortIdentifier": "ID der Organisation (kurz)",
+  "organizationIdentifier": "ID der Organisation (lang)"
 }

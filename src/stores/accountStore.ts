@@ -127,6 +127,7 @@ export const useAccountStore = defineStore("account", () => {
     team,
     isTeamAdmin,
     isOrganizationAdmin,
+    allTeams,
 
     login,
     logout,

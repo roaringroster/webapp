@@ -19,7 +19,10 @@
           item.action && !item.value.includes('\n') ? 'single-line-with-action' : ''
         ]"
       >{{ item.label }}</q-item-label>
-      <div :class="[valueClass, 'row no-wrap items-center']">
+      <div
+        :class="[valueClass, 'row no-wrap items-center break-word']"
+        style="max-width: 100%"
+      >
         <q-item-label 
           :class="[
             'col pre-wrap', 
@@ -141,7 +144,7 @@ export type LabeledItemType = {
   action?: () => void;
 };
 
-const { t, d, n } = i18n;
+const { d, n } = i18n;
 
 
 export function stringToItem(
@@ -149,7 +152,7 @@ export function stringToItem(
   getValue: () => string | null | undefined
 ): LabeledItemType[] {
   if (getValue()) {
-    return [{ label: t(label), value: getValue() || "" }]
+    return [{ label, value: getValue() || "" }]
   } else {
     return [];
   }
@@ -161,7 +164,7 @@ export function dateToItem(
   dateFormat: string
 ): LabeledItemType[] {
   if (getValue() != null) {
-    return [{ label: t(label), value: d(getValue() || 0, dateFormat) }]
+    return [{ label, value: d(getValue() || 0, dateFormat) }]
   } else {
     return [];
   }
@@ -173,7 +176,7 @@ export function numberToItem(
   numberFormat = ""
 ): LabeledItemType[] {
   if (getValue() != null) {
-    return [{ label: t(label), value: n(getValue() || 0, numberFormat) }]
+    return [{ label, value: n(getValue() || 0, numberFormat) }]
   } else {
     return [];
   }
@@ -184,7 +187,7 @@ export function stringArrayToItem(
   getValue: () => string[] | undefined
 ): LabeledItemType[] {
   if (getValue()?.length) {
-    return [{ label: t(label), value: (getValue() || []).join(",\n") }]
+    return [{ label, value: (getValue() || []).join(",\n") }]
   } else {
     return [];
   }
