@@ -44,18 +44,18 @@ export async function registerOrganization(account: LocalAccount, name: string, 
   const { user, device, settings } = account;
   const websocketServer = server || settings.defaultWebsocketServer;
   const keys = await getServerKeys(websocketServer);
-  const authOrganization = await Auth.createTeam(name, { device, user });
-  const shareId = getShareId(authOrganization);
+  const authTeam = await Auth.createTeam(name, { device, user });
+  const shareId = getShareId(authTeam);
   const organization = { shareId, websocketServer };
-  authOrganization.addServer({ host: "localhost", keys });
-  await postOrganization(websocketServer, authOrganization);
+  const { hostname } = new URL(`http://${websocketServer}`);
+  authTeam.addServer({ host: hostname, keys });
+  await postOrganization(websocketServer, authTeam);
   const url = `${websocketServer}/${shareId}`;
 
   const { auth, repo, network } = await initializeAuthRepo(account, url);
   setAuthRepo({ auth, repo, network });
 
-  await auth.addTeam(authOrganization);
-  const authTeam = auth.getTeam(shareId);
+  await auth.addTeam(authTeam);
   const member = createMember(authTeam);
   const members: Record<string, Member> = {};
   members[account.user?.userId] = member;

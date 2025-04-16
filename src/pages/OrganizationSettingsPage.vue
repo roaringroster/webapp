@@ -42,14 +42,14 @@ const organizationName = computed({
 });
 
 const items = computed(() => [
-  ...stringToItem(t("organizationShortIdentifier"), () => 
+  ...stringToItem(t("organizationShortIdentifier") + ":", () => 
     accountStore.authTeam ? getShareId(accountStore.authTeam) : ""
   ),
-  ...stringToItem(t("organizationIdentifier"), () => 
+  ...stringToItem(t("organizationIdentifier") + ":", () => 
     isDev && accountStore.authTeam ? accountStore.authTeam.id : ""
   ),
-  ...numberToItem("Number of documents", () => isDev ? allDocuments.value.length : null),
-  ...stringArrayToItem("IDs of all documents", () => allDocuments.value),
+  ...numberToItem("Number of documents:", () => isDev ? allDocuments.value.length : null),
+  ...stringArrayToItem("IDs of all documents:", () => allDocuments.value),
 ]);
 const compactLayout = ref(false);
 const el = useTemplateRef("el");
