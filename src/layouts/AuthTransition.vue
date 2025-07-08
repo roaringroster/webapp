@@ -1,7 +1,7 @@
 <template>
   <router-view v-slot="{ Component, route }">
     <transition
-      :name="(route.meta.transition as string | undefined)"
+      :name="(route.meta.transition as string)"
       @enter="isTransitioning = !!route.meta.transition"
       @leave="isTransitioning = false"
     >

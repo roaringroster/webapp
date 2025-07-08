@@ -29,7 +29,7 @@
     "@automerge/automerge-repo-network-websocket": "^1.2.1",
     "@automerge/automerge-repo-storage-indexeddb": "^1.2.1",
     "@localfirst/auth-provider-automerge-repo": "^6.0.0",
-    "@quasar/extras": "^1.16.17",
+    "@quasar/extras": "^1.17.0",
     "@yeger/vue-masonry-wall": "^5.0.2",
     "argon2-browser": "^1.18.0",
     "chart.js": "^4.4.6",
@@ -55,12 +55,12 @@
   "devDependencies": {
     "@electron/notarize": "^2.1.0",
     "@eslint/js": "^9.22.0",
-    "@quasar/app-webpack": "^4.2.0",
+    "@quasar/app-webpack": "^4.2.1",
     "@quasar/quasar-app-extension-qcalendar": "^4.1.2",
     "@quasar/quasar-app-extension-qmarkdown": "^2.0.5",
     "@types/argon2-browser": "^1.18.1",
     "@types/luxon": "^3.3.2",
-    "@types/node": "^22.4.0",
+    "@types/node": "^24.0.10",
     "@types/qrcode": "^1.5.5",
     "@types/ua-parser-js": "^0.7.39",
     "@types/uuid": "^10.0.0",
@@ -69,8 +69,8 @@
     "apk-update": "^1.0.3",
     "autoprefixer": "^10.4.21",
     "base64-loader": "^1.0.0",
-    "dotenv": "^16.4.7",
-    "electron": "^35.0.2",
+    "dotenv": "^17.1.0",
+    "electron": "^37.2.0",
     "electron-builder": "^26.0.12",
     "electron-updater": "^6.3.9",
     "eslint": "^9.22.0",
@@ -80,11 +80,14 @@
     "license-webpack-plugin": "^4.0.2",
     "prettier": "^3.5.3",
     "ts-loader": "^9.5.2",
-    "vue-tsc": "^2.2.8"
+    "vue-tsc": "^3.0.1"
   },
   "overrides": {
     "dexie": "$dexie",
-    "fork-ts-checker-webpack-plugin": "9.0.2"
+    "fork-ts-checker-webpack-plugin": "9.0.2",
+    "@yeger/vue-masonry-wall": {
+      "vue": "^3.5.16"
+    }
   },
   "browserslist": [
     "last 10 Chrome versions",
