@@ -68,7 +68,7 @@ export default class SelectableInput extends Vue {
   @Prop({ type: String }) readonly hint?: string;
   @Ref() readonly select!: QSelect;
 
-  filteredOptions: SelectableInputOptions[] = this.options;
+  filteredOptions: SelectableInputOptions[] = [];
   lastTabKeyDownTimestamp = 0;
   inputValue = "";
 

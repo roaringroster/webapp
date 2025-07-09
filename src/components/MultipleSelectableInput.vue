@@ -47,7 +47,7 @@ export default class MultipleSelectableInput extends Vue {
   @Prop({ type: Boolean }) readonly hideDropdownIcon!: boolean;
   @Ref() readonly select!: QSelect;
 
-  filteredOptions: LabeledValue<string>[] = this.options;
+  filteredOptions: LabeledValue<string>[] = [];
   lastOnInputTimestamp = 0;
   inputValue = "";
   isPopupVisible = false;
@@ -168,6 +168,9 @@ export default class MultipleSelectableInput extends Vue {
     })
   }
 
+  created() {
+    this.filteredOptions = this.options;
+  }
   mounted() {
     if (this.isCordovaOnIOS) {
       this.input?.addEventListener("blur", this.onInputBlur)

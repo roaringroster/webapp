@@ -190,7 +190,7 @@ class EditingSheet extends Vue {
   @Prop({ type: String, default: "q-mt-sm q-pb-lg scroll"}) readonly contentClass!: string;
   @Prop({ type: String, default: "q-px-sm"}) readonly xsContentClass!: string;
 
-  private isVisible = this.isInitiallyVisible;
+  private isVisible = true;
   private locationOnClose: RouteLocationRaw | null = null;
 
   get visible() {
@@ -282,6 +282,10 @@ class EditingSheet extends Vue {
 
   hide() {
     this.visible = false;
+  }
+
+  created() {
+    this.isVisible = this.isInitiallyVisible;
   }
 
   mounted() {

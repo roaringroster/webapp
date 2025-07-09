@@ -404,7 +404,7 @@ class ContactView extends Vue {
   @Prop({ type: Boolean }) readonly noDelete!: boolean;
   @Prop({ type: Boolean }) readonly noUrl!: boolean;
 
-  isEditing = this.editOnly;
+  isEditing = false;
   addedOptionalFields: ContactKeys[] = [];
   width = Infinity;
   alwaysString = alwaysString;
@@ -646,6 +646,10 @@ class ContactView extends Vue {
     }).onOk(() => {
       this.$emit("delete", this.contactId);
     });
+  }
+
+  created() {
+    this.isEditing = this.editOnly;
   }
 }
 
