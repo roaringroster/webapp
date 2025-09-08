@@ -504,6 +504,7 @@ export default defineConfig(function (ctx) {
       extendPackageJson: json => {
         json.dependencies = {
           "electron-updater": "^6.6.2",
+          "electron-window-state": "^5.0.3",
         };
       }
     }
