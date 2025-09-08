@@ -3,14 +3,21 @@ import path from "path"
 import { fileURLToPath } from "node:url"
 import { isMac } from "./helper"
 import { setMenuItemEnabled } from "./menu"
+import windowStateKeeper from "electron-window-state"
 
 const currentDir = fileURLToPath(new URL('.', import.meta.url))
 
 export async function createWindow() {
+    const mainWindowState = windowStateKeeper({
+        defaultWidth: 1024,
+        defaultHeight: 768
+    })
     const window = new BrowserWindow({
         icon: path.resolve(currentDir, "icons/icon.png"), // tray icon
-        width: 1024,
-        height: 768,
+        x: mainWindowState.x,
+        y: mainWindowState.y,
+        width: mainWindowState.width,
+        height: mainWindowState.height,
         minWidth: 320,
         minHeight: 480,
         useContentSize: true,
@@ -25,6 +32,7 @@ export async function createWindow() {
         //   symbolColor: "#ffffff",
         // },
     })
+    mainWindowState.manage(window)
 
     if (process.env.DEV) {
         await window.loadURL(process.env.APP_URL)
