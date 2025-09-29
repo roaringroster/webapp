@@ -410,5 +410,7 @@
   "confirmTeamDeletionMessage": "The team {name} will be irretrievably deleted.",
   "teamDeletionNotPossibleTitle": "Team cannot be deleted yet",
   "organizationShortIdentifier": "ID of the organization (short)",
-  "organizationIdentifier": "ID der Organisation (lang)"
+  "organizationIdentifier": "ID der Organisation (lang)",
+  "cannotUpdateInQuarantineTitle": "Updates cannot be installed",
+  "moveAppToUpdateMessage": "The app currently does not have write permissions to update itself. Please move CoopCare to the Applications folder or another folder. Then start the update search via the macOS menu bar under “CoopCare” > “Check for Updates...”. If this message appears again, please log out of macOS and log back in."
 }

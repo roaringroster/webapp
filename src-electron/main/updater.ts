@@ -1,7 +1,9 @@
-import { dialog, ipcMain, shell } from "electron"
+import { app, dialog, ipcMain, shell } from "electron"
 import electronUpdater from "electron-updater"
+import { execSync } from "child_process"
 import { setMenuItemEnabled } from "./menu"
 import { $i18n } from "./i18n"
+import { isMac } from "./helper"
 import { reportError } from "../../src/helper/appInfo"
 import { formatFileSize } from "../../src/helper/formatter"
 
@@ -27,17 +29,29 @@ export function setupUpdater() {
 }
 
 autoUpdater.on("error", (error) => {
-    void dialog.showMessageBox({
-        type: "error",
-        title: $i18n.t("GenericErrorTitle"),
-        message: $i18n.t("GenericUpdateError"),
-        buttons: [$i18n.t("OK"), $i18n.t("reportErrorViaMail")],
-        defaultId: 0,
-    }).then(value => {
-        if (value.response === 1) {
-            void shell.openExternal(reportError(error, "Error while updating"))
+    if (wasInitiatedByUser) {
+        if (error.toString().includes("ERR_INTERNET_DISCONNECTED")) {
+            void dialog.showMessageBox({
+                type: "error",
+                title: $i18n.t("offlineBanner"),
+                message: $i18n.t("ConnectionError"),
+                buttons: [$i18n.t("OK")],
+                defaultId: 0,
+            })
+        } else {
+            void dialog.showMessageBox({
+                type: "error",
+                title: $i18n.t("GenericErrorTitle"),
+                message: $i18n.t("GenericUpdateError"),
+                buttons: [$i18n.t("OK"), $i18n.t("reportErrorViaMail")],
+                defaultId: 0,
+            }).then(value => {
+                if (value.response === 1) {
+                    void shell.openExternal(reportError(error, "Error while updating"))
+                }
+            })
         }
-    })
+    }
     setMenuItemEnabled("checkForUpdates", true);
     wasInitiatedByUser = true;
 })
@@ -100,6 +114,22 @@ autoUpdater.on("checking-for-update", () => undefined)
 autoUpdater.on("download-progress", () => undefined)
 
 export async function checkForUpdates() {
-    setMenuItemEnabled("checkForUpdates", false);
-    await autoUpdater.checkForUpdates();
+    if (isMac) {
+        const result = execSync(`xattr ${app.getAppPath()}`, { encoding: "utf-8" });
+
+        if (result.includes("com.apple.quarantine")) {
+            await dialog.showMessageBox({
+                title: $i18n.t("cannotUpdateInQuarantineTitle"),
+                message: $i18n.t("moveAppToUpdateMessage"),
+                buttons: [$i18n.t("ok")],
+                defaultId: 0,
+            })
+        } else {
+            setMenuItemEnabled("checkForUpdates", false);
+            await autoUpdater.checkForUpdates();
+        }
+    } else {
+        setMenuItemEnabled("checkForUpdates", false);
+        await autoUpdater.checkForUpdates();
+    }
 }

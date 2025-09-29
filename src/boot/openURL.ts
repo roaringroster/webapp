@@ -81,8 +81,13 @@ export default defineBoot(() => undefined);
 
 export async function logout(to: RouteLocationRaw = {name: "auth"}) {
     // first logout
-    logoutAccount();
-    logoutWithAuth();
+    try {
+        logoutAccount();
+        logoutWithAuth();
+    } catch (error) {
+        console.error("logout", error);
+    }
+
     // then navigate to login page so that the state change in api.isLoggedIn is detected
     const router = await whenRouterExists();
     void await router.replace(to);

@@ -410,5 +410,7 @@
   "confirmTeamDeletionMessage": "Das Team {name} wird unwiederbringlich gelöscht.",
   "teamDeletionNotPossibleTitle": "Team kann noch nicht gelöscht werden",
   "organizationShortIdentifier": "ID der Organisation (kurz)",
-  "organizationIdentifier": "ID der Organisation (lang)"
+  "organizationIdentifier": "ID der Organisation (lang)",
+  "cannotUpdateInQuarantineTitle": "Updates können nicht installiert werden",
+  "moveAppToUpdateMessage": "Die App hat momentan keine Schreibrechte um sich selbst aktualisieren zu können. Bitte verschiebe CoopCare in den Programme-Ordner oder einen anderen Ordner. Anschließend starte die Update-Suche über die macOS Menüleiste unter „CoopCare” > „Nach Updates suchen …”. Falls dieser Hinweis erneut erscheint, melde dich bitte einmal von macOS ab und wieder an."
 }
