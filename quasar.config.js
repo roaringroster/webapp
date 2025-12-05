@@ -210,6 +210,7 @@ export default defineConfig(function (ctx) {
           "(MIT OR Apache-2.0)",
           "AGPL-3.0-or-later",
           "(MPL-2.0 OR Apache-2.0)",
+          "BlueOak-1.0.0",
         ].includes(license);
         const licenseTypeOverrides = {
           "cordova-plugin-keyboard": "Apache-2.0",
