@@ -61,6 +61,9 @@
             today-btn
             :options="dateOptions"
             :first-day-of-week="firstDayOfWeek"
+            :navigation-min-year-month="formatMonth(min)"
+            :navigation-max-year-month="formatMonth(max)"
+            :default-year-month="defaultYearMonth"
           />
         </q-popup-proxy>
       </q-icon>
@@ -167,6 +170,8 @@ export default class DateTimeInput extends Vue {
   @Model({ type: Date }) readonly value: Date | null | undefined;
   @Prop({ type: String, default: "YYYY-MM-DD HH:mm"}) readonly format!: string;
   @Prop({ type: Date }) readonly min: Date | undefined;
+  @Prop({ type: Date }) readonly max: Date | undefined;
+  @Prop({ type: Date, default: () => new Date() }) readonly defaultMonth!: Date;
   @Prop({ type: String }) readonly label: string | undefined;
   @Prop({ type: String }) readonly placeholder: string | undefined;
   @Prop({ type: String }) readonly defaultTime: string | undefined;
@@ -193,8 +198,7 @@ export default class DateTimeInput extends Vue {
 
     if (!!value && !value.includes("_") && !isNaN(result.getTime()) /* && result.getTime() != emptyDate */) { // comparing with empty date means that 1900-01-01 or 00:00 or both combined cannot be entered – but why was the check added?
       if (
-        !this.min ||
-        date.isBetweenDates(result, this.min, result, {
+        date.isBetweenDates(result, this.min || result, this.max || result, {
           inclusiveTo: true,
           inclusiveFrom: true,
           onlyDate: true
@@ -205,7 +209,7 @@ export default class DateTimeInput extends Vue {
         this.$emit(
           "update:model-value",
           new Date(
-            new Date(this.min).setHours(
+            new Date(this.min || this.max || result).setHours(
               result.getHours(),
               result.getMinutes(),
               result.getSeconds(),
@@ -247,9 +251,25 @@ export default class DateTimeInput extends Vue {
         };
       });
   }
+  get defaultYearMonth() {
+    if (date.isBetweenDates(this.defaultMonth, this.min || this.defaultMonth, this.max || this.defaultMonth, {
+      inclusiveTo: true,
+      inclusiveFrom: true,
+      onlyDate: true
+    })) {
+      return this.formatMonth(this.defaultMonth);
+    } else {
+      return this.formatMonth(this.min || this.max);
+    }
+  }
 
   dateOptions(value: string) {
-    return !this.min || value >= date.formatDate(this.min, "YYYY/MM/DD");
+    return (!this.min || value >= date.formatDate(this.min, "YYYY/MM/DD"))
+      && (!this.max || value <= date.formatDate(this.max, "YYYY/MM/DD"));
+  }
+
+  formatMonth(value?: Date) {
+    return value ? date.formatDate(value, "YYYY/MM") : undefined;
   }
 
   onInputDate(value: string) {

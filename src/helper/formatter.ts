@@ -14,3 +14,7 @@ export function formatFileSize(value: number, locale?: string) {
   const formatter = new Intl.NumberFormat(locale, unit);
   return formatter.format(value);
 };
+
+export function capitalize(value: string) {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+}

@@ -17,6 +17,11 @@ try {
 // eslint-disable-next-line no-empty
 } catch { }
 
+// workaround for Chromium to use /tmp instead of /dev/shm to avoid crashes due to shared memory limitations
+if (process.platform === "linux") {
+  app.commandLine.appendSwitch("disable-dev-shm-usage");
+}
+
 const urlScheme = process.env.URL_SCHEME;
 
 // register custom url scheme

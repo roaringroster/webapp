@@ -12,16 +12,11 @@ import { i18n } from "src/boot/i18n";
 import { getCaseSensitiveUsername, LocalAccount, PartialLocalAccount, useAccount } from "src/api/local2";
 import { promiseForErrorHandling } from "src/helper/utils";
 
-// import { useAPI } from "src/api";
 import { HasDocumentId } from "src/models/base";
 import { Member, createMember } from "src/models/user";
 import { createOrganization, Organization } from "src/models/organization";
 import { createTeam, Team } from "src/models/team";
 import Dexie from "dexie";
-// import { createContact } from "src/models/contact";
-// import { createWorkAgreements } from "src/models/workAgreements";
-// import { createAvailabilityList } from "src/models/availability";
-// import { createAbsenceList } from "src/models/absence";
 
 const { t } = i18n;
 
@@ -46,6 +41,7 @@ export async function registerOrganization(account: LocalAccount, name: string, 
   const keys = await getServerKeys(websocketServer);
   const authTeam = await Auth.createTeam(name, { device, user });
   const shareId = getShareId(authTeam);
+
   const organization = { shareId, websocketServer };
   const { hostname } = new URL(`http://${websocketServer}`);
   authTeam.addServer({ host: hostname, keys });
@@ -147,7 +143,7 @@ async function initializeAuthRepo(account: PartialLocalAccount, server: string) 
 
   const storage = new IndexedDBStorageAdapter(dbName);
   const auth = new AuthProvider({ user, device, storage, server });
-  
+
   const httpProtocol = window.location.protocol;
   const wsProtocol = httpProtocol == "http:"
     ? "ws:"
@@ -337,9 +333,7 @@ export async function deleteStorage(username: string) {
 }
 
 export function getOrganization() {
-  // console.log("getOrganization", currentAccount.value, currentAccount.value?.activeOrganization);
   if (currentAccount.value?.activeOrganization) {
-    // console.log("1", authRepo, authRepo?.auth.getTeam(currentAccount.value?.activeOrganization));
     return authRepo?.auth.getTeam(currentAccount.value?.activeOrganization) || null;
   } else {
     return null;
@@ -404,10 +398,11 @@ export function removeDocument(id: DocumentId, team: Auth.Team) {
   authRepo?.repo.delete(id);
 }
 
-type Handle<T> = {
+export type Handle<T> = {
   doc: Ref<A.Doc<T> | null>;
   docId: DocumentId
   cleanup: () => void;
+  changeDoc: (changeFn: ChangeFn<T>, options?: ChangeOptions<T>) => void;
   handle: DocHandle<T>;
 };
 
@@ -509,6 +504,13 @@ export function getDocumentsWhenReady<T>(handlesRef: Ref<Handle<T>[]>) {
   return documents;
 }
 
+export function mapById<T>(docList: (T & HasDocumentId)[]) {
+  return docList.reduce((result, doc) => {
+    result[doc.id] = doc;
+    return result;
+  }, {} as Record<DocumentId, T & HasDocumentId>)
+}
+
 
 export function useChangeHistory<T>(source: WatchSource<A.Doc<T> | null>, title: string) {
   const changeHistoryStore = useChangeHistoryStore();
@@ -539,12 +541,11 @@ export function useOrganizationDocument() {
   return handle;
 }
 
-// const api = useAPI();
+
 const { getAccountRef } = useAccount();
 const currentAccount = getAccountRef();
 
 export function changeOptions(
-  // userId = api.username || "",
   userId = currentAccount.value?.user.userId || "",
   time = Math.floor(Date.now() / 1000)
 ) {

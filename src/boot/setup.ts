@@ -1,6 +1,9 @@
 import { defineBoot } from "#q-app/wrappers";
 import { Platform, colors, getCssVar, setCssVar } from "quasar";
 
+// cordova-plugin-file overwrites native implementations, so we keep our own reference
+import "src/models/file";
+
 // Workaround to claim the whole screen space to prevent a 20px gap at the bottom,
 // which only occurs when the value of StatusBarOverlaysWebView is set to true.
 if (Platform.is.cordova && Platform.is.ios) {

@@ -10,7 +10,7 @@
     :clickable="!!item.action"
     @click="onClick"
   >
-    <div :class="['labeled-item-container col text-black', compactLayout ? 'column' : 'row']">
+    <div :class="['labeled-item-container col text-black', compactLayout ? 'column' : 'row', containerClass]">
       <q-item-label 
         caption 
         :class="[
@@ -29,7 +29,15 @@
             item.action ? 'text-primary' : '',
             !$q.platform.is.mobile && !item.action ? 'selectable' : 'non-selectable',
           ]"
-        >{{ item.value }}</q-item-label>
+        >
+          {{ item.value }}
+          <warning-with-tooltip 
+            v-if="item.warning"
+            :tooltip="item.warning"
+            class="inline-block q-ml-xs"
+            width="280px"
+          />
+        </q-item-label>
         <div 
           v-if="item.action"
           class="show-on-hover row q-gutter-sm"
@@ -91,6 +99,9 @@
       margin-top: -2em
   &.q-hoverable > .q-focus-helper
     display: none
+  &.dense
+    min-height: 20px,
+    padding: 0,
 .no-touch .labeled-item
   .show-on-hover
     display: flex
@@ -135,24 +146,30 @@ import { onLongPress } from "src/helper/utils";
 import { notifySuccess } from "src/helper/notify";
 import { copyText } from "src/helper/clipboard";
 import { i18n } from "src/boot/i18n";
+import WarningWithTooltip from "src/components/WarningWithTooltip.vue";
 
 export type LabeledItemType = {
   label: string; 
   value: string; 
   icon?: string; 
   classes?: string; 
+  warning?: string;
   action?: () => void;
 };
 
-const { d, n } = i18n;
+const { d, n, t } = i18n;
 
 
 export function stringToItem(
   label: string, 
-  getValue: () => string | null | undefined
+  getValue: () => string | null | undefined,
+  action?: () => void,
+  icon?: string,
 ): LabeledItemType[] {
-  if (getValue()) {
-    return [{ label, value: getValue() || "" }]
+  const value = getValue();
+
+  if (value) {
+    return [{ label, value, icon, action }]
   } else {
     return [];
   }
@@ -163,8 +180,10 @@ export function dateToItem(
   getValue: () => Date | null | undefined, 
   dateFormat: string
 ): LabeledItemType[] {
-  if (getValue() != null) {
-    return [{ label, value: d(getValue() || 0, dateFormat) }]
+  const value = getValue();
+  
+  if (value != null) {
+    return [{ label, value: d(value, dateFormat) }]
   } else {
     return [];
   }
@@ -175,8 +194,24 @@ export function numberToItem(
   getValue: () => number | null | undefined, 
   numberFormat = ""
 ): LabeledItemType[] {
-  if (getValue() != null) {
-    return [{ label, value: n(getValue() || 0, numberFormat) }]
+  const value = getValue();
+  
+  if (value != null) {
+    return [{ label, value: n(value, numberFormat) }]
+  } else {
+    return [];
+  }
+}
+
+export function booleanToItem(
+  label: string, 
+  getValue: () => boolean | null | undefined, 
+  hideIfFalse = false,
+): LabeledItemType[] {
+  const value = getValue();
+  
+  if (value != null && (!hideIfFalse || value)) {
+    return [{ label, value: value ? t("yes") : t("no") }]
   } else {
     return [];
   }
@@ -184,10 +219,14 @@ export function numberToItem(
 
 export function stringArrayToItem(
   label: string, 
-  getValue: () => string[] | undefined
+  getValue: () => string[] | undefined,
+  action?: () => void,
+  icon?: string,
 ): LabeledItemType[] {
-  if (getValue()?.length) {
-    return [{ label, value: (getValue() || []).join(",\n") }]
+  const value = getValue();
+  
+  if (value?.length) {
+    return [{ label, value: value.join(",\n"), icon, action }]
   } else {
     return [];
   }
@@ -195,10 +234,15 @@ export function stringArrayToItem(
 
 const delay = 500;
 
-@Component
+@Component({
+  components: {
+    WarningWithTooltip
+  }
+})
 export default class LabeledItem extends Vue {
   @Prop({ type: Object, required: true}) readonly item!: LabeledItemType;
   @Prop({ type: Boolean }) readonly compactLayout!: boolean;
+  @Prop({ type: String, default: "" }) readonly containerClass!: string;
   @Prop({ type: String, default: "col-4" }) readonly labelClass!: string;
   @Prop({ type: String, default: "col-8" }) readonly valueClass!: string;
 

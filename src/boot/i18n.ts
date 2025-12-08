@@ -4,15 +4,14 @@ import { Quasar } from "quasar";
 import { DateTime } from "luxon";
 import { WritableComputedRef } from "vue";
 import messages from "../i18n";
-import { matchLocale } from "src/helper/locale";
-import { formatFileSize } from "src/helper/formatter";
+import { matchLocale } from "../helper/locale";
+import { formatFileSize } from "../helper/formatter";
 
 export type MessageLanguages = keyof typeof messages;
 // Type-define 'en-US' as the master schema for the resource
 export type MessageSchema = typeof messages["en-US"];
 
 // See https://vue-i18n.intlify.dev/guide/advanced/typescript.html#global-resource-schema-type-definition
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 declare module "vue-i18n" {
   // define the locale messages schema
   export interface DefineLocaleMessage extends MessageSchema {}
@@ -23,7 +22,6 @@ declare module "vue-i18n" {
   // define the number format schema
   export interface DefineNumberFormat {}
 }
-/* eslint-enable @typescript-eslint/no-empty-object-type */
 
 export async function loadLangPack(locale: string) {
     try {
@@ -72,11 +70,33 @@ export function fileSize(value: number) {
 };
 
 const defaultDateTimeFormats: Record<string, Intl.DateTimeFormatOptions> = {
+  "Date": { // 11.04.2012
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  },
   "DateShort": DateTime.DATE_SHORT, // 11.4.2012
   "DateMed": DateTime.DATE_MED, // 11. Apr 2012
   "DateFull": DateTime.DATE_FULL, // 11. April 2012
   "DateHuge": DateTime.DATE_HUGE, // Mittwoch, 11. April 2012
+  "DateMonthYear": {
+    month: "long",
+    year: "numeric",
+  },
+  "DateTime": { // 11.04.2021, 21:15
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  },
   "DateTimeShort": DateTime.DATETIME_SHORT, // 11.4.2021, 21:15
+  "DayMonthNumericTime": { // 11.4. 21:15
+    day: "numeric",
+    month: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  },
   "DateTimeMed": DateTime.DATETIME_MED, // 11. Apr 2021, 21:15
   "DateTimeShortSeconds": DateTime.DATETIME_SHORT_WITH_SECONDS, // 11.4.2021, 21:15:42
   "WeekdayLong": { // Mittwoch
@@ -116,14 +136,17 @@ const defaultNumberFormats: Record<string, Intl.NumberFormatOptions> = {
   "Percent": {
     style: "percent"
   },
+  "NoGrouping": {
+    style: "decimal", 
+    useGrouping: false
+  },
   "Currency": {
     style: "decimal", 
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   },
-  "CurrencyNoGrouping": {
+  "CurrencyInput": {
     style: "decimal", 
-    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     useGrouping: false
   }
@@ -175,9 +198,12 @@ const i18nGlobal = i18n.global;
 
 const tv = (value: string) => i18nGlobal.te(value) ? i18nGlobal.t(value) : value;
 
+const lc = (...values: string[]) => 
+  (new Intl.ListFormat(locale.value, { style: "long", type: "conjunction" })).format(values);
+
 export default defineBoot(({ app }) => {
   // Set i18n instance on app
   app.use(i18n);
 });
 
-export { locale, i18nGlobal as i18n, tv };
+export { locale, i18nGlobal as i18n, tv, lc };

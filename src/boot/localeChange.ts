@@ -3,7 +3,6 @@ import { getDefaultLocale, loadLangPack, locale } from "./i18n";
 import { bus } from "./eventBus";
 import { useAccountStore } from "src/stores/accountStore";
 
-
 export default defineBoot(() => {
   const accountStore = useAccountStore();
 

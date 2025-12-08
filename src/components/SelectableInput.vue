@@ -3,7 +3,7 @@
     :model-value="value"
     :label="label"
     :options="filteredOptions"
-    map-options
+    :map-options="mapOptions"
     emit-value
     :behavior="behavior"
     :dense="dense"
@@ -14,8 +14,10 @@
     fill-input
     input-debounce="0"
     :clearable="clearable"
-    :hide-dropdown-icon="hideDropdownIcon"
-    :hint="hint"
+    :hide-dropdown-icon="hideDropdownIcon || readOnly"
+    :readonly="readOnly"
+    :borderless="readOnly"
+    :bottom-slots="!!hint"
     @update:model-value="$emit('update:model-value', $event || '')"
     @input-value="inputValue = $event;"
     @keydown.enter.tab="selectInputValue"
@@ -29,7 +31,19 @@
     <template v-slot:option="scope">
       <q-item
         v-bind="scope.itemProps"
+        :disable="scope.opt.disable"
       >
+        <q-item-section
+          v-if="scope.opt.icon"
+          side
+          class="q-pr-xs"
+        >
+          <q-icon
+            :name="scope.opt.icon"
+            color="text-grey-10"
+            size="xs"
+          />
+        </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
           <q-item-label
@@ -38,6 +52,24 @@
           >{{ scope.opt.description }}</q-item-label>
         </q-item-section>
       </q-item>
+    </template>
+    <template v-slot:hint>
+      <q-item-label 
+        :lines="hintLines"
+        style="line-height: 1em !important"
+      >{{ hint }}</q-item-label>
+    </template>
+    <template v-if="$slots.prepend" v-slot:prepend>
+      <slot name="prepend" />
+    </template>
+    <template v-if="$slots.append" v-slot:append>
+      <slot name="append" />
+    </template>
+    <template v-if="$slots.before" v-slot:before>
+      <slot name="before" />
+    </template>
+    <template v-if="$slots.after" v-slot:after>
+      <slot name="after" />
     </template>
   </q-select>
 </template>
@@ -49,15 +81,16 @@ import { selectBehavior } from "src/helper/utils";
 
 type SelectableInputOptions = {
   label: string;
-  value: string;
+  value: any;
   description?: string;
+  disable?: boolean;
 }
 
 @Component({
   emits: ["update:model-value", "new-value"]
 })
 export default class SelectableInput extends Vue {
-  @Model({ type: String, default: "" }) readonly value!: string;
+  @Model() readonly value!: any;
   @Prop({ type: String, default: "" }) readonly label!: string;
   @Prop({ type: Array, default: () => [] }) readonly options!: SelectableInputOptions[];
   @Prop({ type: Boolean }) readonly dense!: boolean;
@@ -65,7 +98,10 @@ export default class SelectableInput extends Vue {
   @Prop({ type: Boolean }) readonly clearable!: boolean;
   @Prop({ type: Boolean }) readonly hideDropdownIcon!: boolean;
   @Prop({ type: Boolean }) readonly noNewValue!: boolean;
+  @Prop({ type: Boolean, default: true }) readonly mapOptions!: boolean;
   @Prop({ type: String }) readonly hint?: string;
+  @Prop({ type: Number, default: 0 }) readonly hintLines!: number;
+  @Prop({ type: Boolean }) readonly readOnly!: boolean;
   @Ref() readonly select!: QSelect;
 
   filteredOptions: SelectableInputOptions[] = [];
@@ -116,6 +152,9 @@ export default class SelectableInput extends Vue {
         [item.label, item.description || ""].join(" ").toLocaleLowerCase().indexOf(needle) > -1
       );
     })
+  }
+  blur() {
+    this.select.blur();
   }
   mounted() {
     // if filteredOptions is not initialized with the list of options, 

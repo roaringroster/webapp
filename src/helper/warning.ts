@@ -25,3 +25,25 @@ export function showWarning(message: string, title?: string) {
         persistent: true
     });
 }
+
+export function confirmDeletionWarning(message?: string, title?: string) {
+    const { t } = i18n;
+
+    return Dialog.create({
+        title: title || t("confirmDeletionTitle"),
+        message,
+        persistent: true,
+        ok: {
+          label: t("delete"),
+          rounded: true,
+          flat: true,
+          noCaps: true,
+          color: "negative"
+        },
+        cancel: {
+          rounded: true,
+          flat: true,
+          noCaps: true
+        }
+    });
+}

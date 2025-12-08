@@ -159,9 +159,10 @@ function readEnv(defaultEnvironment = "production") {
  * If this function is called in a context where an eviornment variable `DRYRUN=true` is set,
  * it will log the command instead of executing it.
  * @param {string} command The command to run.
+ * @param {ExecSyncOptions} options options passed to the process
  * @returns The stdout from the command.
  */
-function runCommand(command) {
+function runCommand(command, options) {
   if (!command) {
     throw new Error("command is not defined");
   }
@@ -169,7 +170,7 @@ function runCommand(command) {
   if (process.env.DRYRUN == "true") {
     return console.log(command);
   } else {
-    return execSync(command, { stdio: "inherit" });
+    return execSync(command, { stdio: "inherit", encoding: "utf-8", ...options });
   }
 }
 

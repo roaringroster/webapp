@@ -99,7 +99,10 @@
           :key="contentIndex"
           class="q-pb-sm"
         >
-          <span class="text-weight-medium">{{ contentItem.label }}:</span> {{ contentItem.value }}
+          <simplified-markdown
+            :text="`**${contentItem.label}**: ${contentItem.value}`"
+            class="half-line-paragraph-spacing"
+          />
         </li>
       </ul>
     </div>
@@ -108,6 +111,7 @@
 
 <script setup lang="ts">
 import { PropType } from "vue";
+import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 
 export type FormattedDependency = {
   label: string;

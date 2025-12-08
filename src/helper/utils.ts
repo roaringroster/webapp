@@ -37,6 +37,22 @@ export const incrementalName = (name: string, existingNames: string[] = []) => {
     return incrementedName;
 }
 
+export const debounce = <T, U extends (...args: any[]) => Promise<T>>(context: any, method: U, ms: number) => {
+    let handle: number | undefined;
+    const resolves: ((value: T) => void)[] = [];
+
+    return ((...args: any[]) => {
+        clearTimeout(handle);
+        handle = window.setTimeout(() => {
+            handle = undefined;
+            void method.apply(context, args)
+                .then(result => resolves.forEach(resolve => resolve(result)));
+        }, ms);
+
+        return new Promise((resolve: (value: T) => void) => resolves.push(resolve));
+    }) as U;
+};
+
 export function sanitizeHTML(html: string) {
   return DOMPurify.sanitize(html);
 }
@@ -105,4 +121,71 @@ export function onLongPress(
   }
 }
 
+export function isObject(item: any) {
+  return (item && typeof item === "object" && !Array.isArray(item));
+}
+
+/**
+ * Deep merge two objects.
+ * Mutates the arguments and will lead to infinite recursion on circular references.
+ * Source: https://stackoverflow.com/a/34749873
+ * @param target
+ * @param ...sources
+ * @return object merged from arguments
+ */
+export function mergeDeep<T>(target: any = {}, ...sources: T[]): T {
+  if (!sources.length) {
+    return target;
+  }
+
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        mergeDeep(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
+};
+
+export function equalArrayBuffer(a: ArrayBuffer, b: ArrayBuffer) {
+  if (a.byteLength != b.byteLength) return false;
+  const dv1 = new Int8Array(a);
+  const dv2 = new Int8Array(b);
+  for (let i = 0 ; i != a.byteLength ; i++)
+  {
+      if (dv1[i] != dv2[i]) return false;
+  }
+  return true;
+}
+
+export function jsonDateReviver(key: any, value: any) {
+  if (typeof value == "string" && dateRegexp.test(value)) {
+    return new Date(value);
+  } else {
+    return value;
+  }
+}
+
+const dateRegexp = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/;
+
 export const InvitationCodeLength = 29;
+
+export function openWindow(
+  url: string, 
+  target = Platform.is.electron || Platform.is.cordova
+    ? "_blank"
+    : "_self"
+) {
+  const win = window.open(url, target);
+
+  if (win) {
+    win.opener = null;
+  }
+}

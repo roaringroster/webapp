@@ -157,6 +157,7 @@ const emit = defineEmits([
 ]);
 
 const { dialogRef } = useDialogPluginComponent();
+const editingSheetRef = dialogRef as Ref<InstanceType<typeof EditingSheet> | undefined>;
 
 const splitterModel = ref(50);
 const selectedRows: Ref<Row[]> = ref([]);
@@ -169,7 +170,7 @@ watch(
     const hash = newValue[0]?.hash;
     const index = changes.value.findIndex(item => item.change.hash == hash);
     const item = changes.value[index];
-    const current = structuredClone(item.snapshot || {});
+    const current = structuredClone(item?.snapshot || {});
     // const previous = structuredClone(this.changes[index + 1]?.snapshot || {});
     // const previous = this.changes[index + 1];
     console.dir(item);
@@ -295,7 +296,7 @@ function onDone () {
     // ToDo: apply changes in this.modifications;
   }
 
-  (dialogRef.value as unknown as EditingSheet)?.confirm();
+  editingSheetRef.value?.confirm();
   emit("ok");
 };
 

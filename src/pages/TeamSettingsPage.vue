@@ -199,6 +199,7 @@ import { debounce, alwaysString } from "src/helper/input";
 import { incrementalName, selectBehavior } from "src/helper/utils";
 import { isDemo } from "src/helper/appInfo";
 import { didExpire } from "src/helper/expiration";
+import { confirmDeletionWarning } from "src/helper/warning";
 import { deleteItems, HasDocumentId } from "src/models/base";
 import { createTeam } from "src/models/team";
 import { Contact, getUsername, ContactProps } from "src/models/contact";
@@ -444,23 +445,8 @@ function deleteTeam() {
         ...infoDialog
       });
     } else {
-      $q.dialog({
-        title: t("confirmDeletionTitle"),
-        message: t("confirmTeamDeletionMessage", {name: team.name}),
-        persistent: true,
-        ok: {
-          label: t("delete"),
-          rounded: true,
-          flat: true,
-          noCaps: true,
-          color: "negative"
-        },
-        cancel: {
-          rounded: true,
-          flat: true,
-          noCaps: true
-        }
-      }).onOk(() => {
+      confirmDeletionWarning(t("confirmTeamDeletionMessage", {name: team.name}))
+      .onOk(() => {
         if (accountStore.authTeam) {
           accountStore.organizationHandle?.changeDoc(doc => {
             deleteItems(doc.teams, id => id == team.id);

@@ -19,15 +19,18 @@ export const floatOrNull = (value: string | number | null) => {
   }
 }
 
+export const positiveOrNull = (value: number | null) =>
+  value != null
+    ? Math.abs(value)
+    : value;
+
 export const notNull = (value: number | null, fallback: number) =>
   value === null
     ? fallback
     : value;
 
-export const positive = (value: number | null) =>
-  value != null
-    ? Math.abs(value)
-    : value;
+export const positive = (value: number) =>
+  Math.abs(value);
 
 export const alwaysFloat = (value: string | number | null, fallback: number) =>
   notNull(floatOrNull(value), fallback);

@@ -12,8 +12,12 @@ export const createBase = (schema = 1) => ({
   schema,
 } as BaseType);
 
-export function equals(a: any, b: any) {
-  return is.deepEqual(unproxify(a), unproxify(b));
+export function equals(a: any, b: any, removeNull = false) {
+  if (!removeNull) {
+    return is.deepEqual(unproxify(a), unproxify(b));
+  } else {
+    return is.deepEqual(unproxifyRemoveNull(a), unproxifyRemoveNull(b));
+  }
 }
 
 export function unproxify<T>(value: T): T {
@@ -29,6 +33,28 @@ export function unproxify<T>(value: T): T {
     return Object.fromEntries(
       Object.entries(Object.assign({}, value))
         .map(([ key, value ]) => [key, unproxify(value)])
+    ) as T;
+  }
+
+  return value;
+}
+
+export function unproxifyRemoveNull<T>(value: T): T {
+  if (value instanceof Array) {
+    return value.map(unproxifyRemoveNull) as T;
+  }
+
+  if (value instanceof Date) {
+    return new Date(value) as T;
+  }
+
+  if (value instanceof Object) {
+    return Object.fromEntries(
+      Object.entries(Object.assign({}, value))
+        .flatMap(([ key, value ]) => value != null
+          ? [[key, unproxifyRemoveNull(value)]]
+          : []
+        )
     ) as T;
   }
 
@@ -59,6 +85,7 @@ export function automergeClone<T>(object: T): T {
   return structuredClone(unproxify(object));
 }
 
+/// does not delete non-existing keys on first level, but on deeper levels while merging
 export function deepMerge<T extends object>(
   target: T, 
   changes: Partial<T>,
@@ -68,14 +95,14 @@ export function deepMerge<T extends object>(
     .reduce((result, [k, value]: [any, any]) => {
       const key = k as keyof T;
 
-      if (!equals(result[key], value)) {
+      if (!equals(result[key], value, true)) {
         // console.log("merging", [...path, key].join("."), value, ">", result[key]);
         if (typeof value === "object" && value != null && result[key] != undefined) {
           if (Array.isArray(value)) {
             deepMerge(result[key] || [], value as any, [...path, key]);
             // delete missing
             (result[key] as any[]).splice(value.length);
-          } else if (value.constructor.name == "Date") {
+          } else if (value instanceof Date) {
             result[key] = new Date(value) as T[keyof T];
           } else {
             deepMerge(result[key] || {}, value, [...path, key]);
@@ -88,6 +115,30 @@ export function deepMerge<T extends object>(
           }
         } else {
           result[key] = value;
+        }
+      }
+
+      return result;
+    }, target);
+}
+
+export function testDeepMerge<T extends object>(
+  target: T, 
+  changes: Partial<T>,
+  path: Array<string | number | symbol> = []
+) {
+  return Object.entries(toRaw(changes || {}))
+    .reduce((result, [k, value]: [any, any]) => {
+      const key = k as keyof T;
+
+      if (!equals(result[key], value, true)) {
+        console.log("merging", [...path, key].join("."), value, ">", result[key]);
+        if (typeof value === "object" && value != null && result[key] != undefined) {
+          if (Array.isArray(value)) {
+            testDeepMerge(result[key] || [], value as any, [...path, key]);
+          } else if (!(value instanceof Date)) {
+            testDeepMerge(result[key] || {}, value, [...path, key]);
+          }
         }
       }
 

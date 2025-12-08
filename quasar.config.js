@@ -482,8 +482,14 @@ export default defineConfig(function (ctx) {
           perMachine: true,
         },
         linux: {
-          target: [],
+          target: [{
+            target: "AppImage",
+            arch: ["x64", "arm64"]
+          }],
           category: "Office",
+          icon: "src-electron/icons/icon.icns",
+          artifactName: "${productName}-${version}-${arch}-linux.${ext}"
+
         },
         snap: {
           publish: {

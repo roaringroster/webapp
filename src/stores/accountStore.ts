@@ -5,9 +5,12 @@ import { DocHandle, DocumentId } from "@automerge/automerge-repo";
 import { Team as AuthTeam } from "@localfirst/auth";
 import { useAccount } from "src/api/local2";
 import { cleanupAll, getOrganization, getHandles, useDocument, useOrganizationDocument } from "src/api/repo";
+import { migrateSchemas } from "src/helper/schemaMigration";
 import { Contact, getUsername } from "src/models/contact";
 import { Team } from "src/models/team";
 import { Organization } from "src/models/organization";
+import { CustomFieldListType, customValue, updateOrAddCustomField } from "src/models/generic";
+import { deepMerge } from "src/models/base";
 
 const { getAccountRef, updateAccount, updateDeviceSettings } = useAccount();
 
@@ -22,9 +25,10 @@ export type StoredHandle<T> = {
 export const useAccountStore = defineStore("account", () => {
   const account = getAccountRef();
   const authTeam: Ref<AuthTeam | null> = ref(null);
+  const isOrganizationAdmin = ref(false);
+
   const organizationHandle: Ref<StoredHandle<Organization> | null> = ref(null);
   const memberContactHandle: Ref<StoredHandle<Contact> | null> = ref(null);
-  const isOrganizationAdmin = ref(false);
 
   const userId = computed(() => account.value?.user.userId || "");
   const userName = computed(() => account.value?.user.userName || "");
@@ -85,6 +89,7 @@ export const useAccountStore = defineStore("account", () => {
   }
 
   async function login() {
+    await migrateSchemas();
     authTeam.value = getOrganization();
     toRaw(authTeam.value)?.on("updated", onTeamUpdated);
     onTeamUpdated();
@@ -108,6 +113,46 @@ export const useAccountStore = defineStore("account", () => {
     cleanupAll(teamHandles.value);
     teamHandles.value = [];
   }
+  
+  function equalsDefaultValues(doc: CustomFieldListType | null | undefined, values: Record<string, any>) {
+    const map = customValue<Record<string, any>>(doc || undefined, "defaultValues") || {};
+    return Object.entries(values).find(([key, value]) => map[key] != value) == undefined;
+  }
+  
+  function setDefaultValues(doc: CustomFieldListType, values: Record<string, any>) {
+    const map = customValue<Record<string, any>>(doc, "defaultValues") || {};
+    deepMerge(map, values);
+    updateOrAddCustomField(doc, "defaultValues", map);
+  }
+
+  function getDefaultValue<T>(doc: CustomFieldListType | null | undefined, label: string) {
+    const map = customValue<Record<string, T>>(doc || undefined, "defaultValues") || {};
+    return map[label];
+  }
+
+  function getLocalDefaultValue<T>(label: string) {
+    return getDefaultValue<T>(account.value?.settings, label);
+  }
+
+  async function updateLocalDefaultValues(values: Record<string, any>) {
+    if (!equalsDefaultValues(account.value?.settings, values)) {
+      await updateDeviceSettings(doc => {
+        setDefaultValues(doc, values);
+      })
+    }
+  }
+
+  // function getUserDefaultValue<T>(label: string) {
+  //   return getDefaultValue<T>(memberSettings.value, label);
+  // }
+
+  // function updateUserDefaultValues(values: Record<string, any>) {
+  //   if (!equalsDefaultValues(memberSettings.value, values)) {
+  //     memberSettingsHandle.value?.changeDoc(doc => {
+  //       setDefaultValues(doc, values);
+  //     })
+  //   }
+  // }
 
   return {
     account,
@@ -133,5 +178,7 @@ export const useAccountStore = defineStore("account", () => {
     logout,
     updateAccount,
     updateDeviceSettings,
+    getLocalDefaultValue,
+    updateLocalDefaultValues,
   }
 });

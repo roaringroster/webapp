@@ -183,12 +183,12 @@ function hasPendingChanges() {
 }
 
 function onDone() {
-  (dialogRef.value as unknown as EditingSheet)?.confirm();
+  editingSheetRef.value?.confirm();
   emit("ok", shift.value);
 }
 
 function onDelete() {
-  (dialogRef.value as unknown as EditingSheet)?.confirm();
+  editingSheetRef.value?.confirm();
   emit("ok", undefined);
 }
 
@@ -197,5 +197,6 @@ const emit = defineEmits([
 ]);
 
 const { dialogRef } = useDialogPluginComponent();
+const editingSheetRef = dialogRef as Ref<InstanceType<typeof EditingSheet> | undefined>;
 
 </script>

@@ -70,7 +70,7 @@
 </style>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, Ref, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useDialogPluginComponent } from "quasar";
 import { locale } from "src/boot/i18n";
@@ -115,7 +115,7 @@ const maxUsesDisplayValue = computed({
 })
 
 function onDone() {
-  (dialogRef.value as unknown as EditingSheet)?.confirm();
+  editingSheetRef.value?.confirm();
   const nowOrNever = expirationSelect.value
     ? Date.now()
     : 0;
@@ -129,5 +129,6 @@ const emit = defineEmits([
 ]);
 
 const { dialogRef } = useDialogPluginComponent();
+const editingSheetRef = dialogRef as Ref<InstanceType<typeof EditingSheet> | undefined>;
 
 </script>

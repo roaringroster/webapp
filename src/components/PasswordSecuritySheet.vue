@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { Ref, ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import EditingSheet from "src/components/EditingSheet.vue";
 import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
@@ -45,11 +45,12 @@ const emit = defineEmits([
 ]);
 
 const { dialogRef } = useDialogPluginComponent();
+const editingSheetRef = dialogRef as Ref<InstanceType<typeof EditingSheet> | undefined>;
 
 const confirmed = ref(false);
 
 function onDone() {
-  (dialogRef.value as unknown as EditingSheet)?.confirm();
+  editingSheetRef.value?.confirm();
   emit("ok");
 }
 

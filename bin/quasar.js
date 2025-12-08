@@ -87,7 +87,7 @@ exitOnError(() => {
     throw new Error(`Missing required env variable DOWNLOAD_DIRECTORY for publishing product "${product}".`);
   }
 
-  if (!!publish && !env.CLEAR_DOWNLOAD_DIRECTORY && product == "app") {
+  if (!!publish && !env.CLEAR_DOWNLOAD_DIRECTORY && ["mac", "win", "linux", "electron", "app"].includes(product)) {
       throw new Error(`Missing required env variable CLEAR_DOWNLOAD_DIRECTORY for publishing product "${product}".`);
   }
 
@@ -205,7 +205,27 @@ exitOnError(() => {
     runCommand(`VERSION=${version} npm run set:version`);
   }
 
-  quasarCommands(mode, product, env.QENV, additionalVariables).forEach(runCommand);
+  const options = {
+    env: {
+      ...process.env,
+    }
+  };
+  const optionsIOS = {
+    env: {
+      ...process.env,
+      /* The iOS build process on macOS 15 or later requires the system's openrsync, 
+        otherwise it would fail with "error: exportArchive Copy failed".
+        Therefore we filter the PATH variable and pass it to the quasar commands,
+        so the process does not use rsync installations via homebrew. 
+        Nevertheless, we need rsync via homebrew for deployment later,
+        because openrsync has no --chown option, and the Android build process needs
+        gradle via homebrew. */
+      "PATH": process.env.PATH?.replace(/\/opt\/homebrew\/bin:/g, ""),
+    }
+  };
+
+  quasarCommands(mode, product, env.QENV, additionalVariables)
+    .forEach(cmd => runCommand(cmd, cmd.includes("cordova -T ios") ? optionsIOS : options));
 
   // == device mode only: transmit build to connected device ==
 
@@ -239,16 +259,27 @@ exitOnError(() => {
       filesToUpload.push("dist/electron/Packaged/{latest.yml,*.exe,*.exe.blockmap}");
     }
     if (["linux", "electron", "app"].includes(product)) {
-      // not supported yet
-      // filesToUpload.push("dist/electron/Packaged/{latest-linux.yml,*.AppImage,*.snap}");
+      filesToUpload.push("dist/electron/Packaged/{latest-linux*.yml,*.AppImage}");
     }
 
     if (isWeb) {
       runCommand("if [ -f dist/spa/*.jsonc ]; then rm dist/spa/*.jsonc; fi");
     }
 
-    if (product == "app" && !!env.CLEAR_DOWNLOAD_DIRECTORY) {
-      runCommand(env.CLEAR_DOWNLOAD_DIRECTORY);
+    if (env.CLEAR_DOWNLOAD_DIRECTORY) {
+      try {
+        if (["mac", "electron", "app"].includes(product)) {
+          runCommand(env.CLEAR_DOWNLOAD_DIRECTORY + "{*mac.zip,*mac.zip.blockmap}");
+        }
+        if (["win", "electron", "app"].includes(product)) {
+          runCommand(env.CLEAR_DOWNLOAD_DIRECTORY + "{*.exe,*.exe.blockmap}");
+        }
+        if (["linux", "electron", "app"].includes(product)) {
+          runCommand(env.CLEAR_DOWNLOAD_DIRECTORY + "{*.AppImage}");
+        }
+      } catch (error) {
+        console.error("error while cleaning download directory:", error.message, "\n");
+      }
     }
 
     if (filesToUpload.length > 0 && !!env.UPLOAD_FILES) {

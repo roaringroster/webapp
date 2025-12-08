@@ -117,15 +117,14 @@
 import { ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { useQuasar } from "quasar";
 import { locale, errorMessage, errorToString } from "src/boot/i18n";
 import * as AppSettings from "src/database/AppSettings";
 import { selectBehavior } from "src/helper/utils";
+import { confirmDeletionWarning } from "src/helper/warning";
 import { useAPI } from "src/api";
 import { useRedirectStore } from "src/stores/redirectStore";
 import { didExpire } from "src/helper/expiration";
 
-const $q = useQuasar();
 const { t } = useI18n();
 const router = useRouter();
 const api = useAPI();
@@ -208,23 +207,8 @@ async function createAccount() {
 }
 
 function confirmDeleteAccount() {
-  $q.dialog({
-    title: t("confirmDeletionTitle"),
-    message: t("deleteAccountMessage", {username: username.value}),
-    persistent: true,
-    ok: {
-      label: t("Delete"),
-      rounded: true,
-      flat: true,
-      noCaps: true,
-      color: "negative",
-    },
-    cancel: {
-      rounded: true,
-      flat: true,
-      noCaps: true,
-    }
-  }).onOk(() => void deleteAccount());
+  confirmDeletionWarning(t("deleteAccountMessage", {username: username.value}))
+  .onOk(() => void deleteAccount());
 }
 
 async function deleteAccount() {

@@ -15,7 +15,7 @@
       :max-width="maxWidth"
       :anchor="(top || $q.platform.is.mobile ? 'top middle' : 'bottom middle')"
       :self="(top || $q.platform.is.mobile ? 'bottom middle' : 'top middle')"
-      class="text-center"
+      :class="tooltipClass"
       style="font-size: 0.8rem"
     >
       <simplified-markdown :text="tooltip" />
@@ -39,6 +39,7 @@ export default class TextWithTooltip extends Vue {
   @Prop({ type: String, default: ""}) readonly tooltip!: string;
   @Prop({ type: String, default: ""}) readonly width!: string;
   @Prop({ type: String, default: ""}) readonly iconClass!: string;
+  @Prop({ type: String, default: "text-center"}) readonly tooltipClass!: string;
   @Prop({ type: Boolean }) readonly top!: boolean;
   @Prop({ type: [Boolean, String, Object], default: true }) readonly target!: boolean | string | Element;
 

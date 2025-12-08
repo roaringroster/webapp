@@ -234,7 +234,7 @@ import { InvitationSeeds, useAccount } from "src/api/local2";
 import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganization, removeDocument } from "src/api/repo";
 import { didExpire } from "src/helper/expiration";
 import { InvitationCodeLength } from "src/helper/utils";
-import { HasDocumentId } from "src/models/base";
+import { deleteItems, HasDocumentId } from "src/models/base";
 import { Contact, ContactProps, getUsername } from "src/models/contact";
 import Signature from "src/components/Signature.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
@@ -463,18 +463,10 @@ function removeMember(authMember: AuthMember) {
 
     // remove userId from member and admin lists of all teams
     accountStore.allTeamHandles.forEach(({ doc, changeDoc }) => {
-      if (!!doc && (doc.members.includes(id) || doc.admins.includes(id))) {
+      if (doc && (doc.members.includes(id) || doc.admins.includes(id))) {
         changeDoc(team => {
-          const memberIndex = [...team.members].indexOf(id);
-          const adminIndex = [...team.admins].indexOf(id);
-
-          if (memberIndex >= 0) {
-            team.members.splice(memberIndex, 1);
-          }
-
-          if (adminIndex >= 0) {
-            team.admins.splice(adminIndex, 1);
-          }
+          deleteItems(team.members, item => item == id);
+          deleteItems(team.admins, item => item == id);
         })
       }
     });

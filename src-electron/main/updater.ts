@@ -1,6 +1,5 @@
-import { app, dialog, ipcMain, shell } from "electron"
+import { dialog, ipcMain, shell } from "electron"
 import electronUpdater from "electron-updater"
-import { execSync } from "child_process"
 import { setMenuItemEnabled } from "./menu"
 import { $i18n } from "./i18n"
 import { isMac } from "./helper"
@@ -18,13 +17,13 @@ import { formatFileSize } from "../../src/helper/formatter"
 const { autoUpdater } = electronUpdater;
 
 let wasInitiatedByUser = true;
+let hadMacWritePermissionError = false;
 
 export function setupUpdater() {
     autoUpdater.autoDownload = false;
 
     ipcMain.on("check-for-updates", (_, isInitiatedByUser: boolean) => {
-        wasInitiatedByUser = isInitiatedByUser;
-        void checkForUpdates();
+        void checkForUpdates(isInitiatedByUser);
     })
 }
 
@@ -38,6 +37,17 @@ autoUpdater.on("error", (error) => {
                 buttons: [$i18n.t("OK")],
                 defaultId: 0,
             })
+        } else if (isMac && error.message.includes("Cannot update while running on a read-only volume")) {
+            // prevent that the error message appears twice
+            if (!hadMacWritePermissionError) {
+                hadMacWritePermissionError = true;
+                void dialog.showMessageBox({
+                    title: $i18n.t("cannotUpdateInQuarantineTitle"),
+                    message: $i18n.t("moveAppToUpdateMessage"),
+                    buttons: [$i18n.t("ok")],
+                    defaultId: 0,
+                });
+            }
         } else {
             void dialog.showMessageBox({
                 type: "error",
@@ -52,6 +62,7 @@ autoUpdater.on("error", (error) => {
             })
         }
     }
+    
     setMenuItemEnabled("checkForUpdates", true);
     wasInitiatedByUser = true;
 })
@@ -113,23 +124,9 @@ autoUpdater.on("checking-for-update", () => undefined)
 
 autoUpdater.on("download-progress", () => undefined)
 
-export async function checkForUpdates() {
-    if (isMac) {
-        const result = execSync(`xattr ${app.getAppPath()}`, { encoding: "utf-8" });
-
-        if (result.includes("com.apple.quarantine")) {
-            await dialog.showMessageBox({
-                title: $i18n.t("cannotUpdateInQuarantineTitle"),
-                message: $i18n.t("moveAppToUpdateMessage"),
-                buttons: [$i18n.t("ok")],
-                defaultId: 0,
-            })
-        } else {
-            setMenuItemEnabled("checkForUpdates", false);
-            await autoUpdater.checkForUpdates();
-        }
-    } else {
-        setMenuItemEnabled("checkForUpdates", false);
-        await autoUpdater.checkForUpdates();
-    }
+export async function checkForUpdates(isInitiatedByUser = true) {
+    setMenuItemEnabled("checkForUpdates", false);
+    wasInitiatedByUser = isInitiatedByUser;
+    hadMacWritePermissionError = false;
+    await autoUpdater.checkForUpdates();
 }

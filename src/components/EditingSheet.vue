@@ -32,6 +32,10 @@
           class="q-px-sm"
           v-close-popup
         />
+        <slot
+          v-else-if="$slots.leftButtons"
+          name="leftButtons"
+        />
         <div
           v-else
           style="width: 32px"
@@ -196,7 +200,7 @@ class EditingSheet extends Vue {
   get visible() {
     return this.isVisible;
   }
-  set visible(value: boolean) {
+  set visible(value) {
     if (value || !this.hasPendingChanges()) {
       this.isVisible = value;
     } else {

@@ -106,7 +106,13 @@ export default defineConfigWithVueTs(
       "@typescript-eslint/no-unsafe-declaration-merging": "off",
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/prefer-promise-reject-errors": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
+      "@typescript-eslint/no-redundant-type-constituents": "off",
       "vue/no-use-v-if-with-v-for": "off",
+      "vue/multi-word-component-names": ["error", {
+        "ignores": ["de"]
+      }],
 
       // allow debugger during development only
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'

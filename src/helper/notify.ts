@@ -24,7 +24,7 @@ export function notifyError(message?: string, caption?: string, top = true) {
     })
 }
 
-export function notifySuccess(message?: string, caption?: string, timeout = 2000) {
+export function notifySuccess(message?: string, caption?: string, timeout = 3000) {
     Notify.create({
         textColor: "positive",
         color: "white",

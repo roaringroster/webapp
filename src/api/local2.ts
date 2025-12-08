@@ -11,6 +11,7 @@ import { bus } from "src/boot/eventBus";
 import { EncryptedDatabase } from "src/database/EncryptedDatabase";
 import Vault from "src/database/Vault";
 import { didExpire } from "src/helper/expiration";
+import { CustomField, CustomFieldListType } from "src/models/generic";
 
 const dbPrefix = "accountlocal.";
 
@@ -352,7 +353,7 @@ type Organization = {
     websocketServer: string;
 };
 
-type DeviceSettings = {
+type DeviceSettings = CustomFieldListType & {
     locale: string;
     defaultWebsocketServer: string;
 };
@@ -409,7 +410,8 @@ function createLocalAccount(username: string, locale = "", isDeviceOnly = false)
     const device = createDevice({ userId, deviceName, deviceInfo });
     // const device = createDevice(user?.userId || username, getDeviceName());
     const defaultWebsocketServer = getDefaultWebsocketServer();
-    const settings: DeviceSettings = { locale, defaultWebsocketServer };
+    const customFields: CustomField<any>[] = [];
+    const settings: DeviceSettings = { locale, defaultWebsocketServer, customFields };
     const organizations: Organization[] = [];
     const currentPath = "";
     const activeOrganization = undefined;

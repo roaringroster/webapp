@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SecureEventType } from "../src-electron/electron-preload"
 
 export interface ElectronAPI {
@@ -34,7 +33,7 @@ declare global {
         plugins?: {
             socialsharing?: {
                 shareWithOptions: (options: { message?: string; subject?: string; files?: string[]; url?: string; }) => void
-            }
+            };
         };
     }
 

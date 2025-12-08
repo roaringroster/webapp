@@ -60,7 +60,7 @@
     <div class="q-mt-xl row justify-center">
       <q-input
         :model-value="formatNumber(weeklyHours)"
-        @update:model-value="weeklyHours = positive(floatOrNull($event))"
+        @update:model-value="weeklyHours = positive(alwaysFloat($event, weeklyHours))"
         :debounce="debounce"
         :label="$t('weeklyHours')"
         inputmode="decimal"
@@ -106,7 +106,7 @@ import { Ref, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { QCalendarAgenda } from "@quasar/quasar-ui-qcalendar";
 import { locale } from "src/boot/i18n";
-import { debounce, floatOrNull, positive } from "src/helper/input";
+import { alwaysFloat, debounce, positive } from "src/helper/input";
 
 const { n } = useI18n();
 

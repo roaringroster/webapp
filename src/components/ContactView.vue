@@ -348,6 +348,7 @@
 import { Component, Model, Prop, Watch, Vue } from "vue-facing-decorator";
 import { didExpire } from "src/helper/expiration";
 import { alwaysString, debounce } from "src/helper/input";
+import { confirmDeletionWarning } from "src/helper/warning";
 import { LabeledValue } from "src/models/generic";
 import { ContactKeys, ContactProps, PostalAddress, emailLabels, getName, makeEmailAddress, makePhoneNumber, makePostalAddress, makeUrl, phoneLabels, postalAddressAsSearchString, postalLabels, predefinedLabels, relationshipTypes, urlLabels } from "src/models/contact";
 import NoDataItem from "src/components/NoDataItem.vue";
@@ -356,6 +357,7 @@ import SelectableInput from "src/components/SelectableInput.vue";
 import LabeledValueEditor from "src/components/LabeledValueEditor.vue";
 import DateTimeInput from "src/components/DateTimeInput.vue";
 import RevealButton from "src/components/RevealButton.vue";
+import { openWindow } from "src/helper/utils";
 
 // const api = useAPI();
 
@@ -412,10 +414,8 @@ class ContactView extends Vue {
   @Watch("contactId", { immediate: true })
   onContactChanged() {
     if (this.editOnly) {
-      return;
-    }
-
-    if (this.$route.query.edit == "1" && !this.disabled) {
+      this.isEditing = true;
+    } else if (this.$route.query.edit == "1" && !this.disabled) {
       void this.$router.replace({
         name: this.$route.name || undefined,
         params: this.$route.params
@@ -494,11 +494,6 @@ class ContactView extends Vue {
   get compactLayout() {
     return this.width <= 400
   }
-  get windowTarget() {
-    return this.$q.platform.is.electron || this.$q.platform.is.cordova
-      ? "_blank"
-      : "_self";
-  }
   get emailLabels() {
     return getLabels(emailLabels, [this.contact], "emailAddresses").map(this.makeOption);
   }
@@ -532,31 +527,24 @@ class ContactView extends Vue {
   }
 
   call(phoneNumber: LabeledValue<string>) {
-    this.openWindow("tel:" + phoneNumber.value);
+    openWindow("tel:" + phoneNumber.value);
   }
   email(email: LabeledValue<string>) {
-    this.openWindow("mailto:" + email.value);
+    openWindow("mailto:" + email.value);
   }
   openHttpsUrl(url: LabeledValue<string>) {
     const secureUrl = /^https?:\/\//.test(url.value)
       ? url.value
       : "https://" + url.value
-    this.openWindow(secureUrl, "_blank");
+    openWindow(secureUrl, "_blank");
   }
   showMap(address: LabeledValue<PostalAddress>) {
     const encodedAddress = postalAddressAsSearchString(address.value);
 
     if (this.$q.platform.is.mac || this.$q.platform.is.ios) {
-      this.openWindow("https://maps.apple.com/?address=" + encodedAddress);
+      openWindow("https://maps.apple.com/?address=" + encodedAddress);
     } else {
-      this.openWindow("geo:0,0?q=" + encodedAddress);
-    }
-  }
-  openWindow(url: string, target = this.windowTarget) {
-    const win = window.open(url, target);
-
-    if (win) {
-      win.opener = null;
+      openWindow("geo:0,0?q=" + encodedAddress);
     }
   }
 
@@ -625,31 +613,11 @@ class ContactView extends Vue {
       return;
     }
 
-    this.$q.dialog({
-      title: this.$t("confirmDeletionTitle"),
-      message: this.$t("confirmContactDeletionMessage", {
-        name: this.name || this.$t("withoutNames")
-      }),
-      persistent: true,
-      ok: {
-        label: this.$t("delete"),
-        rounded: true,
-        flat: true,
-        noCaps: true,
-        color: "negative"
-      },
-      cancel: {
-        rounded: true,
-        flat: true,
-        noCaps: true
-      }
-    }).onOk(() => {
+    confirmDeletionWarning(this.$t("confirmContactDeletionMessage", {
+      name: this.name || this.$t("withoutNames")
+    })).onOk(() => {
       this.$emit("delete", this.contactId);
     });
-  }
-
-  created() {
-    this.isEditing = this.editOnly;
   }
 }
 

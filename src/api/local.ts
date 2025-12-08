@@ -103,7 +103,7 @@ export default class LocalAccountApi {
 
     private assertLoggedIn() {
         if (!this.isLoggedIn) {
-            this.logout();
+            void this.logout();
             throw new Error("NotLoggedIn");
         }
     }
@@ -188,6 +188,7 @@ export default class LocalAccountApi {
         bus.emit("did-login");
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     async logout() {
         if (this.db || this.currentUser) {
             this.db?.close();

@@ -79,7 +79,7 @@
         <div class="row q-gutter-x-md">
           <q-input
             :model-value="formatNumber(modelValue.weeklyHours)"
-            @update:model-value="save({weeklyHours: positive(floatOrNull($event))})"
+            @update:model-value="save({weeklyHours: positiveOrNull(floatOrNull($event))})"
             :debounce="debounce"
             :label="$t('weeklyHours')"
             inputmode="decimal"
@@ -89,7 +89,7 @@
           />
           <q-input
             :model-value="formatNumber(modelValue.yearlyVacationDays)"
-            @update:model-value="save({yearlyVacationDays: positive(floatOrNull($event))})"
+            @update:model-value="save({yearlyVacationDays: positiveOrNull(floatOrNull($event))})"
             :debounce="debounce"
             :label="$t('yearlyVacationDays')"
             inputmode="decimal"
@@ -101,7 +101,7 @@
         <div class="row">
           <q-input
             :model-value="formatNumber(modelValue.grossSalary, 'CurrencyNoGrouping')"
-            @update:model-value="save({grossSalary: positive(floatOrNull($event))})"
+            @update:model-value="save({grossSalary: positiveOrNull(floatOrNull($event))})"
             :debounce="debounce"
             :label="$t('grossSalary')"
             inputmode="decimal"
@@ -123,7 +123,7 @@
 <script setup lang="ts">
 import { PropType, Ref, computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { debounce, alwaysString, floatOrNull, positive } from "src/helper/input";
+import { debounce, alwaysString, floatOrNull, positiveOrNull } from "src/helper/input";
 import { didExpire } from "src/helper/expiration";
 import { WorkAgreements } from "src/models/workAgreements";
 import EditToggleButton from "src/components/EditToggleButton.vue";

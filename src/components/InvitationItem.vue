@@ -166,6 +166,7 @@ import { copyText } from "src/helper/clipboard";
 import { useQRCode } from "src/helper/qrcode";
 import { timeago } from "src/helper/relativeTime";
 import { appCustomURLScheme, appDownloadURL, appName } from "src/helper/appInfo";
+import { isShareSupported } from "src/helper/cordova";
 import { useAccountStore } from "src/stores/accountStore";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import ActionMenu from "src/components/ActionMenu.vue";
@@ -232,8 +233,6 @@ const invitationCodeHint = computed(() => {
   }
 })
 
-const isShareSupported = computed(() => !!navigator.share || !!$q.platform.is.cordova);
-
 async function shareInvitation() {
   const code = invitationCode.value;
   const codeExpiration = timeToExpiration.value;
@@ -255,6 +254,8 @@ async function shareInvitation() {
     }
   ) + "\n\n";
 
+  // navigator.share does not work in electron.
+  // There is a macOS only ShareMenu class for main process though: https://www.electronjs.org/docs/latest/api/share-menu.
   if (navigator.share) {
     await navigator.share({title: subject, text: message}).catch(() => {})
   } else if ($q.platform.is.cordova) {
@@ -286,7 +287,7 @@ const actionItems = computed(() => [{
   name: t("share"),
   icon: "share",
   action: () => shareInvitation(),
-  condition: !isDisabled.value && isShareSupported.value && !!invitationCode.value 
+  condition: !isDisabled.value && isShareSupported && !!invitationCode.value 
     && !$q.screen.gt.xs
 }, {
   name: t("revokeInvitation"),
