@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 0.2.1 (2025-12-09)
+
+- added support for Linux with AppImage as distribution target
+- improved auto-update error handling for macOS
+
 ## 0.2.0 (2025-03-19)
 
 - new local auth views (login, registration) using AuthProvider package
