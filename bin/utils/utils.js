@@ -254,6 +254,11 @@ function quasarCommands(mode, product, environment, extraVariables) {
       // On the other hand, this script's execution will continue even when a real error occured.
       command += " || true"; 
     }
+
+    if (product == "android") {
+      // for some reason cordova hooks don't work anymore, so we run this after_build hook from here and copy the results manually as a workaround
+      command += `; cd src-cordova; node -e "import run from \\"../bin/packageAndroid.js\\"; run();"; cd ..; cp ./src-cordova/platforms/android/app/build/outputs/apk/release/app-release.{json,zip} ./dist/cordova/android/apk/release/;`;
+    }
   } else if (["mac", "win", "linux", "electron"].includes(product)) {
     command = `${extraVariables[product] ?? ""} ${command} -m electron`;
 
