@@ -219,7 +219,8 @@ exitOnError(() => {
         so the process does not use rsync installations via homebrew. 
         Nevertheless, we need rsync via homebrew for deployment later,
         because openrsync has no --chown option, and the Android build process needs
-        gradle via homebrew. */
+        gradle via homebrew. We also need /opt/homebrew/bin/ios-deploy, so we create a
+        hard link with `sudo ln /opt/homebrew/bin/ios-deploy /usr/local/bin/ios-deploy`. */
       "PATH": process.env.PATH?.replace(/\/opt\/homebrew\/bin:/g, ""),
     }
   };

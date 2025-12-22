@@ -40,6 +40,7 @@ Tested on macOS Catalina.
 
 * install Xcode including Developer Tools
 * `npm install -g ios-deploy`
+* `sudo ln /opt/homebrew/bin/ios-deploy /usr/local/bin/ios-deploy`
 * no need to switch to WKWebView using a plugin as it has become the default from cordova-ios version 6!
 
 ### … finally
