@@ -5,6 +5,8 @@ export interface ElectronAPI {
     addListener: (event: SecureEventType, handler: (...args: any[]) => void) => void;
     removeListener: (event: SecureEventType, handler: (...args: any[]) => void) => void;
     checkForUpdates: (isInitiatedByUser: boolean) => void;
+    printWindow: () => void;
+    printFile: (url: string, name: string) => void;
     vault: {
         get: (service: string, account: string) => Promise<string | undefined>;
         set: (service: string, account: string, password: string) => Promise<void>;

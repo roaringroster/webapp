@@ -88,7 +88,7 @@ function print() {
   if ($q.platform.is.cordova && (cordova?.plugins as any)?.printer) {
     (cordova?.plugins as any)?.printer?.print?.();
   } else if ($q.platform.is.electron) {
-    window.print();
+    window.electronAPI?.printWindow();
   } else {
     window.print();
   }

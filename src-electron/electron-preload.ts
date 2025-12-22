@@ -59,4 +59,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
     checkForUpdates: (isInitiatedByUser = true) => 
         ipcRenderer.send("check-for-updates", isInitiatedByUser),
     
+    printWindow: () => 
+        ipcRenderer.send("print-window"),
+
+    printFile: (url: string, name: string) => 
+        ipcRenderer.send("print-file", url, name),
+
 })

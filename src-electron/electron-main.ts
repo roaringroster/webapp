@@ -8,6 +8,7 @@ import { setupAppMenu, setMenuItemEnabled } from "./main/menu"
 import { createWindow } from "./main/window"
 import { setupUpdater } from "./main/updater"
 import { setupDeepLinkHandler } from "./main/deeplink"
+import { setupPrinter } from "./main/printer"
 
 // workaround for DevTools on Windows with dark mode
 try {
@@ -52,6 +53,7 @@ const mainWindowPromise = app.whenReady()
   .then(setupUpdater)
   .then(createWindow)
   .then(setupDeepLinkHandler)
+  .then(setupPrinter)
 
 app.on("window-all-closed", () => {
   if (!isMac) {
