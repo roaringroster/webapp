@@ -22,6 +22,8 @@
         <q-input
           v-model="newPassword1"
           :label="$t('newPassword')"
+          :rules="[(val: string) => isStrongPassword(val) || $t('PasswordPolicy')]"
+          lazy-rules
           class="col-sm-6 col-12"
           autocapitalize="off"
           autocomplete="off"
@@ -29,6 +31,8 @@
         <q-input
           v-model="newPassword2"
           :label="$t('repeatNewPassword')"
+          :rules="[(val: string) => isStrongPassword(val) || $t('PasswordPolicy')]"
+          lazy-rules
           class="col-sm-6 col-12"
           autocapitalize="off"
           autocomplete="off"
@@ -70,6 +74,7 @@ import { useI18n } from "vue-i18n";
 import { useAccount } from "src/api/local2";
 import { errorMessage } from "src/boot/i18n";
 import { notifySuccess } from "src/helper/notify";
+import { isStrongPassword } from "src/helper/security";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 
 const { t } = useI18n();
@@ -79,7 +84,7 @@ const oldPassword = ref("");
 const newPassword1 = ref("");
 const newPassword2 = ref("");
 const canChangePassword = computed(() => 
-  !!oldPassword.value && !!newPassword1.value 
+  !!oldPassword.value && isStrongPassword(newPassword1.value)
     && newPassword1.value == newPassword2.value
 );
 const isChangePassword = ref(false);

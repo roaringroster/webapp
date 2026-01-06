@@ -17,16 +17,16 @@
     <q-input
       v-model="newPassword1"
       :label="$t('password')"
-      :rules="[(val: any) => !!val || $t('PasswordMissing')]"
-      reactive-rules
+      :rules="[(val: string) => isStrongPassword(val) || $t('PasswordPolicy')]"
+      lazy-rules
       autocapitalize="off"
       autocomplete="off"
     />
     <q-input
       v-model="newPassword2"
       :label="$t('repeatPassword')"
-      :rules="[(val: any) => !!val || $t('PasswordMissing')]"
-      reactive-rules
+      :rules="[(val: string) => isStrongPassword(val) || $t('PasswordPolicy')]"
+      lazy-rules
       autocapitalize="off"
       autocomplete="off"
     />
@@ -73,6 +73,7 @@ import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import { bus } from "src/boot/eventBus";
 import { useAccountStore } from "src/stores/accountStore";
 import { isDev } from "src/helper/appInfo";
+import { isStrongPassword } from "src/helper/security";
 import PasswordSecuritySheet from "src/components/PasswordSecuritySheet.vue";
 import RevealButton from "src/components/RevealButton.vue";
 
@@ -99,7 +100,7 @@ const errorDebugInfo = ref("");
 const isLoading = ref(false);
 
 const canCreateAccount = computed(() =>
-  !!newUsername.value && !!newPassword1.value && newPassword1.value == newPassword2.value
+  !!newUsername.value && isStrongPassword(newPassword1.value) && newPassword1.value == newPassword2.value
 );
 const canCreateOrganization = computed(() =>
   !!newOrganizationName.value && canCreateAccount.value

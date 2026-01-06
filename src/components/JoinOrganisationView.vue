@@ -59,16 +59,16 @@
       <q-input
         v-model="newPassword1"
         :label="$t('password')"
-        :rules="[(val: any) => !!val || $t('PasswordMissing')]"
-        reactive-rules
+        :rules="[(val: string) => isStrongPassword(val) || $t('PasswordPolicy')]"
+        lazy-rules
         autocapitalize="off"
         autocomplete="off"
       />
       <q-input
         v-model="newPassword2"
         :label="$t('repeatPassword')"
-        :rules="[(val: any) => !!val || $t('PasswordMissing')]"
-        reactive-rules
+        :rules="[(val: string) => isStrongPassword(val) || $t('PasswordPolicy')]"
+        lazy-rules
         autocapitalize="off"
         autocomplete="off"
       />
@@ -125,6 +125,7 @@ import { initializeDemo } from "src/api/demoRepo";
 import { InvitationCodeLength } from "src/helper/utils";
 import { requestPermissions, useDiagnostic } from "src/helper/cordova";
 import { isDev } from "src/helper/appInfo";
+import { isStrongPassword } from "src/helper/security";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import QRCodeScanner from "src/components/QRCodeScanner.vue";
 import PasswordSecuritySheet from "src/components/PasswordSecuritySheet.vue";
@@ -188,8 +189,8 @@ const revealServer = ref(false);
 
 const canCreateAccount = computed(() =>
   isValidInvitationCode.value
-    && (isDeviceInvitation.value || !!newUsername.value.trim()) 
-    && !!newPassword1.value && newPassword1.value == newPassword2.value
+    && newUsername.value.trim()
+    && isStrongPassword(newPassword1.value) && newPassword1.value == newPassword2.value
 );
 const canUseCamera = window.isSecureContext == true
   && navigator?.mediaDevices?.getUserMedia != undefined;
