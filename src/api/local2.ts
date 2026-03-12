@@ -265,8 +265,6 @@ async function getAccount() {
 }
 
 async function updateAccount(changes: ((value: LocalAccount) => void) | Partial<LocalAccount>, account?: LocalAccount) {
-    assertCanWriteData();
-
     if (!account) {
         account = await getAccount();
     }
