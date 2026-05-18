@@ -165,6 +165,7 @@ export default defineConfig(function (ctx) {
           Buffer: false,
           process: false,
           crypto: false,
+          url: false,
         };
         config.experiments = {
           ...config.experiments,

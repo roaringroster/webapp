@@ -109,6 +109,7 @@ export default defineConfigWithVueTs(
       "@typescript-eslint/prefer-promise-reject-errors": "off",
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-redundant-type-constituents": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
       "vue/no-use-v-if-with-v-for": "off",
       "vue/multi-word-component-names": ["error", {
         "ignores": ["de"]
