@@ -25,16 +25,8 @@ declare module "vue-i18n" {
 
 export async function loadLangPack(locale: string) {
     try {
-        await import(
-            /* webpackInclude: /(de|en-US)\.js$/ */
-            "quasar/lang/" + locale
-        ).catch(error => {
-            if (locale.includes("-")) {
-                return import("quasar/lang/" + locale.split("-")[0])
-            } else {
-                throw error
-            }
-        }).then(langPack => {
+        await importLangPack(locale)
+        .then(langPack => {
             Quasar.lang.set(langPack.default);
         });
     } catch (error) {
@@ -43,6 +35,14 @@ export async function loadLangPack(locale: string) {
         console.error("Quasar Language Pack does not exist", error)
     }
 };
+
+function importLangPack(locale: string) {
+  if (locale == "de-DE") {
+    return import("quasar/lang/de-DE.js");
+  } else {
+    return import("quasar/lang/en-US.js");
+  }
+}
 
 export function errorToString(error: any) {
   return (error as Error)?.message || `${error}`;
