@@ -21,7 +21,6 @@ const routes: RouteRecordRaw[] = [
             name: "addMemberDevice",
             path: "invitation/:code?",
             component: () => import("components/JoinOrganisationView.vue"),
-            beforeEnter: () => !didExpire(),
           },{
             name: "addOrganization",
             path: "create-organization",

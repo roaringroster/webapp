@@ -1,5 +1,5 @@
 <template>
-  <q-form>
+  <q-form v-if="!disabled">
     <div v-if="mode == 'enterCode'">
       <div 
         class="text-center text-grey-9 text-subtitle1 text-weight-medium q-mb-sm"
@@ -108,6 +108,10 @@
       </q-btn>
     </div>
   </q-form>
+  <simplified-markdown
+    v-else-if="expirationDate"
+    :text="$t('betaAppDidExpire', { date: $d(expirationDate, 'DateMed') })"
+  />
 </template>
 
 <script setup lang="ts">
@@ -126,10 +130,12 @@ import { InvitationCodeLength } from "src/helper/utils";
 import { requestPermissions, useDiagnostic } from "src/helper/cordova";
 import { isDev } from "src/helper/appInfo";
 import { isStrongPassword } from "src/helper/security";
+import { didExpire, expirationDate } from "src/helper/expiration";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import QRCodeScanner from "src/components/QRCodeScanner.vue";
 import PasswordSecuritySheet from "src/components/PasswordSecuritySheet.vue";
 import RevealButton from "src/components/RevealButton.vue";
+import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 
 const route = useRoute();
 const $q = useQuasar();
@@ -149,6 +155,7 @@ const mode = ref("enterCode" as Mode);
 
 const invitationCode = ref(route.params.code?.toString() || "");
 const isDemo = computed(() => invitationCode.value == "demo");
+const disabled = computed(() => didExpire());
 
 watch(
   () => route.params.code,
