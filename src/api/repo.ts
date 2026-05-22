@@ -7,6 +7,7 @@ import { AuthProvider, ShareId, getShareId } from "@localfirst/auth-provider-aut
 import { AuthenticatedNetworkAdapter } from "@localfirst/auth-provider-automerge-repo/dist/AuthenticatedNetworkAdapter";
 import * as Auth from "@localfirst/auth";
 import { eventPromise } from "@localfirst/shared";
+import { throttle } from "quasar";
 import { useChangeHistoryStore } from "src/stores/changeHistoryStore";
 import { i18n } from "src/boot/i18n";
 import { getCaseSensitiveUsername, LocalAccount, PartialLocalAccount, useAccount } from "src/api/local2";
@@ -485,20 +486,33 @@ export function getHandles<T>(source: WatchSource<string[] | undefined>) {
   );
   return handles;
 }
-
-export function getDocumentsWhenReady<T>(handlesRef: Ref<Handle<T>[]>) {
+/**
+ * 
+ * @param handlesRef an array of vue Ref of Automerge document handles
+ * @param throttleMilliseconds to prevent excessive redrawing or other performance bottlenecks, the method can be optionally throttled: it will be called only once in the given time interval
+ * @returns an array of vue Ref of Automerge documents, which will not be available yet when returned but hopefully soon after. The array is reactively updated whenever another document becomes available while also respecting the optional throttling.
+ */
+export function getDocumentsWhenReady<T>(handlesRef: Ref<Handle<T>[]>, throttleMilliseconds = 0) {
   const documents: Ref<(T & HasDocumentId)[]> = ref([]);
   watch(
     () => handlesRef.value.map(({ doc }) => doc),
-    value => {
-      if (value.every(Boolean)) {
-        documents.value = handlesRef.value.flatMap(({ doc, docId: id }) =>
-          doc 
-            ? [{ ...(doc as T), id }]
-            : []
-        );
-      }
-    },
+    throttleMilliseconds <= 0
+      ? () => {
+          documents.value = handlesRef.value.flatMap(({ doc, docId: id }) =>
+            doc 
+              ? [{ ...(doc as T), id }]
+              : []
+          );
+        }
+      : () => {
+          throttle(() => {
+            documents.value = handlesRef.value.flatMap(({ doc, docId: id }) =>
+              doc 
+                ? [{ ...(doc as T), id }]
+                : []
+            );
+          }, throttleMilliseconds)
+        },
     { immediate: true }
   );
   return documents;
