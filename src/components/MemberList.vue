@@ -176,12 +176,15 @@
                 </span>
               </span>
             </q-item-label>
-            <q-item-label 
-              v-if="device.deviceInfo?.deviceType && device.deviceInfo?.deviceType != device.deviceName" 
+            <q-item-label
               caption
-              class="text-capitalize"
             >
-              {{ $t(device.deviceInfo?.deviceType + "Device") }}
+              {{ [
+                device.deviceInfo?.deviceType && device.deviceInfo?.deviceType != device.deviceName
+                  ? capitalize($t(device.deviceInfo?.deviceType + "Device"))
+                  : "",
+                getDeviceInfo(devicesById[device.deviceId])
+              ].filter(Boolean).join(" • ") }}
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -234,8 +237,11 @@ import { InvitationSeeds, useAccount } from "src/api/local2";
 import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganization, removeDocument } from "src/api/repo";
 import { didExpire } from "src/helper/expiration";
 import { InvitationCodeLength } from "src/helper/utils";
+import { capitalize } from "src/helper/formatter";
+import { getAppBuildShort } from "src/helper/appInfo";
 import { deleteItems, HasDocumentId } from "src/models/base";
 import { Contact, ContactProps, getUsername } from "src/models/contact";
+import { DeviceInfo } from "src/models/deviceList";
 import Signature from "src/components/Signature.vue";
 import TextWithTooltip from "src/components/TextWithTooltip.vue";
 import ActionMenu from "src/components/ActionMenu.vue";
@@ -322,6 +328,22 @@ const contactByUserId = computed(() => Object.entries(organizationMembers.value)
 
 function getMemberName(authMember: AuthMember) {
   return getUsername(contactByUserId.value[authMember.userId]) || authMember.userName;
+}
+
+const devicesById = computed(() => 
+  Object.entries(accountStore.deviceList?.deviceMap || {})
+    .reduce((result, [userDeviceId, localDeviceId]) => {
+      result[userDeviceId] = accountStore.deviceList?.devices[localDeviceId]
+      return result;
+    }, {} as Record<string, DeviceInfo | undefined>)
+);
+
+function getDeviceInfo(device?: DeviceInfo) {
+  if (device) {
+    return `RoaringRoster ${device.appVersion} (${getAppBuildShort(device.appBuild)})`;
+  } else {
+    return "";
+  }
 }
 
 

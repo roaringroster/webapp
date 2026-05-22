@@ -23,12 +23,16 @@ export type Absence = {
 
 export type AbsenceList = BaseType & AbsenceListProps;
 
+export const absenceListSchema = 1;
+
 export const createAbsenceList = ({
   absences = [],
 }: Partial<AbsenceListProps> = {}): AbsenceList => ({
-  ...createBase(),
+  ...createBase(absenceListSchema),
   absences,
 });
+
+export const absenceSchema = 1;
 
 export const createAbsence = ({
   createdAt = new Date(),
@@ -39,7 +43,7 @@ export const createAbsence = ({
   comment = "",
   approvals = [],
 }: Partial<Absence> = {}): Absence => ({
-  ...createBase(),
+  ...createBase(absenceSchema),
   createdAt,
   reason,
   start,

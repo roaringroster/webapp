@@ -165,7 +165,7 @@ watch(
 async function next() {
   if (isDemo.value) {
     await initializeDemo(locale.value);
-    await accountStore.login();
+    await accountStore.login(true);
     bus.emit("did-login");
     return emit("done");
   }

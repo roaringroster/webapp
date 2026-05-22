@@ -6,6 +6,8 @@ export const appVersion = process.env.APP_VERSION || "0";
 
 export const appBuild = process.env.APP_BUILD || "0";
 
+export const appBuildShort = getAppBuildShort(appBuild);
+
 export const appCustomURLScheme = process.env.URL_SCHEME || "";
 
 export const appDownloadURL = process.env.INSTALL_URL || "";
@@ -35,4 +37,18 @@ export function validCustomSchemes() {
         schemeComponents.slice(0, 2).join("."),
         schemeComponents.join(".")
     ];
+}
+
+export function getAppBuildShort(appBuild: string) {
+    return appBuild.substring(4, 8) + "." + appBuild.substring(8, 12);
+}
+
+export function getDevice() {
+    return {
+        appVersion,
+        appBuild,
+        type: "",
+        operatingSystem: "",
+        systemInfo: "",
+    }
 }

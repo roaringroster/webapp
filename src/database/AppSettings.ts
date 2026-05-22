@@ -2,7 +2,8 @@
 import { EncryptedDatabase } from "./EncryptedDatabase"
 
 type Keys = "lastUpdated"
-    | "lastLoginUsername";
+    | "lastLoginUsername"
+    | "localDeviceId";
 
 async function accessDatabase<T>(operation: (database: EncryptedDatabase) => Promise<T>) {
     const key = Uint8Array.from(process.env.APPSETTINGS_DBKEY?.split(",").map(value => parseInt(value)) || []);

@@ -3,14 +3,17 @@ import { computed, ref, Ref, toRaw, watch } from "vue";
 import { ChangeFn, ChangeOptions, Doc } from "@automerge/automerge";
 import { DocHandle, DocumentId } from "@automerge/automerge-repo";
 import { Team as AuthTeam } from "@localfirst/auth";
+import * as AppSettings from "src/database/AppSettings";
 import { useAccount } from "src/api/local2";
 import { cleanupAll, getOrganization, getHandles, useDocument, useOrganizationDocument } from "src/api/repo";
 import { migrateSchemas } from "src/helper/schemaMigration";
 import { Contact, getUsername } from "src/models/contact";
 import { Team } from "src/models/team";
 import { Organization } from "src/models/organization";
+import { DeviceInfo, DeviceList } from "src/models/deviceList";
 import { CustomFieldListType, customValue, updateOrAddCustomField } from "src/models/generic";
-import { deepMerge } from "src/models/base";
+import { automergeClone, deepMerge, equals } from "src/models/base";
+import { getDevice } from "src/helper/appInfo";
 
 const { getAccountRef, updateAccount, updateDeviceSettings } = useAccount();
 
@@ -28,12 +31,17 @@ export const useAccountStore = defineStore("account", () => {
   const isOrganizationAdmin = ref(false);
 
   const organizationHandle: Ref<StoredHandle<Organization> | null> = ref(null);
+  const deviceListHandle: Ref<StoredHandle<DeviceList> | null> = ref(null);
   const memberContactHandle: Ref<StoredHandle<Contact> | null> = ref(null);
 
   const userId = computed(() => account.value?.user.userId || "");
   const userName = computed(() => account.value?.user.userName || "");
+  const deviceId = computed(() => account.value?.device.deviceId || "");
   const organization = computed(() => 
     organizationHandle.value?.doc
+  );
+  const deviceList = computed(() => 
+    deviceListHandle.value?.doc
   );
   const member = computed(() => 
     organization.value?.members[userId.value]
@@ -88,9 +96,13 @@ export const useAccountStore = defineStore("account", () => {
       && authTeam.value.memberIsAdmin(userId.value);
   }
 
-  async function login() {
-    await migrateSchemas();
+  async function login(skipSchemaMigration = false) {
+    if (!skipSchemaMigration) {
+      await migrateSchemas();
+    }
+
     authTeam.value = getOrganization();
+
     toRaw(authTeam.value)?.on("updated", onTeamUpdated);
     onTeamUpdated();
     const orgHandle = useOrganizationDocument() as unknown as StoredHandle<Organization>;
@@ -101,6 +113,32 @@ export const useAccountStore = defineStore("account", () => {
       memberContactHandle.value = 
         useDocument(member.value.contactId) as unknown as StoredHandle<Contact>;
     }
+
+    if (organization.value) {
+      deviceListHandle.value = 
+        useDocument(organization.value.deviceListId) as unknown as StoredHandle<DeviceList>;
+    }
+
+    const localDeviceId = await AppSettings.get<string>("localDeviceId");
+    await toRaw(deviceListHandle.value)?.handle.whenReady();
+    const device: Partial<DeviceInfo> | undefined = automergeClone(deviceList.value?.devices?.[localDeviceId]);
+    delete device?.customName;
+
+    if (!deviceList.value?.deviceMap[deviceId.value]) {
+      deviceListHandle.value?.changeDoc(doc => {
+        doc.deviceMap[deviceId.value] = localDeviceId;
+      });
+    }
+
+    if (!equals(device, getDevice())) {
+      deviceListHandle.value?.changeDoc(doc => {
+        if (!doc.devices[localDeviceId]) {
+          doc.devices[localDeviceId] = { ...getDevice(), customName: "" };
+        } else {
+          deepMerge(doc.devices[localDeviceId] || {}, getDevice());
+        }
+      });
+    }
   }
 
   function logout() {
@@ -110,6 +148,8 @@ export const useAccountStore = defineStore("account", () => {
     organizationHandle.value = null;
     memberContactHandle.value?.cleanup();
     memberContactHandle.value = null;
+    deviceListHandle.value?.cleanup();
+    deviceListHandle.value = null;
     cleanupAll(teamHandles.value);
     teamHandles.value = [];
   }
@@ -158,6 +198,7 @@ export const useAccountStore = defineStore("account", () => {
     account,
     authTeam,
     organizationHandle,
+    deviceListHandle,
     memberContactHandle,
     teamHandle,
     allTeamHandles: teamHandles,
@@ -165,6 +206,7 @@ export const useAccountStore = defineStore("account", () => {
     userId,
     userName,
     organization,
+    deviceList,
     member,
     memberName,
     memberContact,

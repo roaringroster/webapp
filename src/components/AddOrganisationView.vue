@@ -130,7 +130,7 @@ async function createOrganization() {
         component: PasswordSecuritySheet
       })
       .onOk(async () => {
-        await accountStore.login();
+        await accountStore.login(true);
         bus.emit("did-login");
         await AppSettings.set("lastLoginUsername", username);
 

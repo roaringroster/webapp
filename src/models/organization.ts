@@ -1,6 +1,8 @@
 import { DocumentId } from "@automerge/automerge-repo";
 import { BaseType, createBase } from "./base";
 import { Member } from "./user";
+import { createDeviceList } from "./deviceList";
+import { AuthTeam, createDocument } from "src/api/repo";
 
 type AuthUserId = string;
 
@@ -9,6 +11,7 @@ type OrganizationProps = {
   teams: DocumentId[];
   members: Record<AuthUserId, Member>;
   formerUserNames: Record<AuthUserId, string>;
+  deviceListId: DocumentId;
   selectionOptions: {
     absenceReasons: {
       title: string;
@@ -30,24 +33,29 @@ export const PredefinedAbsenceReasons = [
   "unpaidLeave",
 ];
 
+export const organizationSchema = 2;
+
 export const createOrganization = ({
-  name = "",
-  teams = [],
-  members = {},
-  formerUserNames = {},
-  selectionOptions = {
-    absenceReasons: PredefinedAbsenceReasons
-      .map(title => ({
-        title, 
-        color: colorForAbsenceReason(title)
-    })),
-  }
-}: Partial<OrganizationProps> = {}): Organization => ({
-  ...createBase(),
+    name = "",
+    teams = [],
+    members = {},
+    formerUserNames = {},
+    selectionOptions = {
+      absenceReasons: PredefinedAbsenceReasons
+        .map(title => ({
+          title, 
+          color: colorForAbsenceReason(title)
+      })),
+    }
+  }: Partial<OrganizationProps> = {},
+  authTeam: AuthTeam
+): Organization => ({
+  ...createBase(organizationSchema),
   name,
   teams,
   members,
   formerUserNames,
+  deviceListId: createDocument(createDeviceList(), authTeam),
   selectionOptions
 });
 

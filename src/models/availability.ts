@@ -12,9 +12,11 @@ type AvailabilityProps = {
 
 export type AvailabilityList = BaseType & AvailabilityProps;
 
+export const availabilityListSchema = 1;
+
 export const createAvailabilityList = ({
   availabilities = [],
 }: Partial<AvailabilityProps> = {}): AvailabilityList => ({
-  ...createBase(),
+  ...createBase(availabilityListSchema),
   availabilities,
 });

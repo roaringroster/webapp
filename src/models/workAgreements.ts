@@ -65,6 +65,7 @@ type WorkAgreementsProps = {
 
 export type WorkAgreements = BaseType & WorkAgreementsProps;
 
+export const workAgreementsSchema = 1;
 
 export const createWorkAgreements = ({
   employeeId = "",
@@ -79,7 +80,7 @@ export const createWorkAgreements = ({
   grossSalary = null,
   salaryNotes = "",
 }: Partial<WorkAgreementsProps> = {}): WorkAgreements => ({
-  ...createBase(),
+  ...createBase(workAgreementsSchema),
   employeeId,
   jobTitle,
   jobDescription,

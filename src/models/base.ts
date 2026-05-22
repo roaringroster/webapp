@@ -8,7 +8,7 @@ export type BaseType = {
   schema: Schema;
 }
 
-export const createBase = (schema = 1) => ({
+export const createBase = (schema: number) => ({
   schema,
 } as BaseType);
 

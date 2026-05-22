@@ -96,7 +96,7 @@ import { bus } from "src/boot/eventBus";
 import { checkForUpdates } from "src/boot/updater";
 import { logout } from "src/boot/openURL";
 import { expirationDate, didExpire } from "src/helper/expiration";
-import { appContributingURL, appFeedbackAddress } from "src/helper/appInfo";
+import { appBuildShort, appContributingURL, appFeedbackAddress } from "src/helper/appInfo";
 import { getUsername } from "src/models/contact";
 import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 import NavigationSection, { NavigationItem } from "src/components/NavigationSection.vue";
@@ -116,7 +116,8 @@ const username = computed(() =>
   getUsername(accountStore.memberContact) 
     || accountStore.userName
 );
-const appVersion = computed(() => t("currentVersion") + ": " + appversion);
+ 
+const appVersion = computed(() => `${t("currentVersion")}: ${appversion} (${appBuildShort})`);
 const expirationWarning = computed(() => 
     expirationDate 
       ? t(

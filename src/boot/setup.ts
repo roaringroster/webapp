@@ -1,5 +1,7 @@
 import { defineBoot } from "#q-app/wrappers";
 import { Platform, colors, getCssVar, setCssVar } from "quasar";
+import { nanoid } from "nanoid";
+import * as AppSettings from "src/database/AppSettings";
 
 // cordova-plugin-file overwrites native implementations, so we keep our own reference
 import "src/models/file";
@@ -18,7 +20,11 @@ if (Platform.is.cordova && Platform.is.ios) {
   });
 }
 
-export default defineBoot(() => {
+export default defineBoot(async () => {
+  if (!(await AppSettings.get("localDeviceId"))) {
+    await AppSettings.set("localDeviceId", nanoid());
+  }
+
   const { lighten } = colors;
   
   document.body.classList.add("platform-" + Platform.is.platform);

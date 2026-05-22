@@ -62,7 +62,7 @@ export async function registerOrganization(account: LocalAccount, name: string, 
   const teamId = createDocument(team, authTeam);
 
   const teams = [teamId];
-  const organizationId = createDocument(createOrganization({ name, members, teams }), authTeam);
+  const organizationId = createDocument(createOrganization({ name, members, teams }, authTeam), authTeam);
 
   authTeam.addMessage({ type: "ROOT_DOCUMENT_ID", payload: organizationId });
   

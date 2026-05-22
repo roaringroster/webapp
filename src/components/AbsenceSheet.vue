@@ -110,7 +110,7 @@ import { selectBehavior } from "src/helper/utils";
 import { fromUTC, toUTC } from "src/helper/date";
 import { equals } from "src/models/base";
 import { Absence, createAbsence } from "src/models/absence";
-import { createOrganization } from "src/models/organization";
+import { Organization } from "src/models/organization";
 import EditingSheet from "src/components/EditingSheet.vue";
 import SelectableInput from "src/components/SelectableInput.vue";
 import DateTimeInput from "src/components/DateTimeInput.vue";
@@ -132,10 +132,10 @@ const props = defineProps({
   isNew: Boolean,
 });
 
-const organization = ref(createOrganization());
+const organization: Ref<Organization | null> = ref(null);
 const reasonOptions = computed(() => 
-  organization.value.selectionOptions.absenceReasons
-    .map(reason => ({ label: tv(reason.title), value: reason.title }))
+  organization.value?.selectionOptions.absenceReasons
+    .map(reason => ({ label: tv(reason.title), value: reason.title })) || []
 );
 
 const absence: Ref<Absence> = ref(

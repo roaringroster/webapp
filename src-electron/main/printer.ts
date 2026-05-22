@@ -21,16 +21,26 @@ export function setupPrinter() {
           contextIsolation: true
         }
       });
-      printWindow.webContents.on("did-finish-load", () => {
-        setTimeout(() => {
-          printWindow.setTitle(title);
-          printWindow.webContents.print({}, () => {
-            printWindow.close();
-            isPrinting = false;
-          });
-        }, 500)
-      });
-      await printWindow.loadURL(url);
+      
+      try {
+        await printWindow.loadURL(url);
+        await delay(500);
+        printWindow.setTitle(title);
+        printWindow.webContents.print({}, () => {
+          isPrinting = false;
+          printWindow.close();
+        });
+      } catch (error) {
+        console.error("error while preparing to print:", error);
+        isPrinting = false;
+        printWindow.close();
+      }
     }
+  });
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
   });
 }

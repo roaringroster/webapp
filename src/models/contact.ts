@@ -32,6 +32,8 @@ export type PostalAddress = {
   country: string;
 };
 
+export const contactSchema = 1;
+
 export const createContact = ({
   firstName = "",
   lastName = "",
@@ -50,7 +52,7 @@ export const createContact = ({
   notes = "",
   customFields = [],
 }: Partial<ContactProps> = {}): Contact => ({
-  ...createBase(),
+  ...createBase(contactSchema),
   firstName,
   lastName,
   birthday,

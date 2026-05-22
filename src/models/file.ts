@@ -23,8 +23,10 @@ export type FileType = {
   bytes: Uint8Array;
 };
 
+export const fileListSchema = 1;
+
 export const createFileList = (): FileList => ({
-  ...createBase(),
+  ...createBase(fileListSchema),
   files: [],
 });
 

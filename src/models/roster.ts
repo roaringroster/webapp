@@ -41,10 +41,12 @@ export type Shift = {
 
 export type Roster = BaseType & RosterProps;
 
+export const rosterSchema = 1;
+
 export const createRoster = ({
   weeks = [],
 }: Partial<RosterProps> = {}): Roster => ({
-  ...createBase(),
+  ...createBase(rosterSchema),
   weeks,
 });
 

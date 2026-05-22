@@ -16,6 +16,7 @@ import { LicenseWebpackPlugin } from "license-webpack-plugin";
 import { config } from "dotenv";
 
 const packageJson = JSON.parse(readFileSync("./package.json"));
+const appBuild = (new Date()).toISOString().replace(/\D/g, "");
 const envFilenName = (process.env.QENV?.replace(/^production$/, "") || "") + ".env";
 const env = config({ path: path.resolve(process.cwd(), envFilenName) }).parsed || {};
 env.UPDATE_URL = process.env.UPDATE_URL || env.UPDATE_URL;
@@ -119,7 +120,7 @@ export default defineConfig(function (ctx) {
           APPSETTINGS_DBKEY: "117,92,224,103,245,209,145,178,128,123,202,194,188,164,94,181,168,87,48,227,202,184,246,191,156,141,232,100,188,212,15,224",
           ...env,
           APP_VERSION: packageJson.version || 0,
-          APP_BUILD: (new Date()).toISOString().replace(/\D/g, ""),
+          APP_BUILD: appBuild,
           APP_NAME: packageJson.productName || "",
         };
       },
@@ -447,6 +448,7 @@ export default defineConfig(function (ctx) {
         appId: env.APP_ID,
         productName: "RoaringRoster",
         copyright: "Copyright © Michael Kamphausen",
+        buildVersion: appBuild.substring(4, 8) + "." + appBuild.substring(8, 12),
         nativeRebuilder: "legacy",
         protocols: [{
           name: "RoaringRoster URL",

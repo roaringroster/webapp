@@ -21,6 +21,8 @@ type TeamProps = {
 
 export type Team = BaseType & TeamProps;
 
+export const teamSchema = 1;
+
 export const createTeam = ({
     name = "",
     members = [],
@@ -31,7 +33,7 @@ export const createTeam = ({
   }: Partial<TeamProps> = {},
   authTeam: AuthTeam
 ): Team => ({
-  ...createBase(),
+  ...createBase(teamSchema),
   name,
   members,
   admins,
