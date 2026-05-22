@@ -291,7 +291,7 @@
   "invitation": "Invitation",
   "revokeInvitation": "Revoke invitation",
   "remove": "Remove",
-  "share": "Share",
+  "sharing": "Share",
   "expiresIn": "expires {timeToExpiration}",
   "invitationMessage": "Hello,\n\nI'm sending you an invitation code for the {appName} app.\n\n{appDescription} You can download {appName} here: {appDownloadURL}\n\nWith the invitation code you can use {appName} on your device and join our organization {organizationName}.\n\nOnce you have installed {appName}, activate your device by clicking this invitation link: {invitationURL}\n\nOr you copy the invitation code {code}, start {appName}, tap on “{joinButtonLabel}” and paste the code.\n\n{expirationHint}\n",
   "invitationCode": "Invitation code",
@@ -412,6 +412,6 @@
   "organizationShortIdentifier": "ID of the organization (short)",
   "organizationIdentifier": "ID der Organisation (lang)",
   "cannotUpdateInQuarantineTitle": "Updates cannot be installed",
-  "moveAppToUpdateMessage": "The app currently does not have write permissions to update itself. Please move CoopCare to the Applications folder or another folder. Then start the update search via the macOS menu bar under “CoopCare” > “Check for Updates...”. If this message appears again, please log out of macOS and log back in.",
+  "moveAppToUpdateMessage": "The app currently does not have write permissions to update itself. Please move RoaringRoster to the Applications folder or another folder. Then start the update search via the macOS menu bar under “RoaringRoster” > “Check for Updates...”. If this message appears again, please log out of macOS and log back in.",
   "PasswordPolicy": "Please enter your password with at least 8 characters."
 }

@@ -524,7 +524,7 @@ import { locale } from "src/boot/i18n";
 import { cleanupAll, getDocumentsWhenReady, getHandles, getOrganizationOrThrow, useDocument } from "src/api/repo";
 import { selectBehavior } from "src/helper/utils";
 import { getWeek, toUTC } from "src/helper/date";
-import { showWarning } from "src/helper/warning";
+import { showWarning } from "src/helper/dialog";
 import { useAccountStore } from "src/stores/accountStore";
 import { deepMerge, HasDocumentId } from "src/models/base";
 import { Roster, Shift, WeekSchedule, createWorkSchedule } from "src/models/roster";

@@ -314,12 +314,13 @@
             :debounce="debounce"
             autogrow
             :label="$t('contactNotes')"
-            class="mb-row-dense"
           />
+
+          <slot/>
 
           <div 
             v-if="!noDelete"
-            class="row justify-center q-mb-xl"
+            class="row justify-center q-mt-lg q-mb-xl"
           >
             <q-btn
               :label="$t('deleteContact')"
@@ -348,7 +349,7 @@
 import { Component, Model, Prop, Watch, Vue } from "vue-facing-decorator";
 import { didExpire } from "src/helper/expiration";
 import { alwaysString, debounce } from "src/helper/input";
-import { confirmDeletionWarning } from "src/helper/warning";
+import { confirmDeletionWarning } from "src/helper/dialog";
 import { LabeledValue } from "src/models/generic";
 import { ContactKeys, ContactProps, PostalAddress, emailLabels, getName, makeEmailAddress, makePhoneNumber, makePostalAddress, makeUrl, phoneLabels, postalAddressAsSearchString, postalLabels, predefinedLabels, relationshipTypes, urlLabels } from "src/models/contact";
 import NoDataItem from "src/components/NoDataItem.vue";
@@ -397,6 +398,7 @@ class ContactView extends Vue {
   @Prop({ type: String, default: "" }) readonly relationshipLabel!: string;
   @Prop({ type: Boolean }) readonly isDisabled!: boolean;
   @Prop({ type: Boolean }) readonly editOnly!: boolean;
+  @Prop({ type: Array, default: () => [] }) readonly additionalContactDetails!: LabeledItemType[];
   @Prop({ type: Boolean }) readonly noHeader!: boolean;
   @Prop({ type: Boolean }) readonly noDegree!: boolean;
   @Prop({ type: Boolean }) readonly noBirthday!: boolean;
@@ -489,7 +491,7 @@ class ContactView extends Vue {
         label: this.$t("contactNotes"),
         value: this.contact.notes
       }
-    ] : []);
+    ] : []).concat(this.additionalContactDetails);
   }
   get compactLayout() {
     return this.width <= 400

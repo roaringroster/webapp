@@ -159,7 +159,7 @@
 import { Component, Prop, Ref, Vue } from "vue-facing-decorator";
 import { RouteLocationRaw } from "vue-router";
 import { QCard } from "quasar";
-import { showWarning } from "src/helper/warning";
+import { showWarning } from "src/helper/dialog";
 import { equals } from "src/models/base";
 import SimplifiedMarkdown from "components/SimplifiedMarkdown.vue";
 

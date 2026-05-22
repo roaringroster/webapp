@@ -1,7 +1,7 @@
 <template>
   <q-btn
     v-if="isVisible"
-    icon="far fa-file-lines"
+    icon="fas fa-circle-chevron-down"
     flat
     stretch
     style="max-width:44px"

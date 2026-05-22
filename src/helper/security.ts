@@ -1,3 +1,4 @@
+import { isDev } from "./appInfo";
 
 export function isStrongPassword(password: string) {
   // We keep it simple for now.
@@ -7,5 +8,9 @@ export function isStrongPassword(password: string) {
   // - https://www.npmjs.com/package/check-password-strength
   // - https://www.npmjs.com/package/@zxcvbn-ts/core
   // - https://passbits.dev
-  return password.length >= 8;
+  if (!isDev) {
+    return password.length >= 8;
+  } else {
+    return password.length >= 1;
+  }
 }

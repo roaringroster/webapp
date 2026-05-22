@@ -199,7 +199,7 @@ import { debounce, alwaysString } from "src/helper/input";
 import { incrementalName, selectBehavior } from "src/helper/utils";
 import { isDemo } from "src/helper/appInfo";
 import { didExpire } from "src/helper/expiration";
-import { confirmDeletionWarning } from "src/helper/warning";
+import { confirmDeletionWarning } from "src/helper/dialog";
 import { deleteItems, HasDocumentId } from "src/models/base";
 import { createTeam } from "src/models/team";
 import { Contact, getUsername, ContactProps } from "src/models/contact";

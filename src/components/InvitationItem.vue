@@ -127,7 +127,7 @@
           <q-btn
             v-if="!isDisabled && isShareSupported && !!invitationCode && $q.screen.gt.xs"
             icon="share"
-            :title="$t('share')"
+            :title="$t('sharing')"
             round
             flat
             no-caps
@@ -284,7 +284,7 @@ async function copyInvitation() {
 }
 
 const actionItems = computed(() => [{
-  name: t("share"),
+  name: t("sharing"),
   icon: "share",
   action: () => shareInvitation(),
   condition: !isDisabled.value && isShareSupported && !!invitationCode.value 

@@ -120,7 +120,7 @@ import { useRouter } from "vue-router";
 import { locale, errorMessage, errorToString } from "src/boot/i18n";
 import * as AppSettings from "src/database/AppSettings";
 import { selectBehavior } from "src/helper/utils";
-import { confirmDeletionWarning } from "src/helper/warning";
+import { confirmDeletionWarning } from "src/helper/dialog";
 import { useAPI } from "src/api";
 import { useRedirectStore } from "src/stores/redirectStore";
 import { didExpire } from "src/helper/expiration";

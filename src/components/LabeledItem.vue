@@ -30,7 +30,7 @@
             !$q.platform.is.mobile && !item.action ? 'selectable' : 'non-selectable',
           ]"
         >
-          {{ item.value }}
+          <simplified-markdown :text="item.value " />
           <warning-with-tooltip 
             v-if="item.warning"
             :tooltip="item.warning"
@@ -43,7 +43,7 @@
           class="show-on-hover row q-gutter-sm"
         >
           <q-btn
-            v-if="isCopySupported"
+            v-if="isCopySupported && !item.noCopyButton"
             :icon="isCopied ? 'fas fa-check' : 'far fa-clipboard'"
             outline
             round
@@ -146,6 +146,7 @@ import { onLongPress } from "src/helper/utils";
 import { notifySuccess } from "src/helper/notify";
 import { copyText } from "src/helper/clipboard";
 import { i18n } from "src/boot/i18n";
+import SimplifiedMarkdown from "src/components/SimplifiedMarkdown.vue";
 import WarningWithTooltip from "src/components/WarningWithTooltip.vue";
 
 export type LabeledItemType = {
@@ -155,6 +156,7 @@ export type LabeledItemType = {
   classes?: string; 
   warning?: string;
   action?: () => void;
+  noCopyButton?: boolean;
 };
 
 const { d, n, t } = i18n;
@@ -236,7 +238,8 @@ const delay = 500;
 
 @Component({
   components: {
-    WarningWithTooltip
+    SimplifiedMarkdown,
+    WarningWithTooltip,
   }
 })
 export default class LabeledItem extends Vue {

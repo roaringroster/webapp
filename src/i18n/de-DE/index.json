@@ -291,7 +291,7 @@
   "invitation": "Einladung",
   "revokeInvitation": "Einladung widerrufen",
   "remove": "Entfernen",
-  "share": "Teilen",
+  "sharing": "Teilen",
   "expiresIn": "läuft {timeToExpiration} ab",
   "invitationMessage": "Hallo,\n\nich sende dir einen Einladungs-Code für die {appName}-App.\n\n{appDescription} Du kannst {appName} hier herunterladen: {appDownloadURL}\n\nMit dem Einladungs-Code kannst du {appName} auf deinem Gerät benutzen und unserer Organisation {organizationName} beitreten.\n\nWenn du {appName} installiert hast, aktivierst du dein Gerät, indem du diesen Einladungs-Link anklickst: {invitationURL}\n\nOder du kopierst den Einladungs-Code {code}, startest {appName}, tippst in der App auf „{joinButtonLabel}” und fügst den Code ein.\n\n{expirationHint}\n",
   "invitationCode": "Einladungs-Code",
@@ -412,6 +412,6 @@
   "organizationShortIdentifier": "ID der Organisation (kurz)",
   "organizationIdentifier": "ID der Organisation (lang)",
   "cannotUpdateInQuarantineTitle": "Updates können nicht installiert werden",
-  "moveAppToUpdateMessage": "Die App hat momentan keine Schreibrechte um sich selbst aktualisieren zu können. Bitte verschiebe CoopCare in den Programme-Ordner oder einen anderen Ordner. Anschließend starte die Update-Suche über die macOS Menüleiste unter „CoopCare” > „Nach Updates suchen …”. Falls dieser Hinweis erneut erscheint, melde dich bitte einmal von macOS ab und wieder an.",
+  "moveAppToUpdateMessage": "Die App hat momentan keine Schreibrechte um sich selbst aktualisieren zu können. Bitte verschiebe RoaringRoster in den Programme-Ordner oder einen anderen Ordner. Anschließend starte die Update-Suche über die macOS Menüleiste unter „RoaringRoster” > „Nach Updates suchen …”. Falls dieser Hinweis erneut erscheint, melde dich bitte einmal von macOS ab und wieder an.",
   "PasswordPolicy": "Bitte gib dein Passwort mit mindestens 8 Zeichen ein."
 }

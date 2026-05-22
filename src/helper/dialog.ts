@@ -2,6 +2,25 @@ import { Dialog } from "quasar";
 import { i18n } from "src/boot/i18n";
 import { sanitizeHTML } from "src/helper/utils";
 
+export function showMessage(message: string, title?: string) {
+    const { t } = i18n;
+
+    return Dialog.create({
+        title: title ?? t("warningTitle"),
+        message: sanitizeHTML(message).replace(/\n/g, "<br>"),
+        html: true,
+        class: "warning-dialog",
+        cancel: {
+            label: t("ok"),
+            rounded: true,
+            outline: true,
+            noCaps: true,
+        },
+        ok: false,
+        persistent: true
+    });
+}
+
 export function showWarning(message: string, title?: string) {
     const { t } = i18n;
 
