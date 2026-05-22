@@ -65,6 +65,8 @@ export async function registerOrganization(account: LocalAccount, name: string, 
   const organizationId = createDocument(createOrganization({ name, members, teams }, authTeam), authTeam);
 
   authTeam.addMessage({ type: "ROOT_DOCUMENT_ID", payload: organizationId });
+  authTeam.addRole("member");
+  authTeam.addMemberRole(account.user?.userId, "member");
   
   return { team, organization, teamId };
 }

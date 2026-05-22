@@ -105,6 +105,26 @@ export const useAccountStore = defineStore("account", () => {
 
     toRaw(authTeam.value)?.on("updated", onTeamUpdated);
     onTeamUpdated();
+
+    // role migration code
+    if (authTeam.value && isOrganizationAdmin.value) {
+      if (!authTeam.value.hasRole("member")) {
+        authTeam.value.addRole("member");
+      }
+      
+      const membersWithRole = authTeam.value.membersInRole("member")
+        .map(({ userId }) => userId);
+      const membersWithoutRole = authTeam.value.members()
+        .filter(member => !membersWithRole.includes(member.userId));
+
+      if (membersWithoutRole.length) {
+        membersWithoutRole.forEach(({ userId }) => 
+          authTeam.value?.addMemberRole(userId, "member")
+        );
+        console.warn("members without role migrated", membersWithoutRole);
+      }
+    }
+
     const orgHandle = useOrganizationDocument() as unknown as StoredHandle<Organization>;
     await orgHandle.handle.whenReady();
     organizationHandle.value = orgHandle;
